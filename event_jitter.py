@@ -129,7 +129,6 @@ def effective_event(w, r):
 # Algorithm 2
 
 
-
 # init
 r1 = Event(name="r1", event_type="read", period=8, offset=0, jitter=1)
 w1 = Event(name="w1", event_type="write", period=8, offset=8, jitter=2)
