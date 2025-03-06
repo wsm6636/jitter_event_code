@@ -127,6 +127,39 @@ def effective_event(w, r):
    return (w_star, r_star)
 
 # Algorithm 2
+def combine(task1,task2):
+   r1=task1.read_event
+   w1=task1.write_event
+   r2=task2.read_event
+   w2=task2.write_event
+   (w1_star, r2_star) = effective_event(w1, r2)   #line 1
+   T_star = w1_star.period   #line 2
+   if task1.period > task2.period: # line 4
+      r_1_2_offset = r1.offset + w1_star.offset - w1.offset #line 5
+      r_1_2_jitter = r1.jitter  #line 6
+      m2 = w2.offset - r2.offset - r2.jitter
+      M2 = w2.offset - r2.offset + w2.jitter  #line 7
+      w_1_2_offset = r2_star.offset + m2 
+      w_1_2_jitter = r2_star.jitter + M2 - m2 #line 8
+   elif task1.period < task2.period: #line 9
+      w_1_2_offset = w2.offset + r2_star.offset - r2.offset #line 10
+      w_1_2_jitter = w2.jitter  #line 11
+      m1 = w1.offset - r1.offset - r1.jitter
+      M1 = w1.offset - r1.offset + w1.jitter #line 12
+      r_1_2_offset = w1_star.offset - M1
+      r_1_2_jitter = w1_star.jitter + M1 - m1  #line 13   
+   else: #line 14
+      r_1_2_offset = r1.offset + w1_star.offset - w1.offset
+      r_1_2_jitter = r1.jitter
+      w_1_2_offset = w2.offset + r2_star.offset - r2.offset
+      w_1_2_jitter = w2.jitter
+
+   r_1_2 = Event(name="r_1_2", event_type="read", period=T_star, offset=r_1_2_offset, jitter=r_1_2_jitter) #line 19
+   w_1_2 = Event(name="w_1_2", event_type="write", period=T_star, offset=w_1_2_offset, jitter=w_1_2_jitter) #line 20
+   print(f"r_1_2: period: {r_1_2.period}, offset: {r_1_2.offset}, jitter: {r_1_2.jitter}")
+   print(f"w_1_2: period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
+
+   return (r_1_2, w_1_2)
 
 
 # init
@@ -140,5 +173,5 @@ task1 = Task(name="task1", read_event=r1, write_event=w1)
 task2 = Task(name="task2", read_event=r2, write_event=w2)
 
 effective_event(w1, r2)
-
+combine(task1, task2)
    
