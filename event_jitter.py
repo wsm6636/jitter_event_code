@@ -178,15 +178,23 @@ def chain(tasks):
    return e2e(r,w)
 
 # init
-r1 = Event(name="r1", event_type="read", period=8, offset=0, jitter=1)
-w1 = Event(name="w1", event_type="write", period=8, offset=8, jitter=2)
+# r1 = Event(name="r1", event_type="read", period=8, offset=0, jitter=1)
+# w1 = Event(name="w1", event_type="write", period=8, offset=8, jitter=2)
 
-r2 = Event(name="r2", event_type="read", period=5, offset=6, jitter=1)
-w2 = Event(name="w2", event_type="write", period=5, offset=13, jitter=2)
+# r2 = Event(name="r2", event_type="read", period=5, offset=6, jitter=1)
+# w2 = Event(name="w2", event_type="write", period=5, offset=13, jitter=2)
 
-event_r = [r1, r2]
-event_w = [w1, w2]
+# event_r = [r1, r2]
+# event_w = [w1, w2]
 tasks = []
+event_r = [
+            Event(name="r1", event_type="read", period=8, offset=0, jitter=1),
+            Event(name="r2", event_type="read", period=5, offset=6, jitter=1)
+            ]
+event_w = [
+            Event(name="w1", event_type="write", period=8, offset=8, jitter=2),
+            Event(name="w2", event_type="write", period=5, offset=13, jitter=2)
+            ]
 
 for i in range(event_r.__len__()):
    task = Task(name=f"task{i}", read_event=event_r[i], write_event=event_w[i])
