@@ -65,8 +65,6 @@ def euclide_extend(a,b):
 def effective_event(w, r):
    w_star = None
    r_star = None
-   print("================EFFECTIVE====================")
-   print(f"effective_event of  ({w.event_type}{w.id},{r.event_type}{r.id})")
    delta = r.offset - w.offset
    print(f"delta: {delta}.")
    (G,pw,pr) = euclide_extend(w.period, r.period)
@@ -132,8 +130,8 @@ def effective_event(w, r):
 
    w_star = Event(id=w.id, event_type="write_star", period=T_star, offset=w_offser_star, jitter=w_jitter_star)
    r_star = Event(id=r.id, event_type="read_star", period=T_star, offset=r_offset_star, jitter=r_jitter_star)
-   print(f"w_star : period: {w_star.period}, offset: {w_star.offset}, jitter: {w_star.jitter}")
-   print(f"r_star : period: {r_star.period}, offset: {r_star.offset}, jitter: {r_star.jitter}")
+   # print(f"w_star : period: {w_star.period}, offset: {w_star.offset}, jitter: {w_star.jitter}")
+   # print(f"r_star : period: {r_star.period}, offset: {r_star.offset}, jitter: {r_star.jitter}")
 
    return (w_star, r_star)
 
@@ -143,11 +141,47 @@ def combine(task1,task2):
    w1=task1.write_event
    r2=task2.read_event
    w2=task2.write_event
-   if effective_event(w1, r2) == False:
-      print(f"effective_event False.")
-      return False
+   print("================EFFECTIVE====================")
+   print(f"effective_event of  ({w1.event_type}{w1.id},{r2.event_type}{r2.id})")
+
+   result = effective_event(w1, r2)
+   if result:
+      (w1_star, r2_star) = result
+   elif w1.jitter != 0 or r2.jitter != 0:
+      print("==============TRY JITTER FREE==============")
+      if w1.jitter != 0 and r2.jitter == 0:
+         w1_free = jitter_free(w1)
+         result = effective_event(w1_free, r2)
+         if result:
+            print("==============w1_free==============")
+            (w1_star, r2_star) = result
+            w1 = w1_free
+      elif w1.jitter==0 and r2.jitter != 0:
+         r2_free = jitter_free(r2)
+         result = effective_event(w1, r2_free)
+         if result:
+            print("==============r2_free==============")
+            (w1_star, r2_star) = result     
+            r2 = r2_free
+      else:
+         result = effective_event(w1_free, r2_free)
+         if result:
+            print("==============w1_free, r2_free==============")
+            (w1_star, r2_star) = result
+            w1 = w1_free
+            r2 = r2_free
    else:
-      (w1_star, r2_star) = effective_event(w1, r2)   #line 1
+      print("==========FAILED TO EFFECTIVE EVENT==========")
+      return False
+
+   # print(f"w_star : period: {w1_star.period}, offset: {w1_star.offset}, jitter: {w1_star.jitter}")
+   # print(f"r_star : period: {r2_star.period}, offset: {r2_star.offset}, jitter: {r2_star.jitter}")
+
+   # print(f"r1: period: {r1.period}, offset: {r1.offset}, jitter: {r1.jitter}")
+   # print(f"w1: period: {w1.period}, offset: {w1.offset}, jitter: {w1.jitter}")
+   # print(f"r2: period: {r2.period}, offset: {r2.offset}, jitter: {r2.jitter}")
+   # print(f"w2: period: {w2.period}, offset: {w2.offset}, jitter: {w2.jitter}")
+
    T_star = w1_star.period   #line 2
    if task1.period > task2.period: # line 4
       r_1_2_offset = r1.offset + w1_star.offset - w1.offset #line 5
@@ -175,6 +209,15 @@ def combine(task1,task2):
    # print(f"period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
    return (r_1_2, w_1_2)
 
+#jitter-free Figure 2
+def jitter_free(event):
+   if event.jitter == 0:
+      print(f"{event.event_type}{event.id} is zero jitter.")
+   else:
+      event.jitter = 0
+      event.offset = event.offset + event.jitter
+   return event
+
 #e2e
 def e2e(r,w):
    print("================E2E====================")
@@ -183,41 +226,24 @@ def e2e(r,w):
    print(f"min_e2e: {min_e2e}, max_e2e: {max_e2e}")
    return (min_e2e, max_e2e)
 
-# #chain
-# def chain(tasks):
-#    print("================CHAIN====================")
-#    n = len(tasks)
-#    for i in range(1, n):
-#       if combine(tasks[i],tasks[i+1]) == False:
-#          return False
-#       else:
-#          (r,w) = combine(tasks[i],tasks[i+1])
-         
-#          tasks[i+1] = Task(id=i+1, read_event=r, write_event=w)
-#    return e2e(r,w)
-
+#chain
 def chain(tasks):
    print("================CHAIN====================")
    n = len(tasks)
-   # if n < 2:
-   #    (r,w) = combine(tasks[0],tasks[1])
-   #    tasks[1] = Task(id=1, read_event=r, write_event=w)
-
-   # 初始化第一个任务
    current_task = tasks[0]
 
-   for i in range(1, n):  # 从第二个任务开始
-      print(f"================Combining task {current_task.id} and task {tasks[i].id}====================")
-      if combine(current_task, tasks[i]) == False:
+   for i in range(1, n):  
+      print(f"================Combining task {current_task.id} and {tasks[i].id}====================")
+      result = combine(current_task, tasks[i])
+      if result is False:
+         print("================END====================")
          print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
          return False
       else:
-         (r, w) = combine(current_task, tasks[i])
-         # 更新当前任务为新生成的任务
-         print(f"Updated combined_task: ")
+         (r,w) = result
+         print("================UPDATE combined task====================")
          current_task = Task(read_event=r, write_event=w, id=i)
 
-   # 计算端到端延迟
    return e2e(r,w)
 
 # init
@@ -234,7 +260,6 @@ event_w = [
             Event(event_type="write", period=4, offset=3, jitter=0)
             ]
 
-# 动态为每个事件分配 id
 for i, (r, w) in enumerate(zip(event_r, event_w)):
    r.id = i
    w.id = i
@@ -244,8 +269,6 @@ tasks = []
 for i in range(n):
    task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
    tasks.append(task)
-
-
 
 # effective_event(w1, r2)
 # combine(task1, task2)
