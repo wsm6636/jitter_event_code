@@ -161,6 +161,21 @@ def combine(task1,task2):
 
    return (r_1_2, w_1_2)
 
+#e2e
+def e2e(r,w):
+   min_e2e = w.offset - r.offset - r.jitter
+   max_e2e = w.offset + w.jitter - r.offset
+   print(f"min_e2e: {min_e2e}, max_e2e: {max_e2e}")
+   return (min_e2e, max_e2e)
+
+#chain
+def chain(tasks):
+   print(f"chain: ")
+   n = len(tasks)
+   for i in range(n - 1):
+      (r,w) = combine(tasks[i],tasks[i+1])
+      tasks[i+1] = Task(name=tasks[i+1].name, read_event=r, write_event=w)
+   return e2e(r,w)
 
 # init
 r1 = Event(name="r1", event_type="read", period=8, offset=0, jitter=1)
@@ -169,9 +184,16 @@ w1 = Event(name="w1", event_type="write", period=8, offset=8, jitter=2)
 r2 = Event(name="r2", event_type="read", period=5, offset=6, jitter=1)
 w2 = Event(name="w2", event_type="write", period=5, offset=13, jitter=2)
 
-task1 = Task(name="task1", read_event=r1, write_event=w1)
-task2 = Task(name="task2", read_event=r2, write_event=w2)
+event_r = [r1, r2]
+event_w = [w1, w2]
+tasks = []
 
-effective_event(w1, r2)
-combine(task1, task2)
+for i in range(event_r.__len__()):
+   task = Task(name=f"task{i}", read_event=event_r[i], write_event=event_w[i])
+   tasks.append(task)
+
+
+# effective_event(w1, r2)
+# combine(task1, task2)
+chain(tasks)
    
