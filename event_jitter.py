@@ -15,23 +15,29 @@ import math
 
 
 class Event:
-      def __init__(self, name, event_type, period, offset, jitter):
-         self.name = name
-         self.event_type = event_type  # "read" or "write"
-         self.period = period
-         self.offset = offset
-         self.jitter = jitter
-         print(f"event series: {self.name}, {self.event_type} with period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
+   def __init__(self, event_type, period, offset, jitter,id=None):
+      self.id = id
+      self.event_type = event_type  # "read" or "write"
+      self.period = period
+      self.offset = offset
+      self.jitter = jitter
+      print(f"event {self.event_type}{self.id},  period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
+   def __repr__(self):
+      return (f"Event(type={self.event_type},id={self.id}, period={self.period}, "
+            f"offset={self.offset}, jitter={self.jitter})")
 
 class Task:
-   def __init__(self, name, read_event, write_event):
-      self.name = name
+   def __init__(self, read_event, write_event, id=None):
+      self.id = id
       self.read_event = read_event
       self.write_event = write_event
       self.period = read_event.period
       self.offset = read_event.offset
       self.jitter = 0
-      print(f"task: {name}, period: {self.period}, offset: {self.offset}, read_event: {self.read_event.name}, write_event: {self.write_event.name}.")
+      print(f"task{self.id}, period: {self.period}, offset: {self.offset}, read_event: {self.read_event.event_type}{self.read_event.id}, write_event: {self.write_event.event_type}{self.write_event.id}.")
+      def __repr__(self):
+         return (f"Task(period={self.period}, offset={self.offset}, "
+               f"read_event={self.read_event}, write_event={self.write_event})")
 
 # Euclide's algorithm for coefficients of Bezout's identity
 def euclide_extend(a,b):
@@ -59,7 +65,8 @@ def euclide_extend(a,b):
 def effective_event(w, r):
    w_star = None
    r_star = None
-
+   print("================EFFECTIVE====================")
+   print(f"effective_event of  ({w.event_type}{w.id},{r.event_type}{r.id})")
    delta = r.offset - w.offset
    print(f"delta: {delta}.")
    (G,pw,pr) = euclide_extend(w.period, r.period)
@@ -82,6 +89,7 @@ def effective_event(w, r):
             r_offset_star = r.offset
       else:
          print(f"Does not conform to Theorem 12, Formula (14).")
+         return False
    elif w.period > r.period:
       if w.jitter == r.jitter == 0: # Lemma (15)
          print(f"w.period > r.period, without jitter. Lemma (15), Formula (28).")
@@ -99,6 +107,7 @@ def effective_event(w, r):
          r_jitter_star = r.period + w.jitter # Formula (18) 
       else:
          print(f"Does not conform to Theorem (13), Formula (17).")
+         return False
    elif w.period < r.period:
       if w.jitter == r.jitter == 0: # Lemma (16)
          print(f"w.period < r.period, without jitter. Lemma (16), Formula (30).")
@@ -116,13 +125,15 @@ def effective_event(w, r):
          w_jitter_star = w.period + r.jitter          # Formula (24)
       else:
          print(f"Does not conform to Theorem (14), Formula (22).")
+         return False
    else:
       print(f"Does not exist effective write/read event series.")
+      return False
 
-   w_star = Event(name="w_star", event_type="write", period=T_star, offset=w_offser_star, jitter=w_jitter_star)
-   r_star = Event(name="r_star", event_type="read", period=T_star, offset=r_offset_star, jitter=r_jitter_star)
-   print(f"w_star: period: {w_star.period}, offset: {w_star.offset}, jitter: {w_star.jitter}")
-   print(f"r_star: period: {r_star.period}, offset: {r_star.offset}, jitter: {r_star.jitter}")
+   w_star = Event(id=w.id, event_type="write_star", period=T_star, offset=w_offser_star, jitter=w_jitter_star)
+   r_star = Event(id=r.id, event_type="read_star", period=T_star, offset=r_offset_star, jitter=r_jitter_star)
+   print(f"w_star : period: {w_star.period}, offset: {w_star.offset}, jitter: {w_star.jitter}")
+   print(f"r_star : period: {r_star.period}, offset: {r_star.offset}, jitter: {r_star.jitter}")
 
    return (w_star, r_star)
 
@@ -132,7 +143,11 @@ def combine(task1,task2):
    w1=task1.write_event
    r2=task2.read_event
    w2=task2.write_event
-   (w1_star, r2_star) = effective_event(w1, r2)   #line 1
+   if effective_event(w1, r2) == False:
+      print(f"effective_event False.")
+      return False
+   else:
+      (w1_star, r2_star) = effective_event(w1, r2)   #line 1
    T_star = w1_star.period   #line 2
    if task1.period > task2.period: # line 4
       r_1_2_offset = r1.offset + w1_star.offset - w1.offset #line 5
@@ -154,45 +169,82 @@ def combine(task1,task2):
       w_1_2_offset = w2.offset + r2_star.offset - r2.offset
       w_1_2_jitter = w2.jitter
 
-   r_1_2 = Event(name="r_1_2", event_type="read", period=T_star, offset=r_1_2_offset, jitter=r_1_2_jitter) #line 19
-   w_1_2 = Event(name="w_1_2", event_type="write", period=T_star, offset=w_1_2_offset, jitter=w_1_2_jitter) #line 20
-   print(f"r_1_2: period: {r_1_2.period}, offset: {r_1_2.offset}, jitter: {r_1_2.jitter}")
-   print(f"w_1_2: period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
-
+   r_1_2 = Event(id=task2.id ,event_type="read_combined", period=T_star, offset=r_1_2_offset, jitter=r_1_2_jitter) #line 19
+   w_1_2 = Event(id=task2.id ,event_type="write_combined", period=T_star, offset=w_1_2_offset, jitter=w_1_2_jitter) #line 20
+   # print(f"period: {r_1_2.period}, offset: {r_1_2.offset}, jitter: {r_1_2.jitter}")
+   # print(f"period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
    return (r_1_2, w_1_2)
 
 #e2e
 def e2e(r,w):
+   print("================E2E====================")
    min_e2e = w.offset - r.offset - r.jitter
    max_e2e = w.offset + w.jitter - r.offset
    print(f"min_e2e: {min_e2e}, max_e2e: {max_e2e}")
    return (min_e2e, max_e2e)
 
-#chain
+# #chain
+# def chain(tasks):
+#    print("================CHAIN====================")
+#    n = len(tasks)
+#    for i in range(1, n):
+#       if combine(tasks[i],tasks[i+1]) == False:
+#          return False
+#       else:
+#          (r,w) = combine(tasks[i],tasks[i+1])
+         
+#          tasks[i+1] = Task(id=i+1, read_event=r, write_event=w)
+#    return e2e(r,w)
+
 def chain(tasks):
-   print(f"chain: ")
+   print("================CHAIN====================")
    n = len(tasks)
-   for i in range(n - 1):
-      (r,w) = combine(tasks[i],tasks[i+1])
-      tasks[i+1] = Task(name=tasks[i+1].name, read_event=r, write_event=w)
+   # if n < 2:
+   #    (r,w) = combine(tasks[0],tasks[1])
+   #    tasks[1] = Task(id=1, read_event=r, write_event=w)
+
+   # 初始化第一个任务
+   current_task = tasks[0]
+
+   for i in range(1, n):  # 从第二个任务开始
+      print(f"================Combining task {current_task.id} and task {tasks[i].id}====================")
+      if combine(current_task, tasks[i]) == False:
+         print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
+         return False
+      else:
+         (r, w) = combine(current_task, tasks[i])
+         # 更新当前任务为新生成的任务
+         print(f"Updated combined_task: ")
+         current_task = Task(read_event=r, write_event=w, id=i)
+
+   # 计算端到端延迟
    return e2e(r,w)
 
 # init
-
+print("================INIT====================")
 event_r = [
-            Event(name="r1", event_type="read", period=8, offset=0, jitter=1),
-            Event(name="r2", event_type="read", period=5, offset=6, jitter=1)
+            Event(event_type="read", period=8, offset=0, jitter=1),
+            Event(event_type="read", period=5, offset=6, jitter=1),
+            Event(event_type="read", period=4, offset=0, jitter=0),
             ]
 
 event_w = [
-            Event(name="w1", event_type="write", period=8, offset=8, jitter=2),
-            Event(name="w2", event_type="write", period=5, offset=13, jitter=2)
+            Event(event_type="write", period=8, offset=8, jitter=2),
+            Event(event_type="write", period=5, offset=13, jitter=2),
+            Event(event_type="write", period=4, offset=3, jitter=0)
             ]
 
+# 动态为每个事件分配 id
+for i, (r, w) in enumerate(zip(event_r, event_w)):
+   r.id = i
+   w.id = i
+
+n = len(event_r)
 tasks = []
-for i in range(event_r.__len__()):
-   task = Task(name=f"task{i}", read_event=event_r[i], write_event=event_w[i])
+for i in range(n):
+   task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
    tasks.append(task)
+
 
 
 # effective_event(w1, r2)
