@@ -21,7 +21,7 @@ class Event:
       self.period = period
       self.offset = offset
       self.jitter = jitter
-      print(f"event {self.event_type}{self.id},  period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
+      print(f"event {self.event_type}_{self.id},  period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
    def __repr__(self):
       return (f"Event(type={self.event_type},id={self.id}, period={self.period}, "
             f"offset={self.offset}, jitter={self.jitter})")
@@ -34,7 +34,7 @@ class Task:
       self.period = read_event.period
       self.offset = read_event.offset
       self.jitter = 0
-      print(f"task{self.id}, period: {self.period}, offset: {self.offset}, read_event: {self.read_event.event_type}{self.read_event.id}, write_event: {self.write_event.event_type}{self.write_event.id}.")
+      print(f"task_{self.id}, period: {self.period}, offset: {self.offset}, read_event: {self.read_event.event_type}_{self.read_event.id}, write_event: {self.write_event.event_type}_{self.write_event.id}.")
       def __repr__(self):
          return (f"Task(period={self.period}, offset={self.offset}, "
                f"read_event={self.read_event}, write_event={self.write_event})")
@@ -203,8 +203,9 @@ def combine(task1,task2):
       w_1_2_offset = w2.offset + r2_star.offset - r2.offset
       w_1_2_jitter = w2.jitter
 
-   r_1_2 = Event(id=task2.id ,event_type="read_combined", period=T_star, offset=r_1_2_offset, jitter=r_1_2_jitter) #line 19
-   w_1_2 = Event(id=task2.id ,event_type="write_combined", period=T_star, offset=w_1_2_offset, jitter=w_1_2_jitter) #line 20
+   combined_id = f"{task1.id}_{task2.id}"
+   r_1_2 = Event(id=combined_id ,event_type="read_combined", period=T_star, offset=r_1_2_offset, jitter=r_1_2_jitter) #line 19
+   w_1_2 = Event(id=combined_id ,event_type="write_combined", period=T_star, offset=w_1_2_offset, jitter=w_1_2_jitter) #line 20
    # print(f"period: {r_1_2.period}, offset: {r_1_2.offset}, jitter: {r_1_2.jitter}")
    # print(f"period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
    return (r_1_2, w_1_2)
@@ -227,8 +228,8 @@ def e2e(r,w):
    return (min_e2e, max_e2e)
 
 #chain
-def chain(tasks):
-   print("================CHAIN====================")
+def chain_asc(tasks):
+   print("================CHAIN_ASC====================")
    n = len(tasks)
    current_task = tasks[0]
 
@@ -242,9 +243,32 @@ def chain(tasks):
       else:
          (r,w) = result
          print("================UPDATE combined task====================")
-         current_task = Task(read_event=r, write_event=w, id=i)
+         current_task = Task(read_event=r, write_event=w, id=r.id)
 
    return e2e(r,w)
+
+
+#chain
+def chain_desc(tasks):
+   print("================CHAIN_DESC====================")
+   n = len(tasks)
+   current_task = tasks[-1]
+
+   for i in range(n-2, -1,-1):  
+      print(f"================Combining task {tasks[i].id} and {current_task.id}====================")
+      result = combine(tasks[i], current_task)
+      if result is False:
+         print("================END====================")
+         print(f"Failed to combine task {tasks[i].id} and task {current_task.id}.")
+         return False
+      else:
+         (r,w) = result
+         print("================UPDATE combined task====================")
+         current_task = Task(read_event=r, write_event=w, id=r.id)
+
+   return e2e(r,w)
+
+
 
 # init
 print("================INIT====================")
@@ -272,5 +296,5 @@ for i in range(n):
 
 # effective_event(w1, r2)
 # combine(task1, task2)
-chain(tasks)
-   
+chain_asc(tasks)
+chain_desc(tasks)
