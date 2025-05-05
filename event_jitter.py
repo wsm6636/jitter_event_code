@@ -396,7 +396,10 @@ class RandomEvent:
          
          # 随机生成偏移量，确保偏移量小于周期
          read_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
-         write_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
+         # LET
+         write_offset = period
+         # write_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
+         
          # 随机生成抖动
          jitter = random.randint(self.min_jitter, self.max_jitter)
          

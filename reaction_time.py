@@ -28,6 +28,11 @@ class Event:
     def __repr__(self):
         return (f"Event(type={self.event_type},id={self.id}, period={self.period}, "
             f"offset={self.offset}, jitter={self.jitter})")
+    def get_trigger_time(self, j):
+        random_jitter = random.uniform(0, self.jitter)
+        tj = j * self.period + self.offset + random_jitter
+        # print(f"event {self.event_type}_{self.id}, j: {j}, trigger_time: {tj:.2f}.")
+        return tj
 
 class Task:
     def __init__(self, read_event, write_event, id=None):
@@ -66,7 +71,10 @@ class RandomEvent:
             
             # 随机生成偏移量，确保偏移量小于周期
             read_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
-            write_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
+            # LET
+            write_offset = period
+            # write_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
+            
             # 随机生成抖动
             jitter = random.randint(self.min_jitter, self.max_jitter)
             
@@ -81,14 +89,49 @@ class RandomEvent:
             tasks.append(task)
 
         return tasks
-    def get_tasks(self):
-        return self.tasks
+    # def get_tasks(self):
+    #     return self.tasks
+
+
+def is_valid_chain(task_chain):
+    for i in range(0, len(task_chain), 2):
+        read_event, _ ,_ = task_chain[i]
+        write_event, _ ,_ = task_chain[i+1]
+        if read_event.id > write_event.id or read_event.get_trigger_time(0) >= write_event.get_trigger_time(0):
+            return False
+    return True
+
+def find_valid_task_chains(tasks):
+    valid_chains = []
+    for instance in range(20):  # 假设实例序号不超过99
+        task_chain = []
+        last_write_time = -float('inf')
+        for task in tasks:
+            read_event = task.read_event
+            write_event = task.write_event
+            while True:
+                read_time = read_event.get_trigger_time(instance)
+                write_time = write_event.get_trigger_time(instance)
+                if read_time > last_write_time:
+                    break
+                instance += 1
+            if instance >= 100:
+                break
+            task_chain.append((read_event, read_time, instance))
+            task_chain.append((write_event, write_time, instance))
+            last_write_time = write_time
+
+        # 检查构建的任务链是否有效
+        if is_valid_chain(task_chain) and len(task_chain) == len(tasks) * 2:
+            valid_chains.append(task_chain)
+
+    return valid_chains
+
+
 
 
 # init
 print("================INIT====================")
-
-
 
 # event_r = [
             
@@ -115,7 +158,13 @@ print("================INIT====================")
 #     task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
 #     tasks.append(task)
 
-tasks = RandomEvent(num_tasks=3, min_period=3, max_period=5, min_offset=0, max_offset=4, min_jitter=0, max_jitter=0).get_tasks()
-# # 打印任务信息
-# for task in tasks:
-#    print(task)
+tasks = RandomEvent(num_tasks=5, min_period=3, max_period=8, 
+                                    min_offset=0, max_offset=4, min_jitter=0, max_jitter=0).tasks 
+# tasks = random_event_generator.generate_events_tasks()
+valid_task_chains = find_valid_task_chains(tasks)
+
+
+for i, task_chain in enumerate(valid_task_chains):
+    print(f"Valid Task Chain {i}:")
+    for j, (event, time, instance) in enumerate(task_chain):
+        print(f"  Event {j}: {event.event_type}_{event.id}_{instance} at {time:.2f}")
