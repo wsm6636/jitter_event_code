@@ -305,7 +305,7 @@ def chain_max_period(tasks):
    print("===============Combining Predecessor and Successor Results===============")
    if len(final_tasks) == 1:
       print(f"================Final: Only one task in the final chain================")
-      print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}")
+      print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}, max_reaction_time: {final_e2es[0][1] + final_tasks[0].read_event.period}")
       print(f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}")
       print(f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}")
       return True
@@ -314,7 +314,7 @@ def chain_max_period(tasks):
       if final_combine_result:
          final_e2e, final_r, final_w, final_task = final_combine_result
          print("================Final Combined Result====================")
-         print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}")
+         print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}, max_reaction_time: {final_e2e[1] + final_r.period}")
          print(f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}")
          print(f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}")
          return True
@@ -357,7 +357,7 @@ def chain_min_period(tasks):
    print("===============Combining Predecessor and Successor Results===============")
    if len(final_tasks) == 1:
       print(f"================Final: Only one task in the final chain================")
-      print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}")
+      print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}, max_reaction_time: {final_e2es[0][1] + final_tasks[0].read_event.period}")
       print(f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}")
       print(f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}")
       return True
@@ -366,7 +366,7 @@ def chain_min_period(tasks):
       if final_combine_result:
          final_e2e, final_r, final_w, final_task = final_combine_result
          print("================Final Combined Result====================")
-         print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}")
+         print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}, max_reaction_time: {final_e2e[1] + final_r.period}")
          print(f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}")
          print(f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}")
          return True
@@ -378,16 +378,16 @@ def chain_min_period(tasks):
 print("================INIT====================")
 event_r = [
             
-            Event(event_type="read", period=8, offset=0, jitter=1),
+            Event(event_type="read", period=5, offset=0, jitter=0),
             Event(event_type="read", period=3, offset=0, jitter=0),
-            Event(event_type="read", period=5, offset=6, jitter=1),
+            Event(event_type="read", period=4, offset=0, jitter=0),
             ]
 
 event_w = [
             
-            Event(event_type="write", period=8, offset=8, jitter=2),
+            Event(event_type="write", period=5, offset=4, jitter=0),
             Event(event_type="write", period=3, offset=3, jitter=0),
-            Event(event_type="write", period=5, offset=13, jitter=2),   
+            Event(event_type="write", period=4, offset=4, jitter=0),   
             ]
 
 for i, (r, w) in enumerate(zip(event_r, event_w)):
