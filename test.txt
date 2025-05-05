@@ -1,150 +1,236 @@
 ================INIT====================
-event read_0,  period: 3, offset: 0, jitter: 0.
+event read_0,  period: 3, offset: 2, jitter: 0.
 event write_0,  period: 3, offset: 3, jitter: 0.
-task_0, period: 3, offset: 0, read_event: read_0, write_event: write_0.
-event read_1,  period: 5, offset: 0, jitter: 0.
-event write_1,  period: 5, offset: 5, jitter: 0.
-task_1, period: 5, offset: 0, read_event: read_1, write_event: write_1.
-event read_2,  period: 5, offset: 0, jitter: 0.
-event write_2,  period: 5, offset: 5, jitter: 0.
-task_2, period: 5, offset: 0, read_event: read_2, write_event: write_2.
+task_0, period: 3, offset: 2, read_event: read_0, write_event: write_0.
+event read_1,  period: 8, offset: 1, jitter: 0.
+event write_1,  period: 8, offset: 8, jitter: 0.
+task_1, period: 8, offset: 1, read_event: read_1, write_event: write_1.
+event read_2,  period: 7, offset: 1, jitter: 0.
+event write_2,  period: 7, offset: 7, jitter: 0.
+task_2, period: 7, offset: 1, read_event: read_2, write_event: write_2.
+event read_3,  period: 3, offset: 0, jitter: 0.
+event write_3,  period: 3, offset: 3, jitter: 0.
+task_3, period: 3, offset: 0, read_event: read_3, write_event: write_3.
+event read_4,  period: 4, offset: 2, jitter: 0.
+event write_4,  period: 4, offset: 4, jitter: 0.
+task_4, period: 4, offset: 2, read_event: read_4, write_event: write_4.
 Valid Task Chain 0:
-  Event 0: read_0_0 at 0.00
+  Event 0: read_0_0 at 2.00
   Event 1: write_0_0 at 3.00
-  Event 2: read_1_1 at 5.00
-  Event 3: write_1_1 at 10.00
-  Event 4: read_2_3 at 15.00
-  Event 5: write_2_3 at 20.00
+  Event 2: read_1_1 at 9.00
+  Event 3: write_1_1 at 16.00
+  Event 4: read_2_3 at 22.00
+  Event 5: write_2_3 at 28.00
+  Event 6: read_3_10 at 30.00
+  Event 7: write_3_10 at 33.00
+  Event 8: read_4_8 at 34.00
+  Event 9: write_4_8 at 36.00
 Valid Task Chain 1:
-  Event 0: read_0_1 at 3.00
+  Event 0: read_0_1 at 5.00
   Event 1: write_0_1 at 6.00
-  Event 2: read_1_2 at 10.00
-  Event 3: write_1_2 at 15.00
-  Event 4: read_2_4 at 20.00
-  Event 5: write_2_4 at 25.00
+  Event 2: read_1_1 at 9.00
+  Event 3: write_1_1 at 16.00
+  Event 4: read_2_3 at 22.00
+  Event 5: write_2_3 at 28.00
+  Event 6: read_3_10 at 30.00
+  Event 7: write_3_10 at 33.00
+  Event 8: read_4_8 at 34.00
+  Event 9: write_4_8 at 36.00
 Valid Task Chain 2:
-  Event 0: read_0_2 at 6.00
+  Event 0: read_0_2 at 8.00
   Event 1: write_0_2 at 9.00
-  Event 2: read_1_2 at 10.00
-  Event 3: write_1_2 at 15.00
-  Event 4: read_2_4 at 20.00
-  Event 5: write_2_4 at 25.00
+  Event 2: read_1_2 at 17.00
+  Event 3: write_1_2 at 24.00
+  Event 4: read_2_4 at 29.00
+  Event 5: write_2_4 at 35.00
+  Event 6: read_3_12 at 36.00
+  Event 7: write_3_12 at 39.00
+  Event 8: read_4_10 at 42.00
+  Event 9: write_4_10 at 44.00
 Valid Task Chain 3:
-  Event 0: read_0_3 at 9.00
+  Event 0: read_0_3 at 11.00
   Event 1: write_0_3 at 12.00
-  Event 2: read_1_3 at 15.00
-  Event 3: write_1_3 at 20.00
-  Event 4: read_2_5 at 25.00
-  Event 5: write_2_5 at 30.00
+  Event 2: read_1_3 at 25.00
+  Event 3: write_1_3 at 32.00
+  Event 4: read_2_5 at 36.00
+  Event 5: write_2_5 at 42.00
+  Event 6: read_3_15 at 45.00
+  Event 7: write_3_15 at 48.00
+  Event 8: read_4_12 at 50.00
+  Event 9: write_4_12 at 52.00
 Valid Task Chain 4:
-  Event 0: read_0_4 at 12.00
+  Event 0: read_0_4 at 14.00
   Event 1: write_0_4 at 15.00
-  Event 2: read_1_4 at 20.00
-  Event 3: write_1_4 at 25.00
-  Event 4: read_2_6 at 30.00
-  Event 5: write_2_6 at 35.00
+  Event 2: read_1_4 at 33.00
+  Event 3: write_1_4 at 40.00
+  Event 4: read_2_6 at 43.00
+  Event 5: write_2_6 at 49.00
+  Event 6: read_3_17 at 51.00
+  Event 7: write_3_17 at 54.00
+  Event 8: read_4_14 at 58.00
+  Event 9: write_4_14 at 60.00
 Valid Task Chain 5:
-  Event 0: read_0_5 at 15.00
+  Event 0: read_0_5 at 17.00
   Event 1: write_0_5 at 18.00
-  Event 2: read_1_5 at 25.00
-  Event 3: write_1_5 at 30.00
-  Event 4: read_2_7 at 35.00
-  Event 5: write_2_7 at 40.00
+  Event 2: read_1_5 at 41.00
+  Event 3: write_1_5 at 48.00
+  Event 4: read_2_7 at 50.00
+  Event 5: write_2_7 at 56.00
+  Event 6: read_3_19 at 57.00
+  Event 7: write_3_19 at 60.00
+  Event 8: read_4_15 at 62.00
+  Event 9: write_4_15 at 64.00
 Valid Task Chain 6:
-  Event 0: read_0_6 at 18.00
+  Event 0: read_0_6 at 20.00
   Event 1: write_0_6 at 21.00
-  Event 2: read_1_6 at 30.00
-  Event 3: write_1_6 at 35.00
-  Event 4: read_2_8 at 40.00
-  Event 5: write_2_8 at 45.00
+  Event 2: read_1_6 at 49.00
+  Event 3: write_1_6 at 56.00
+  Event 4: read_2_8 at 57.00
+  Event 5: write_2_8 at 63.00
+  Event 6: read_3_22 at 66.00
+  Event 7: write_3_22 at 69.00
+  Event 8: read_4_17 at 70.00
+  Event 9: write_4_17 at 72.00
 Valid Task Chain 7:
-  Event 0: read_0_7 at 21.00
+  Event 0: read_0_7 at 23.00
   Event 1: write_0_7 at 24.00
-  Event 2: read_1_7 at 35.00
-  Event 3: write_1_7 at 40.00
-  Event 4: read_2_9 at 45.00
-  Event 5: write_2_9 at 50.00
+  Event 2: read_1_7 at 57.00
+  Event 3: write_1_7 at 64.00
+  Event 4: read_2_10 at 71.00
+  Event 5: write_2_10 at 77.00
+  Event 6: read_3_26 at 78.00
+  Event 7: write_3_26 at 81.00
+  Event 8: read_4_20 at 82.00
+  Event 9: write_4_20 at 84.00
 Valid Task Chain 8:
-  Event 0: read_0_8 at 24.00
+  Event 0: read_0_8 at 26.00
   Event 1: write_0_8 at 27.00
-  Event 2: read_1_8 at 40.00
-  Event 3: write_1_8 at 45.00
-  Event 4: read_2_10 at 50.00
-  Event 5: write_2_10 at 55.00
+  Event 2: read_1_8 at 65.00
+  Event 3: write_1_8 at 72.00
+  Event 4: read_2_11 at 78.00
+  Event 5: write_2_11 at 84.00
+  Event 6: read_3_29 at 87.00
+  Event 7: write_3_29 at 90.00
+  Event 8: read_4_23 at 94.00
+  Event 9: write_4_23 at 96.00
 Valid Task Chain 9:
-  Event 0: read_0_9 at 27.00
+  Event 0: read_0_9 at 29.00
   Event 1: write_0_9 at 30.00
-  Event 2: read_1_9 at 45.00
-  Event 3: write_1_9 at 50.00
-  Event 4: read_2_11 at 55.00
-  Event 5: write_2_11 at 60.00
+  Event 2: read_1_9 at 73.00
+  Event 3: write_1_9 at 80.00
+  Event 4: read_2_12 at 85.00
+  Event 5: write_2_12 at 91.00
+  Event 6: read_3_31 at 93.00
+  Event 7: write_3_31 at 96.00
+  Event 8: read_4_24 at 98.00
+  Event 9: write_4_24 at 100.00
 Valid Task Chain 10:
-  Event 0: read_0_10 at 30.00
+  Event 0: read_0_10 at 32.00
   Event 1: write_0_10 at 33.00
-  Event 2: read_1_10 at 50.00
-  Event 3: write_1_10 at 55.00
-  Event 4: read_2_12 at 60.00
-  Event 5: write_2_12 at 65.00
+  Event 2: read_1_10 at 81.00
+  Event 3: write_1_10 at 88.00
+  Event 4: read_2_13 at 92.00
+  Event 5: write_2_13 at 98.00
+  Event 6: read_3_33 at 99.00
+  Event 7: write_3_33 at 102.00
+  Event 8: read_4_26 at 106.00
+  Event 9: write_4_26 at 108.00
 Valid Task Chain 11:
-  Event 0: read_0_11 at 33.00
+  Event 0: read_0_11 at 35.00
   Event 1: write_0_11 at 36.00
-  Event 2: read_1_11 at 55.00
-  Event 3: write_1_11 at 60.00
-  Event 4: read_2_13 at 65.00
-  Event 5: write_2_13 at 70.00
+  Event 2: read_1_11 at 89.00
+  Event 3: write_1_11 at 96.00
+  Event 4: read_2_14 at 99.00
+  Event 5: write_2_14 at 105.00
+  Event 6: read_3_36 at 108.00
+  Event 7: write_3_36 at 111.00
+  Event 8: read_4_28 at 114.00
+  Event 9: write_4_28 at 116.00
 Valid Task Chain 12:
-  Event 0: read_0_12 at 36.00
+  Event 0: read_0_12 at 38.00
   Event 1: write_0_12 at 39.00
-  Event 2: read_1_12 at 60.00
-  Event 3: write_1_12 at 65.00
-  Event 4: read_2_14 at 70.00
-  Event 5: write_2_14 at 75.00
+  Event 2: read_1_12 at 97.00
+  Event 3: write_1_12 at 104.00
+  Event 4: read_2_15 at 106.00
+  Event 5: write_2_15 at 112.00
+  Event 6: read_3_38 at 114.00
+  Event 7: write_3_38 at 117.00
+  Event 8: read_4_29 at 118.00
+  Event 9: write_4_29 at 120.00
 Valid Task Chain 13:
-  Event 0: read_0_13 at 39.00
+  Event 0: read_0_13 at 41.00
   Event 1: write_0_13 at 42.00
-  Event 2: read_1_13 at 65.00
-  Event 3: write_1_13 at 70.00
-  Event 4: read_2_15 at 75.00
-  Event 5: write_2_15 at 80.00
+  Event 2: read_1_13 at 105.00
+  Event 3: write_1_13 at 112.00
+  Event 4: read_2_16 at 113.00
+  Event 5: write_2_16 at 119.00
+  Event 6: read_3_40 at 120.00
+  Event 7: write_3_40 at 123.00
+  Event 8: read_4_31 at 126.00
+  Event 9: write_4_31 at 128.00
 Valid Task Chain 14:
-  Event 0: read_0_14 at 42.00
+  Event 0: read_0_14 at 44.00
   Event 1: write_0_14 at 45.00
-  Event 2: read_1_14 at 70.00
-  Event 3: write_1_14 at 75.00
-  Event 4: read_2_16 at 80.00
-  Event 5: write_2_16 at 85.00
+  Event 2: read_1_14 at 113.00
+  Event 3: write_1_14 at 120.00
+  Event 4: read_2_18 at 127.00
+  Event 5: write_2_18 at 133.00
+  Event 6: read_3_45 at 135.00
+  Event 7: write_3_45 at 138.00
+  Event 8: read_4_35 at 142.00
+  Event 9: write_4_35 at 144.00
 Valid Task Chain 15:
-  Event 0: read_0_15 at 45.00
+  Event 0: read_0_15 at 47.00
   Event 1: write_0_15 at 48.00
-  Event 2: read_1_15 at 75.00
-  Event 3: write_1_15 at 80.00
-  Event 4: read_2_17 at 85.00
-  Event 5: write_2_17 at 90.00
+  Event 2: read_1_15 at 121.00
+  Event 3: write_1_15 at 128.00
+  Event 4: read_2_19 at 134.00
+  Event 5: write_2_19 at 140.00
+  Event 6: read_3_47 at 141.00
+  Event 7: write_3_47 at 144.00
+  Event 8: read_4_36 at 146.00
+  Event 9: write_4_36 at 148.00
 Valid Task Chain 16:
-  Event 0: read_0_16 at 48.00
+  Event 0: read_0_16 at 50.00
   Event 1: write_0_16 at 51.00
-  Event 2: read_1_16 at 80.00
-  Event 3: write_1_16 at 85.00
-  Event 4: read_2_18 at 90.00
-  Event 5: write_2_18 at 95.00
+  Event 2: read_1_16 at 129.00
+  Event 3: write_1_16 at 136.00
+  Event 4: read_2_20 at 141.00
+  Event 5: write_2_20 at 147.00
+  Event 6: read_3_50 at 150.00
+  Event 7: write_3_50 at 153.00
+  Event 8: read_4_38 at 154.00
+  Event 9: write_4_38 at 156.00
 Valid Task Chain 17:
-  Event 0: read_0_17 at 51.00
+  Event 0: read_0_17 at 53.00
   Event 1: write_0_17 at 54.00
-  Event 2: read_1_17 at 85.00
-  Event 3: write_1_17 at 90.00
-  Event 4: read_2_19 at 95.00
-  Event 5: write_2_19 at 100.00
+  Event 2: read_1_17 at 137.00
+  Event 3: write_1_17 at 144.00
+  Event 4: read_2_21 at 148.00
+  Event 5: write_2_21 at 154.00
+  Event 6: read_3_52 at 156.00
+  Event 7: write_3_52 at 159.00
+  Event 8: read_4_40 at 162.00
+  Event 9: write_4_40 at 164.00
 Valid Task Chain 18:
-  Event 0: read_0_18 at 54.00
+  Event 0: read_0_18 at 56.00
   Event 1: write_0_18 at 57.00
-  Event 2: read_1_18 at 90.00
-  Event 3: write_1_18 at 95.00
-  Event 4: read_2_20 at 100.00
-  Event 5: write_2_20 at 105.00
+  Event 2: read_1_18 at 145.00
+  Event 3: write_1_18 at 152.00
+  Event 4: read_2_22 at 155.00
+  Event 5: write_2_22 at 161.00
+  Event 6: read_3_54 at 162.00
+  Event 7: write_3_54 at 165.00
+  Event 8: read_4_41 at 166.00
+  Event 9: write_4_41 at 168.00
 Valid Task Chain 19:
-  Event 0: read_0_19 at 57.00
+  Event 0: read_0_19 at 59.00
   Event 1: write_0_19 at 60.00
-  Event 2: read_1_19 at 95.00
-  Event 3: write_1_19 at 100.00
-  Event 4: read_2_21 at 105.00
-  Event 5: write_2_21 at 110.00
+  Event 2: read_1_19 at 153.00
+  Event 3: write_1_19 at 160.00
+  Event 4: read_2_23 at 162.00
+  Event 5: write_2_23 at 168.00
+  Event 6: read_3_57 at 171.00
+  Event 7: write_3_57 at 174.00
+  Event 8: read_4_44 at 178.00
+  Event 9: write_4_44 at 180.00

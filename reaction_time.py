@@ -93,42 +93,81 @@ class RandomEvent:
     #     return self.tasks
 
 
-def is_valid_chain(task_chain):
-    for i in range(0, len(task_chain), 2):
-        read_event, _ ,_ = task_chain[i]
-        write_event, _ ,_ = task_chain[i+1]
-        if read_event.id > write_event.id or read_event.get_trigger_time(0) >= write_event.get_trigger_time(0):
-            return False
-    return True
+# def is_valid_chain(task_chain):
+#     return True
+
+# def find_valid_task_chains(tasks):
+#     valid_chains = []
+#     for instance in range(20):  # 假设实例序号不超过99
+#         task_chain = []
+#         last_write_time = -float('inf')
+#         for task in tasks:
+#             read_event = task.read_event
+#             write_event = task.write_event
+#             while True:
+#                 read_time = read_event.get_trigger_time(instance)
+#                 write_time = write_event.get_trigger_time(instance)
+#                 if read_time > last_write_time:
+#                     break
+#                 instance += 1
+#             if instance >= 100:
+#                 break
+#             task_chain.append((read_event, read_time, instance))
+#             task_chain.append((write_event, write_time, instance))
+#             last_write_time = write_time
+
+#         # 检查构建的任务链是否有效
+#         if is_valid_chain(task_chain) and len(task_chain) == len(tasks) * 2:
+#             valid_chains.append(task_chain)
+
+#     return valid_chains
 
 def find_valid_task_chains(tasks):
     valid_chains = []
-    for instance in range(20):  # 假设实例序号不超过99
+    for start_instance in range(10):  # 从不同的起始实例编号开始
         task_chain = []
         last_write_time = -float('inf')
         for task in tasks:
             read_event = task.read_event
             write_event = task.write_event
+
+            # 从当前起始实例编号开始
+            read_instance = start_instance
             while True:
-                read_time = read_event.get_trigger_time(instance)
-                write_time = write_event.get_trigger_time(instance)
-                if read_time > last_write_time:
+                read_time = read_event.get_trigger_time(read_instance)
+                if read_time >= last_write_time:
                     break
-                instance += 1
-            if instance >= 100:
+                read_instance += 1
+                if read_instance >= 100:  # 防止无限循环
+                    break
+
+            # 如果没有找到合适的读事件实例编号，跳过当前尝试
+            if read_instance >= 100:
                 break
-            task_chain.append((read_event, read_time, instance))
-            task_chain.append((write_event, write_time, instance))
+
+            # 找到第一个满足条件的写事件实例编号
+            write_instance = read_instance  # 从读事件的实例编号开始
+            while True:
+                write_time = write_event.get_trigger_time(write_instance)
+                if write_time >= read_time:  # 写事件时间必须晚于读事件时间
+                    break
+                write_instance += 1
+                if write_instance >= 100:  # 防止无限循环
+                    break
+
+            # 如果没有找到合适的写事件实例编号，跳过当前尝试
+            if write_instance >= 100:
+                break
+
+            task_chain.append((read_event, read_time, read_instance))
+            task_chain.append((write_event, write_time, write_instance))
             last_write_time = write_time
 
-        # 检查构建的任务链是否有效
-        if is_valid_chain(task_chain) and len(task_chain) == len(tasks) * 2:
+        # 检查生成的任务链是否有效
+        if len(task_chain) == len(tasks) * 2:
             valid_chains.append(task_chain)
 
     return valid_chains
-
-
-
 
 # init
 print("================INIT====================")
@@ -158,7 +197,7 @@ print("================INIT====================")
 #     task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
 #     tasks.append(task)
 
-tasks = RandomEvent(num_tasks=5, min_period=3, max_period=8, 
+tasks = RandomEvent(num_tasks=3, min_period=3, max_period=5, 
                                     min_offset=0, max_offset=4, min_jitter=0, max_jitter=0).tasks 
 # tasks = random_event_generator.generate_events_tasks()
 valid_task_chains = find_valid_task_chains(tasks)
