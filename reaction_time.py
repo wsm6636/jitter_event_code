@@ -141,6 +141,7 @@ def calculate_max_reaction_time(valid_chains):
     return max_reaction_time
 
 
+
 def write_results_to_file(tasks, valid_chains):
     # 获取当前时间戳
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -166,7 +167,35 @@ def write_results_to_file(tasks, valid_chains):
                 file.write(f"   Reaction Time: {task_chain[-1][1] - task_chain[0][1] + task_chain[0][0].period:.2f}\n")
                 file.write(f"\n")
         file.write(f"Maximum Reaction Time for all task chains: {max_reaction_time:.2f}\n")
+        file.write(f"Global Maximum Reaction Time: {global_max_reaction_time:.2f}\n")
     print(f"Results written to {filename}")
+
+
+
+def calculate_reaction_time(task_chain):
+    first_read_event = task_chain[0]
+    last_write_event = task_chain[-1]
+    return last_write_event[1] - first_read_event[1] + first_read_event[0].period
+
+def objective_function(x):
+    return -calculate_reaction_time(x)  # 负号用于将最大化问题转换为最小化问题
+
+def take_step(x):
+    new_x = x.copy()
+    i = random.randint(0, len(x) // 3 - 1)
+    new_x[3*i + 2] = random.randint(0, 99)  # 随机改变实例编号
+    return new_x
+
+
+def maximize_reaction_time(valid_chains):
+    if not valid_chains:
+        return 0
+    initial_task_chain = valid_chains[0]
+    
+    result = basinhopping(objective_function, initial_task_chain, niter=200, take_step=take_step, niter_success=50)
+    max_reaction_time = -result.fun  # 负号用于将最小化结果转换为最大化结果
+    return max_reaction_time
+
 
 
 # init
@@ -175,13 +204,9 @@ print("================INIT====================")
 
 tasks = RandomEvent(num_tasks=3, min_period=3, max_period=8, 
                                     min_offset=0, max_offset=5, min_jitter=0, max_jitter=2).tasks 
-valid_task_chains = find_valid_task_chains(tasks)
-max_reaction_time = calculate_max_reaction_time(valid_task_chains)
-
-# for i, task_chain in enumerate(valid_task_chains):
-#     print(f"Valid Task Chain {i}:")
-#     for j, (event, time, instance) in enumerate(task_chain):
-#         print(f"  Event {j}: {event.event_type}_{event.id}_{instance} at {time:.2f}")
+valid_chains = find_valid_task_chains(tasks)
+max_reaction_time = calculate_max_reaction_time(valid_chains)
+global_max_reaction_time = maximize_reaction_time(valid_chains)
 
 # 将结果写入文件
-write_results_to_file(tasks, valid_task_chains)
+write_results_to_file(tasks, valid_chains)
