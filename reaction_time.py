@@ -187,8 +187,8 @@ print("================INIT====================")
 #     task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
 #     tasks.append(task)
 
-tasks = RandomEvent(num_tasks=5, min_period=3, max_period=8, 
-                                    min_offset=0, max_offset=5, min_jitter=0, max_jitter=0).tasks 
+tasks = RandomEvent(num_tasks=3, min_period=3, max_period=8, 
+                                    min_offset=0, max_offset=5, min_jitter=0, max_jitter=2).tasks 
 # tasks = random_event_generator.generate_events_tasks()
 valid_task_chains = find_valid_task_chains(tasks)
 
