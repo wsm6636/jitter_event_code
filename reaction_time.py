@@ -130,7 +130,15 @@ def find_valid_task_chains(tasks):
     return valid_chains
 
 
-
+def calculate_max_reaction_time(valid_chains):
+    max_reaction_time = 0
+    for chain in valid_chains:
+        first_read_event = chain[0]
+        last_write_event = chain[-1]
+        reaction_time = last_write_event[1] - first_read_event[1] + first_read_event[0].period
+        max_reaction_time = max(max_reaction_time, reaction_time)
+    print(f"Max reaction time: {max_reaction_time:.2f}")
+    return max_reaction_time
 
 
 def write_results_to_file(tasks, valid_chains):
@@ -155,43 +163,20 @@ def write_results_to_file(tasks, valid_chains):
                 file.write(f"Valid Task Chain {i}:\n")
                 for j, (event, time, instance) in enumerate(task_chain):
                     file.write(f"   Event {j}: {event.event_type}_{event.id}_{instance} at {time:.2f}\n")
-                file.write("\n")
+                file.write(f"   Reaction Time: {task_chain[-1][1] - task_chain[0][1] + task_chain[0][0].period:.2f}\n")
+                file.write(f"\n")
+        file.write(f"Maximum Reaction Time for all task chains: {max_reaction_time:.2f}\n")
     print(f"Results written to {filename}")
 
 
 # init
 print("================INIT====================")
 
-# event_r = [
-            
-#             Event(event_type="read", period=5, offset=0, jitter=0),
-#             Event(event_type="read", period=3, offset=0, jitter=0),
-#             Event(event_type="read", period=4, offset=0, jitter=0),
-#             ]
-
-# event_w = [
-            
-#             Event(event_type="write", period=5, offset=4, jitter=0),
-#             Event(event_type="write", period=3, offset=3, jitter=0),
-#             Event(event_type="write", period=4, offset=4, jitter=0),   
-#             ]
-
-# for i, (r, w) in enumerate(zip(event_r, event_w)):
-#     r.id = i
-#     w.id = i
-
-# # original chain
-# n = len(event_r)
-# tasks = []
-# for i in range(n):
-#     task = Task(read_event=event_r[i], write_event=event_w[i], id=i)
-#     tasks.append(task)
 
 tasks = RandomEvent(num_tasks=3, min_period=3, max_period=8, 
                                     min_offset=0, max_offset=5, min_jitter=0, max_jitter=2).tasks 
-# tasks = random_event_generator.generate_events_tasks()
 valid_task_chains = find_valid_task_chains(tasks)
-
+max_reaction_time = calculate_max_reaction_time(valid_task_chains)
 
 # for i, task_chain in enumerate(valid_task_chains):
 #     print(f"Valid Task Chain {i}:")

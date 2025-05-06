@@ -1,0 +1,102 @@
+All Events and Tasks Information:
+Task 0:
+   Read Event: Event(type=read,id=0, period=4, offset=1, jitter=2)
+   Write Event: Event(type=write,id=0, period=4, offset=4, jitter=2)
+Task 1:
+   Read Event: Event(type=read,id=1, period=7, offset=3, jitter=1)
+   Write Event: Event(type=write,id=1, period=7, offset=7, jitter=1)
+Task 2:
+   Read Event: Event(type=read,id=2, period=8, offset=1, jitter=2)
+   Write Event: Event(type=write,id=2, period=8, offset=8, jitter=2)
+
+Valid Task Chain 0:
+   Event 0: read_0_0 at 1.28
+   Event 1: write_0_0 at 4.05
+   Event 2: read_1_1 at 10.08
+   Event 3: write_1_1 at 14.06
+   Event 4: read_2_2 at 17.34
+   Event 5: write_2_2 at 25.50
+   Reaction Time: 28.21
+
+Valid Task Chain 1:
+   Event 0: read_0_1 at 5.12
+   Event 1: write_0_1 at 8.80
+   Event 2: read_1_1 at 10.36
+   Event 3: write_1_1 at 14.24
+   Event 4: read_2_2 at 17.34
+   Event 5: write_2_2 at 25.99
+   Reaction Time: 24.87
+
+Valid Task Chain 2:
+   Event 0: read_0_2 at 10.76
+   Event 1: write_0_2 at 13.42
+   Event 2: read_1_2 at 17.03
+   Event 3: write_1_2 at 21.77
+   Event 4: read_2_3 at 26.85
+   Event 5: write_2_3 at 33.32
+   Reaction Time: 26.56
+
+Valid Task Chain 3:
+   Event 0: read_0_3 at 13.73
+   Event 1: write_0_3 at 17.76
+   Event 2: read_1_3 at 24.70
+   Event 3: write_1_3 at 28.62
+   Event 4: read_2_4 at 34.49
+   Event 5: write_2_4 at 40.40
+   Reaction Time: 30.67
+
+Valid Task Chain 4:
+   Event 0: read_0_4 at 18.17
+   Event 1: write_0_4 at 21.53
+   Event 2: read_1_4 at 31.61
+   Event 3: write_1_4 at 35.69
+   Event 4: read_2_5 at 41.12
+   Event 5: write_2_5 at 48.92
+   Reaction Time: 34.76
+
+Valid Task Chain 5:
+   Event 0: read_0_5 at 21.78
+   Event 1: write_0_5 at 25.09
+   Event 2: read_1_5 at 38.21
+   Event 3: write_1_5 at 42.56
+   Event 4: read_2_6 at 49.16
+   Event 5: write_2_6 at 56.47
+   Reaction Time: 38.69
+
+Valid Task Chain 6:
+   Event 0: read_0_6 at 26.87
+   Event 1: write_0_6 at 29.90
+   Event 2: read_1_6 at 45.08
+   Event 3: write_1_6 at 49.55
+   Event 4: read_2_7 at 58.46
+   Event 5: write_2_7 at 65.28
+   Reaction Time: 42.41
+
+Valid Task Chain 7:
+   Event 0: read_0_7 at 30.23
+   Event 1: write_0_7 at 32.21
+   Event 2: read_1_7 at 52.56
+   Event 3: write_1_7 at 56.57
+   Event 4: read_2_7 at 58.96
+   Event 5: write_2_7 at 64.23
+   Reaction Time: 38.00
+
+Valid Task Chain 8:
+   Event 0: read_0_8 at 34.12
+   Event 1: write_0_8 at 37.71
+   Event 2: read_1_8 at 59.42
+   Event 3: write_1_8 at 63.03
+   Event 4: read_2_8 at 66.65
+   Event 5: write_2_8 at 72.61
+   Reaction Time: 42.48
+
+Valid Task Chain 9:
+   Event 0: read_0_9 at 37.05
+   Event 1: write_0_9 at 40.96
+   Event 2: read_1_9 at 66.87
+   Event 3: write_1_9 at 70.03
+   Event 4: read_2_9 at 73.11
+   Event 5: write_2_9 at 80.38
+   Reaction Time: 47.33
+
+Maximum Reaction Time for all task chains: 47.33
