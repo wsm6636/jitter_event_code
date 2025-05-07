@@ -25,10 +25,13 @@ class Event:
         self.period = period
         self.offset = offset
         self.jitter = jitter
+        self.read_time = 0
+        self.write_time = 0
         print(f"event {self.event_type}_{self.id},  period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
     def __repr__(self):
         return (f"Event(type={self.event_type},id={self.id}, period={self.period}, "
-            f"offset={self.offset}, jitter={self.jitter})")
+            f"offset={self.offset}, jitter={self.jitter}, read_time={self.read_time:.2f}, "
+            f"write_time={self.write_time:.2f}")
     def get_trigger_time(self, j):
         random_jitter = random.uniform(0, self.jitter)
         tj = j * self.period + self.offset + random_jitter
@@ -119,6 +122,8 @@ def find_valid_task_chains(tasks):
             write_instance = read_instance  # 从读事件的实例编号开始
             write_time = write_event.get_trigger_time(write_instance)
 
+            read_event.read_time = read_time
+            write_event.write_time = write_time
             task_chain.append((read_event, read_time, read_instance))
             task_chain.append((write_event, write_time, write_instance))
             last_write_time = write_time
@@ -173,27 +178,29 @@ def write_results_to_file(tasks, valid_chains):
 
 
 def calculate_reaction_time(task_chain):
-    first_read_event = task_chain[0]
-    last_write_event = task_chain[-1]
-    return last_write_event[1] - first_read_event[1] + first_read_event[0].period
+    first_read_time = task_chain[1]
+    first_read_period = task_chain[0]
+    last_write_time = task_chain[-1]
+    return last_write_time - first_read_time + first_read_period
 
 def objective_function(x):
     return -calculate_reaction_time(x)  # 负号用于将最大化问题转换为最小化问题
 
-def take_step(x):
-    new_x = x.copy()
-    i = random.randint(0, len(x) // 3 - 1)
-    new_x[3*i + 2] = random.randint(0, 99)  # 随机改变实例编号
-    return new_x
-
-
 def maximize_reaction_time(valid_chains):
+    initial_x = []
     if not valid_chains:
         return 0
     initial_task_chain = valid_chains[0]
+
+    for event, _, _ in initial_task_chain:
+        initial_x.append(event.period,)  # 提取周期
+        initial_x.append(event.read_time)  # 提取读时间
+        initial_x.append(event.write_time) 
+    print(f"Initial task chain: {initial_x}")
     
-    result = basinhopping(objective_function, initial_task_chain, niter=200, take_step=take_step, niter_success=50)
+    result = basinhopping(objective_function, initial_x, niter=10, T=1.0, stepsize=1)
     max_reaction_time = -result.fun  # 负号用于将最小化结果转换为最大化结果
+    print(f"basinhopping Maximized reaction time: {max_reaction_time:.2f}")
     return max_reaction_time
 
 
@@ -209,4 +216,4 @@ max_reaction_time = calculate_max_reaction_time(valid_chains)
 global_max_reaction_time = maximize_reaction_time(valid_chains)
 
 # 将结果写入文件
-write_results_to_file(tasks, valid_chains)
+# write_results_to_file(tasks, valid_chains)
