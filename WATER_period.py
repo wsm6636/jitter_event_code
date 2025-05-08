@@ -797,7 +797,7 @@ def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
         objective1,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=100,
+        niter=10,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
@@ -807,7 +807,7 @@ def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
         objective2,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=100,
+        niter=10,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
