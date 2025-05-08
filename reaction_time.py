@@ -877,15 +877,15 @@ max_jitter = 3  # 最大抖动
 all_final_e2e_max = []
 results_function1 = []
 results_function2 = []
-log1 = True
-log2 = True
+log1 = log2 = False
+
 
 print(f"num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}, max_offset: {max_offset}, max_jitter: {max_jitter}")
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file1 = f"OTHER_basinhopping_{timestamp}.txt"
-log_file2 = f"AG_basinhopping_{timestamp}.txt"
-fig_file = f"box_{timestamp}.png"
+log_file1 = f"OTHER_{num_tasks}_{timestamp}.txt"
+log_file2 = f"AG_{num_tasks}_{timestamp}.txt"
+fig_file = f"box_{num_tasks}_{timestamp}.png"
 
 print("================REACTION TIME ANALYSIS====================")
 max_reaction_time1,max_reaction_time2 = maximize_reaction_time(num_tasks, min_period, max_period, max_offset, max_jitter)
