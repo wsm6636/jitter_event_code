@@ -1,0 +1,849 @@
+==================Iteration AG: 0======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 1======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 2======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 3======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 4======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 5======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 6======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 7======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 8======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 9======================
+final_e2e: max_reaction_time: 41
+final_r: period: 8, offset: -5, jitter: 9
+final_w: period: 8, offset: 20, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 10======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 11======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 12======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 13======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 14======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 15======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 16======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 17======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 18======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 19======================
+final_e2e: max_reaction_time: 40
+final_r: period: 8, offset: -5, jitter: 8
+final_w: period: 8, offset: 20, jitter: 7
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=8, offset=0, jitter=0
+   Task 1: write_1, period=8, offset=8, jitter=0
+   Task 2: read_2, period=5, offset=0, jitter=1
+   Task 2: write_2, period=5, offset=5, jitter=1
+==================Iteration AG: 20======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 21======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 22======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 23======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 24======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 25======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 26======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 27======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 28======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 29======================
+final_e2e: max_reaction_time: 39
+final_r: period: 8, offset: -2, jitter: 6
+final_w: period: 8, offset: 19, jitter: 10
+Tasks:
+   Task 0: read_0, period=5, offset=0, jitter=0
+   Task 0: write_0, period=5, offset=5, jitter=0
+   Task 1: read_1, period=8, offset=0, jitter=1
+   Task 1: write_1, period=8, offset=8, jitter=1
+   Task 2: read_2, period=5, offset=0, jitter=2
+   Task 2: write_2, period=5, offset=5, jitter=2
+==================Iteration AG: 30======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 31======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 32======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 33======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 34======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 35======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 36======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 37======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 38======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 39======================
+final_e2e: max_reaction_time: 40
+final_r: period: 9, offset: -4, jitter: 8
+final_w: period: 9, offset: 23, jitter: 4
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=1
+   Task 0: write_0, period=6, offset=6, jitter=1
+   Task 1: read_1, period=9, offset=0, jitter=0
+   Task 1: write_1, period=9, offset=9, jitter=0
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 40======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 41======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 42======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 43======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 44======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 45======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 46======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 47======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 48======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 49======================
+final_e2e: max_reaction_time: 43
+final_r: period: 9, offset: -5, jitter: 11
+final_w: period: 9, offset: 23, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=9, offset=0, jitter=1
+   Task 1: write_1, period=9, offset=9, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 50======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 51======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 52======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 53======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -4, jitter: 11
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 54======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 55======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 56======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 57======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 58======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=1, jitter=1
+   Task 2: write_2, period=5, offset=6, jitter=1
+==================Iteration AG: 59======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 60======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 61======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 62======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -4, jitter: 11
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=2
+   Task 0: write_0, period=6, offset=7, jitter=2
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 63======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 64======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 65======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 66======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 67======================
+final_e2e: max_reaction_time: 47
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 24, jitter: 8
+Tasks:
+   Task 0: read_0, period=6, offset=1, jitter=3
+   Task 0: write_0, period=6, offset=7, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=1
+   Task 2: write_2, period=5, offset=7, jitter=1
+==================Iteration AG: 68======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 69======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 70======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 71======================
+final_e2e: max_reaction_time: 45
+final_r: period: 10, offset: -4, jitter: 11
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=2
+   Task 0: write_0, period=6, offset=6, jitter=2
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 72======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 73======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 74======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 75======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Iteration AG: 76======================
+final_e2e: max_reaction_time: 46
+final_r: period: 10, offset: -5, jitter: 13
+final_w: period: 10, offset: 25, jitter: 6
+Tasks:
+   Task 0: read_0, period=6, offset=0, jitter=3
+   Task 0: write_0, period=6, offset=6, jitter=3
+   Task 1: read_1, period=10, offset=0, jitter=1
+   Task 1: write_1, period=10, offset=10, jitter=1
+   Task 2: read_2, period=5, offset=2, jitter=0
+   Task 2: write_2, period=5, offset=7, jitter=0
+==================Final AG======================
+AG Maximized reaction time: 47.00

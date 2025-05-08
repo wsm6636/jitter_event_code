@@ -815,41 +815,53 @@ def plot_reaction_time_distribution(results1, results2, title="Max Reaction Time
     results2 (list): 第二个目标函数的结果列表。
     title (str): 图表的标题，默认为 "Max Reaction Time Distribution"。
     """
+
     # 将结果转换为适合绘图的格式
     data = {
-        "Objective Function 1": results1,
-        "Objective Function 2": results2
+        "OTHER": results1,
+        "AG2": results2 if results2 else [0]
     }
 
-    # 创建箱形图
-    plt.figure(figsize=(10, 6))
-    sns.boxplot(data=data)
-    plt.title(title)
-    plt.ylabel("Max Reaction Time")
-    plt.xlabel("Objective Function")
-
     # 计算统计信息
-    stats = {
-        "Objective Function 1": {
-            "max": np.max(results1),
-            "min": np.min(results1),
-            "mean": np.mean(results1)
-        },
-        "Objective Function 2": {
+    OTHER = {
+        "max": np.max(results1),
+        "min": np.min(results1),
+        "mean": np.mean(results1)
+    }
+    if not results2:
+        AG2 = {"max": 0, "min": 0, "mean": 0}
+    else:
+        AG2 = {
             "max": np.max(results2),
             "min": np.min(results2),
             "mean": np.mean(results2)
         }
-    }
+    # 创建箱形图
+    plt.figure(figsize=(12, 6))
+    sns.boxplot(data=data)
+    plt.title(title)
+    plt.ylabel("Max Reaction Time")
+    plt.xlabel(f"num_tasks {num_tasks}\n"
+        f"OTHER (Max: {OTHER['max']:.2f}, Min: {OTHER['min']:.2f}, Mean: {OTHER['mean']:.2f}), "
+        f"AG2 (Max: {AG2['max']:.2f}, Min: {AG2['min']:.2f}, Mean: {AG2['mean']:.2f})")
+
 
     # 添加标注
-    for i, (label, values) in enumerate(stats.items()):
+    stats = [OTHER, AG2]  # 将两个目标函数的统计信息存储在一个列表中
+    for i, values in enumerate(stats):
         max_val = values["max"]
         min_val = values["min"]
         mean_val = values["mean"]
+        
+        # 添加最大值标注
         plt.text(i, max_val, f"Max: {max_val:.2f}", ha="center", va="bottom", fontsize=10, color="blue")
+        
+        # 添加最小值标注
         plt.text(i, min_val, f"Min: {min_val:.2f}", ha="center", va="top", fontsize=10, color="red")
+        
+        # 添加平均值标注
         plt.text(i, mean_val, f"Mean: {mean_val:.2f}", ha="center", va="bottom", fontsize=10, color="black")
+
     plt.savefig(fig_file)
     plt.show()
 
@@ -865,8 +877,8 @@ max_jitter = 3  # 最大抖动
 all_final_e2e_max = []
 results_function1 = []
 results_function2 = []
-log1 = False
-log2 = False
+log1 = True
+log2 = True
 
 print(f"num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}, max_offset: {max_offset}, max_jitter: {max_jitter}")
 
@@ -880,15 +892,13 @@ max_reaction_time1,max_reaction_time2 = maximize_reaction_time(num_tasks, min_pe
 print(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}")
 print(f"AG Maximized reaction time: {max_reaction_time2:.2f}")
 
-with open(log_file1, "a") as file:
-    file.write(f"==================Final OTHER======================\n")
-    file.write(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}\n")
-
-with open(log_file2, "a") as file:  
-    file.write(f"==================Final AG======================\n")
-    file.write(f"AG Maximized reaction time: {max_reaction_time2:.2f}\n")
-
 if log1 is True and log2 is True:
+    with open(log_file1, "a") as file:
+        file.write(f"==================Final OTHER======================\n")
+        file.write(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}\n")
+    with open(log_file2, "a") as file:  
+        file.write(f"==================Final AG======================\n")
+        file.write(f"AG Maximized reaction time: {max_reaction_time2:.2f}\n")
     print(f"Results written to {log_file1} and {log_file2}")
 
 print(f"results_function1: {results_function1}, results_function2: {results_function2}\n")
