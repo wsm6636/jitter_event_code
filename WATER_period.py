@@ -606,6 +606,7 @@ def chain_min_period(tasks):
 
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
+    # final_combine_result = chain_asc(tasks)
     if final_combine_result:
         final_e2e, final_r, final_w, final_task = final_combine_result
         # print(
@@ -730,6 +731,7 @@ def objective_function2(x, num_tasks, periods, max_offset, max_jitter):
         tasks.append(Task(read_event=read_event, write_event=write_event, id=i))
 
     our = our_chain(tasks)
+    
     if our is False:
         return 999
     else:
@@ -807,7 +809,7 @@ def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
         objective2,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=10,
+        niter=50,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
@@ -894,9 +896,9 @@ log1 = log2 = True
 print(f"num_tasks: {num_tasks}, max_offset: {max_offset}, max_jitter: {max_jitter}")
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file1 = f"OTHER_{num_tasks}_{timestamp}.txt"
-log_file2 = f"AG_{num_tasks}_{timestamp}.txt"
-fig_file = f"box_{num_tasks}_{timestamp}.png"
+log_file1 = f"no-jitter-free-10-50/OTHER_{num_tasks}_{timestamp}.txt"
+log_file2 = f"no-jitter-free-10-50/AG_{num_tasks}_{timestamp}.txt"
+fig_file = f"no-jitter-free-10-50/box_{num_tasks}_{timestamp}.png"
 
 print("================REACTION TIME ANALYSIS====================")
 max_reaction_time1,max_reaction_time2 = maximize_reaction_time(num_tasks, periods, max_offset, max_jitter)
