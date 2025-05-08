@@ -76,7 +76,7 @@ class RandomEvent:
             # 随机生成偏移量，确保偏移量小于周期
             read_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
             # LET
-            write_offset = period
+            write_offset = read_offset + period
             # write_offset = random.randint(self.min_offset, min(self.max_offset, period - 1))
             
             # 随机生成抖动
@@ -588,32 +588,6 @@ def write_results_to_file(tasks, valid_chains):
    print(f"Results written to {filename}")
 
 
-
-def calculate_reaction_time(task_chain):
-   first_read_time = task_chain[1]
-   first_read_period = task_chain[0]
-   last_write_time = task_chain[-1]
-   return last_write_time - first_read_time + first_read_period
-
-def objective_function(x):
-   return -calculate_reaction_time(x)  # 负号用于将最大化问题转换为最小化问题
-
-def maximize_reaction_time(valid_chains):
-   initial_x = []
-   if not valid_chains:
-      return 0
-   initial_task_chain = valid_chains[0]
-
-   for event, _, _ in initial_task_chain:
-      initial_x.append(event.period,)  # 提取周期
-      initial_x.append(event.read_time)  # 提取读时间
-      initial_x.append(event.write_time) 
-   print(f"Initial task chain: {initial_x}")
-   
-   result = basinhopping(objective_function, initial_x, niter=10, T=1.0, stepsize=1)
-   max_reaction_time = -result.fun  # 负号用于将最小化结果转换为最大化结果
-   print(f"basinhopping Maximized reaction time: {max_reaction_time:.2f}")
-   return max_reaction_time
 
 
 
