@@ -240,96 +240,6 @@ def effective_event(w, r):
     return (w_star, r_star)
 
 
-# Algorithm 2
-def combine(task1, task2):
-    r1 = task1.read_event
-    w1 = task1.write_event
-    r2 = task2.read_event
-    w2 = task2.write_event
-    #    print("================EFFECTIVE====================")
-    #    print(f"effective_event of  ({w1.event_type}{w1.id},{r2.event_type}{r2.id})")
-
-    result = effective_event(w1, r2)
-    if result:
-        (w1_star, r2_star) = result
-    elif w1.jitter != 0 or r2.jitter != 0:
-        #   print("==============TRY JITTER FREE==============")
-        if w1.jitter != 0 and r2.jitter == 0:
-            w1_free = jitter_free(w1)
-            result = effective_event(w1_free, r2)
-            if result:
-                # print("==============w1_free==============")
-                (w1_star, r2_star) = result
-                w1 = w1_free
-        elif w1.jitter == 0 and r2.jitter != 0:
-            r2_free = jitter_free(r2)
-            result = effective_event(w1, r2_free)
-            if result:
-                # print("==============r2_free==============")
-                (w1_star, r2_star) = result
-                r2 = r2_free
-        elif w1.jitter != 0 and r2.jitter != 0:
-            w1_free = jitter_free(w1)
-            r2_free = jitter_free(r2)
-            result = effective_event(w1_free, r2_free)
-            if result:
-                # print("==============w1_free, r2_free==============")
-                (w1_star, r2_star) = result
-                w1 = w1_free
-                r2 = r2_free
-    else:
-        # print("==========FAILED TO EFFECTIVE EVENT==========")
-        return False
-
-    # print(f"w_star : period: {w1_star.period}, offset: {w1_star.offset}, jitter: {w1_star.jitter}")
-    # print(f"r_star : period: {r2_star.period}, offset: {r2_star.offset}, jitter: {r2_star.jitter}")
-
-    # print(f"r1: period: {r1.period}, offset: {r1.offset}, jitter: {r1.jitter}")
-    # print(f"w1: period: {w1.period}, offset: {w1.offset}, jitter: {w1.jitter}")
-    # print(f"r2: period: {r2.period}, offset: {r2.offset}, jitter: {r2.jitter}")
-    # print(f"w2: period: {w2.period}, offset: {w2.offset}, jitter: {w2.jitter}")
-
-    T_star = w1_star.period  # line 2
-    if task1.period > task2.period:  # line 4
-        r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5
-        r_1_2_jitter = r1.jitter  # line 6
-        m2 = w2.offset - r2.offset - r2.jitter
-        M2 = w2.offset - r2.offset + w2.jitter  # line 7
-        w_1_2_offset = r2_star.offset + m2
-        w_1_2_jitter = r2_star.jitter + M2 - m2  # line 8
-    elif task1.period < task2.period:  # line 9
-        w_1_2_offset = w2.offset + r2_star.offset - r2.offset  # line 10
-        w_1_2_jitter = w2.jitter  # line 11
-        m1 = w1.offset - r1.offset - r1.jitter
-        M1 = w1.offset - r1.offset + w1.jitter  # line 12
-        r_1_2_offset = w1_star.offset - M1
-        r_1_2_jitter = w1_star.jitter + M1 - m1  # line 13
-    else:  # line 14
-        r_1_2_offset = r1.offset + w1_star.offset - w1.offset
-        r_1_2_jitter = r1.jitter
-        w_1_2_offset = w2.offset + r2_star.offset - r2.offset
-        w_1_2_jitter = w2.jitter
-
-    combined_id = f"{task1.id}_{task2.id}"
-    r_1_2 = Event(
-        id=combined_id,
-        event_type="read_combined",
-        period=T_star,
-        offset=r_1_2_offset,
-        jitter=r_1_2_jitter,
-    )  # line 19
-    w_1_2 = Event(
-        id=combined_id,
-        event_type="write_combined",
-        period=T_star,
-        offset=w_1_2_offset,
-        jitter=w_1_2_jitter,
-    )  # line 20
-    # print(f"period: {r_1_2.period}, offset: {r_1_2.offset}, jitter: {r_1_2.jitter}")
-    # print(f"period: {w_1_2.period}, offset: {w_1_2.offset}, jitter: {w_1_2.jitter}")
-    return (r_1_2, w_1_2)
-
-
 def combine_no_free_jitter(task1, task2):
     r1 = task1.read_event
     w1 = task1.write_event
@@ -384,17 +294,6 @@ def combine_no_free_jitter(task1, task2):
     return (r_1_2, w_1_2)
 
 
-# jitter-free Figure 2
-def jitter_free(event):
-    if event.jitter == 0:
-        return event
-    #   print(f"{event.event_type}{event.id} is zero jitter.")
-    else:
-        event.jitter = 0
-        event.offset = event.offset + event.jitter
-    return event
-
-
 # e2e
 def e2e(r, w):
     #    print("================E2E====================")
@@ -402,48 +301,6 @@ def e2e(r, w):
     max_e2e = w.offset + w.jitter - r.offset
     #    print(f"min_e2e: {min_e2e}, max_e2e: {max_e2e}")
     return (min_e2e, max_e2e)
-
-
-# chain: sort by asc index
-def chain_asc(tasks):
-    #    print("================CHAIN_ASC====================")
-    n = len(tasks)
-    current_task = tasks[0]
-
-    for i in range(1, n):
-        #   print(f"================Combining task {current_task.id} and {tasks[i].id}====================")
-        result = combine(current_task, tasks[i])
-        if result is False:
-            #  print("================CHAIN_ASC END====================")
-            # print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
-            return False
-        else:
-            (r, w) = result
-            #  print("================UPDATE combined task====================")
-            current_task = Task(read_event=r, write_event=w, id=r.id)
-
-    return e2e(r, w), r, w, current_task
-
-
-# chain: sort by desc index
-def chain_desc(tasks):
-    #    print("================CHAIN_DESC====================")
-    n = len(tasks)
-    current_task = tasks[-1]
-
-    for i in range(n - 2, -1, -1):
-        #   print(f"================Combining task {tasks[i].id} and {current_task.id}====================")
-        result = combine(tasks[i], current_task)
-        if result is False:
-            #  print("================CHAIN_DESC END====================")
-            # print(f"Failed to combine task {tasks[i].id} and task {current_task.id}.")
-            return False
-        else:
-            (r, w) = result
-            #  print("================UPDATE combined task====================")
-            current_task = Task(read_event=r, write_event=w, id=r.id)
-
-    return e2e(r, w), r, w, current_task
 
 
 def chain_asc_no_free_jitter(tasks):
@@ -466,147 +323,8 @@ def chain_asc_no_free_jitter(tasks):
     return e2e(r, w), r, w, current_task
 
 
-# chain max period order
-def chain_max_period(tasks):
-    #    print("================CHAIN_MAX_PERIOD====================")
-    max_period_task = max(tasks, key=lambda x: x.period)  # taski
-    max_period_index = tasks.index(max_period_task)
-    #    print(f"max_period = {max_period_task.period}, task_id = {max_period_task.id}")
-
-    # Grouping
-    predecessor_group = tasks[: max_period_index + 1]  # task0~i
-    successor_group = tasks[max_period_index:]  # taski~n
-    final_tasks = []
-    final_e2es = []
-    # task0~i chain
-    #    print("===============Processing Predecessor Group (desc)===============")
-    if len(predecessor_group) > 1:
-        predecessor_result = chain_desc(predecessor_group)
-        predecessor_task_e2e, r_predecessor, w_predecessor, predecessor_task = (
-            predecessor_result
-        )
-        final_tasks.append(predecessor_task)
-        final_e2es.append(predecessor_task_e2e)
-    else:
-        print(f"predecessor chain is only one task.")
-
-    # taski~n chain
-    #    print("===============Processing Successor Group (asc)===============")
-    if len(successor_group) > 1:
-        successor_result = chain_asc(successor_group)
-        successor_task_e2e, r_successor, w_successor, successor_task = successor_result
-        final_tasks.append(successor_task)
-        final_e2es.append(successor_task_e2e)
-    else:
-        print(f"successor chain is only one task.")
-
-    # print("===============Combining Predecessor and Successor Results===============")
-    if len(final_tasks) == 1:
-        # print(
-        #     f"================Final: Only one task in the final chain================"
-        # )
-        # print(
-        #     f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}, max_reaction_time: {final_e2es[0][1] + final_tasks[0].read_event.period}, min_reaction_time: {final_e2es[0][0] + final_tasks[0].read_event.period}"
-        # )
-        # print(
-        #     f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}"
-        # )
-        # print(
-        #     f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}"
-        # )
-        return True
-    elif len(final_tasks) > 1:
-        final_combine_result = chain_asc(final_tasks)
-        if final_combine_result:
-            final_e2e, final_r, final_w, final_task = final_combine_result
-            # print("================Final Combined Result====================")
-            # print(
-            #     f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}, max_reaction_time: {final_e2e[1] + final_r.period}, min_reaction_time: {final_e2e[0] + final_r.period}"
-            # )
-            # print(
-            #     f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}"
-            # )
-            # print(
-            #     f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}"
-            # )
-            return True
-    else:
-        #   print("Failed to combine predecessor and successor results.")
-        return False
-
-
-# chain min period order
-def chain_min_period(tasks):
-    #    print("================CHAIN_MIN_PERIOD====================")
-    min_period_task = min(tasks, key=lambda x: x.period)  # taski
-    min_period_index = tasks.index(min_period_task)
-    #    print(f"min_period = {min_period_task.period}, task_id = {min_period_task.id}")
-
-    # Grouping
-    predecessor_group = tasks[: min_period_index + 1]  # task0~i
-    successor_group = tasks[min_period_index:]  # taski~n
-    final_tasks = []
-    final_e2es = []
-    # task0~i chain
-    #    print("===============Processing Predecessor Group (desc)===============")
-    if len(predecessor_group) > 1:
-        predecessor_result = chain_desc(predecessor_group)
-        predecessor_task_e2e, r_predecessor, w_predecessor, predecessor_task = (
-            predecessor_result
-        )
-        final_tasks.append(predecessor_task)
-        final_e2es.append(predecessor_task_e2e)
-    else:
-        print(f"predecessor chain is only one task.")
-
-    # taski~n chain
-    #    print("===============Processing Successor Group (asc)===============")
-    if len(successor_group) > 1:
-        successor_result = chain_asc(successor_group)
-        successor_task_e2e, r_successor, w_successor, successor_task = successor_result
-        final_tasks.append(successor_task)
-        final_e2es.append(successor_task_e2e)
-    else:
-        print(f"successor chain is only one task.")
-
-    # print("===============Combining Predecessor and Successor Results===============")
-    if len(final_tasks) == 1:
-        # print(
-        #     f"================Final: Only one task in the final chain================"
-        # )
-        # print(
-        #     f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}, max_reaction_time: {final_e2es[0][1] + final_tasks[0].read_event.period}, min_reaction_time: {final_e2es[0][0] + final_tasks[0].read_event.period}"
-        # )
-        # print(
-        #     f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}"
-        # )
-        # print(
-        #     f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}"
-        # )
-        return True
-    elif len(final_tasks) > 1:
-        final_combine_result = chain_asc(final_tasks)
-        if final_combine_result:
-            final_e2e, final_r, final_w, final_task = final_combine_result
-            # print("================Final Combined Result====================")
-            # print(
-            #     f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}, max_reaction_time: {final_e2e[1] + final_r.period}, min_reaction_time: {final_e2e[0] + final_r.period}"
-            # )
-            # print(
-            #     f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}"
-            # )
-            # print(
-            #     f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}"
-            # )
-            return True
-    else:
-        # print("Failed to combine predecessor and successor results.")
-        return False
-
-
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
-    # final_combine_result = chain_asc(tasks)
     if final_combine_result:
         final_e2e, final_r, final_w, final_task = final_combine_result
         # print(
@@ -622,10 +340,6 @@ def our_chain(tasks):
     else:
         #   print("Failed to combine predecessor and successor results.")
         return False
-
-
-# def is_valid_chain(task_chain):
-#     return True
 
 
 def find_valid_task_chains(tasks):
@@ -799,7 +513,7 @@ def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
         objective1,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=10,
+        niter=200,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
@@ -809,7 +523,7 @@ def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
         objective2,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=50,
+        niter=200,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
@@ -896,9 +610,9 @@ log1 = log2 = True
 print(f"num_tasks: {num_tasks}, max_offset: {max_offset}, max_jitter: {max_jitter}")
 
 timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file1 = f"no-jitter-free-10-50/OTHER_{num_tasks}_{timestamp}.txt"
-log_file2 = f"no-jitter-free-10-50/AG_{num_tasks}_{timestamp}.txt"
-fig_file = f"no-jitter-free-10-50/box_{num_tasks}_{timestamp}.png"
+log_file1 = f"no-jitter-free-200-200/OTHER_{num_tasks}_{timestamp}.txt"
+log_file2 = f"no-jitter-free-200-200/AG_{num_tasks}_{timestamp}.txt"
+fig_file = f"no-jitter-free-200-200/box_{num_tasks}_{timestamp}.png"
 
 print("================REACTION TIME ANALYSIS====================")
 max_reaction_time1,max_reaction_time2 = maximize_reaction_time(num_tasks, periods, max_offset, max_jitter)
