@@ -26,7 +26,7 @@ class Event:
         self.period = period
         self.offset = offset
         self.maxjitter = maxjitter
-        self.random_jitter = random.uniform(0, self.maxjitter)
+        self.random_jitter = 0
 
     def __repr__(self):
         return (
@@ -440,13 +440,19 @@ def maximize_reaction_time(tasks, niter):
         return objective_function(x, tasks)
     def accept(f_new, x_new, f_old, x_old, **kwargs):
         return accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
+    
+    def schedule(iteration, niter):
+        T = 1.0 * (0.001 / 1.0) ** (iteration / niter)
+        stepsize = 0.1 * (0.01 / 0.1) ** (iteration / niter)
+        return T, stepsize
+
 
     result = basinhopping(
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
         niter=niter,
-        T=1.0,
+        T=schedule(0, niter)[0],  
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
     )
