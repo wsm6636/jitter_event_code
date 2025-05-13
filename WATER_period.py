@@ -37,7 +37,6 @@ class Event:
     def get_trigger_time(self, j):
         # random_jitter = random.uniform(0, self.maxjitter)
         tj = j * self.period + self.offset + self.random_jitter
-        # print(f"event {self.event_type}_{self.id}, j: {j}, trigger_time: {tj:.2f}.")
         return tj
 
 
@@ -346,21 +345,26 @@ def find_valid_task_chains(tasks):
         write_event = task.write_event
 
         # 从当前起始实例编号开始
-        read_instance = objective_function.iteration
+        if task is tasks[0]:
+            read_instance = objective_function.iteration
+            # write_instance = objective_function.iteration
+        else:
+            read_instance = 0
+            # write_instance = 0
         while True:
             read_time = read_event.get_trigger_time(read_instance)
             if read_time >= last_write_time:
                 break
             read_instance += 1
 
-        # 找到第一个满足条件的写事件实例编号
-        write_instance = read_instance  # 从读事件的实例编号开始
-        write_time = write_event.get_trigger_time(write_instance)
+        write_time = write_event.get_trigger_time(read_instance)
 
         read_event.read_time = read_time
         write_event.write_time = write_time
+
         task_chain.append((read_event, read_time, read_instance))
-        task_chain.append((write_event, write_time, write_instance))
+        task_chain.append((write_event, write_time, read_instance))
+
         last_write_time = write_time
 
     # 检查生成的任务链是否有效
@@ -382,8 +386,6 @@ def calculate_reaction_time(task_chain):
     first_read_time = task_chain[0][1]
     last_write_time = task_chain[-1][1]
     reaction_time = last_write_time - first_read_time +  task_chain[0][0].period
-    # print(f"reaction_time: {reaction_time:.2f}, first_read_time: {first_read_time:.2f}, "
-    #       f"last_write_time: {last_write_time:.2f}, period: {task_chain[0][0].period:.2f}")
     
     return reaction_time
 
@@ -395,6 +397,7 @@ def objective_function(x, tasks):
         tasks[i].write_event.random_jitter = x[i + num_tasks]
 
     task_chain = find_valid_task_chains(tasks)
+
     if task_chain:
         max_reaction_time = calculate_reaction_time(task_chain)
 
@@ -405,8 +408,7 @@ def objective_function(x, tasks):
     else:
         return float("inf")
     
-
-
+    
 def take_step(x, bounds):
     new_x = x.copy()
     for i in range(len(x)):
@@ -430,8 +432,6 @@ def maximize_reaction_time(tasks, niter):
         initial_guess[i] = random.uniform(0, task.read_event.maxjitter)
         initial_guess[i + len(tasks)] = random.uniform(0, task.write_event.maxjitter)
 
-    # print(f"bounds: {bounds}")
-
     minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds}
 
     objective_function.iteration = 0
@@ -441,10 +441,6 @@ def maximize_reaction_time(tasks, niter):
     def accept(f_new, x_new, f_old, x_old, **kwargs):
         return accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
     
-    def schedule(iteration, niter):
-        T = 1.0 * (0.001 / 1.0) ** (iteration / niter)
-        stepsize = 0.1 * (0.01 / 0.1) ** (iteration / niter)
-        return T, stepsize
 
 
     result = basinhopping(
@@ -452,13 +448,17 @@ def maximize_reaction_time(tasks, niter):
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
         niter=niter,
-        T=schedule(0, niter)[0],  
+        T=1.0,
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
     )
 
     max_reaction_time = -result.fun
+
+    
     return max_reaction_time
+
+
 
 
 
@@ -539,10 +539,11 @@ print("================INIT====================")
 
 niter = 1  # 迭代次数
 num_tasks = 5  # 任务数量
-# periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-periods = [1, 2, 5, 10]
+periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
+# periods = [1, 2, 5, 10, 20, 50]
 tasks = RandomEvent(num_tasks, periods).tasks
 
+print("================OUR====================")
 final_e2e_max = our_chain(tasks)
 
 results_function = []
@@ -553,8 +554,8 @@ if final_e2e_max is False:
     exit(1)
 else:
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = f"OTHER_{num_tasks}_{niter}_{timestamp}.txt"
-    fig_file = f"box_{num_tasks}_{niter}_{timestamp}.png"
+    log_file = f"result/OTHER_{num_tasks}_{niter}_{timestamp}.txt"
+    fig_file = f"result/box_{num_tasks}_{niter}_{timestamp}.png"
 
     if log is True:
         with open(log_file, "a") as file:
@@ -567,7 +568,7 @@ else:
 
     print("================REACTION TIME ANALYSIS====================")
     max_reaction_time = maximize_reaction_time(tasks, niter)
-
+    
     print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
     print(f"AG Maximized reaction time: {final_e2e_max:.2f}")
 
