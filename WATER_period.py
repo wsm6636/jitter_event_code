@@ -26,15 +26,12 @@ class Event:
         self.period = period
         self.offset = offset
         self.jitter = jitter
-        self.read_time = 0
-        self.write_time = 0
         # print(f"event {self.event_type}_{self.id},  period: {self.period}, offset: {self.offset}, jitter: {self.jitter}.")
 
     def __repr__(self):
         return (
             f"Event(type={self.event_type},id={self.id}, period={self.period}, "
-            f"offset={self.offset}, jitter={self.jitter}, read_time={self.read_time:.2f}, "
-            f"write_time={self.write_time:.2f}"
+            f"offset={self.offset}, jitter={self.jitter}"
         )
 
     def get_trigger_time(self, j):
@@ -66,14 +63,10 @@ class RandomEvent:
     def __init__(
         self,
         num_tasks,
-        periods,
-        max_offset,
-        max_jitter,
+        periods
     ):
         self.num_tasks = num_tasks
         self.periods = periods
-        self.max_offset = max_offset
-        self.max_jitter = max_jitter
         self.tasks = self.generate_events_tasks()
 
     def generate_events_tasks(self):
@@ -87,13 +80,16 @@ class RandomEvent:
 
             # 随机生成偏移量，确保偏移量小于周期
             read_offset = random.randint(
-                0, min(self.max_offset, period - 1)
+                0, (period - 1)
             )
             # LET
+            # write_offset = random.randint(
+            #     read_offset + 1, period - 1
+            # )
             write_offset = read_offset + period
 
             # 随机生成抖动
-            jitter = random.randint(0, self.max_jitter)
+            jitter = 0.05*period
 
             # 创建读事件和写事件
             read_event = Event(
@@ -116,6 +112,12 @@ class RandomEvent:
 
             task = Task(read_event=read_event, write_event=write_event, id=i)
             tasks.append(task)
+
+            print(
+                f"task_{i}: read_event: {read_event.event_type}_{read_event.id}, "
+                f"period: {read_event.period}, offset: {read_event.offset}, jitter: {read_event.jitter};")
+            print(f"task_{i}: write_event: {write_event.event_type}_{write_event.id}, "
+                f"period: {write_event.period}, offset: {write_event.offset}, jitter: {write_event.jitter}.\n")
 
         return tasks
 
@@ -161,7 +163,7 @@ def effective_event(w, r):
     if w.period == r.period:  # Theorem 12
         #   print(f"periods are equal. Theorem 12.")
         if (
-            w.jitter <= (delta % T_star) & (delta % T_star) < (T_star - r.jitter)
+            w.jitter <= (delta % T_star) and (delta % T_star) < (T_star - r.jitter)
         ):  # Formula (14)
             w_jitter_star = w.jitter
             r_jitter_star = r.jitter  # Formula (15)
@@ -174,7 +176,7 @@ def effective_event(w, r):
                 w_offser_star = r.offset - (delta % T_star)  # Formula (15)
                 r_offset_star = r.offset
         else:
-            # print(f"Does not conform to Theorem 12, Formula (14).")
+            print(f"Does not conform to Theorem 12, Formula (14).")
             return False
     elif w.period > r.period:
         if w.jitter == r.jitter == 0:  # Lemma (15)
@@ -194,7 +196,7 @@ def effective_event(w, r):
             r_offset_star = w_offser_star
             r_jitter_star = r.period + w.jitter  # Formula (18)
         else:
-            # print(f"Does not conform to Theorem (13), Formula (17).")
+            print(f"Does not conform to Theorem (13), Formula (17).")
             return False
     elif w.period < r.period:
         if w.jitter == r.jitter == 0:  # Lemma (16)
@@ -214,10 +216,10 @@ def effective_event(w, r):
             w_offser_star = r_offset_star - w.period
             w_jitter_star = w.period + r.jitter  # Formula (24)
         else:
-            # print(f"Does not conform to Theorem (14), Formula (22).")
+            print(f"Does not conform to Theorem (14), Formula (22).")
             return False
     else:
-        # print(f"Does not exist effective write/read event series.")
+        print(f"Does not exist effective write/read event series.")
         return False
 
     w_star = Event(
@@ -294,15 +296,6 @@ def combine_no_free_jitter(task1, task2):
     return (r_1_2, w_1_2)
 
 
-# e2e
-def e2e(r, w):
-    #    print("================E2E====================")
-    min_e2e = w.offset - r.offset - r.jitter
-    max_e2e = w.offset + w.jitter - r.offset
-    #    print(f"min_e2e: {min_e2e}, max_e2e: {max_e2e}")
-    return (min_e2e, max_e2e)
-
-
 def chain_asc_no_free_jitter(tasks):
     #    print("================CHAIN_ASC====================")
     n = len(tasks)
@@ -317,28 +310,32 @@ def chain_asc_no_free_jitter(tasks):
             return False
         else:
             (r, w) = result
+            if r.offset < 0:
+                r.offset += r.period
+                w.offset += r.period
             #  print("================UPDATE combined task====================")
             current_task = Task(read_event=r, write_event=w, id=r.id)
 
-    return e2e(r, w), r, w, current_task
+    return  r, w, current_task
 
 
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
-        final_e2e, final_r, final_w, final_task = final_combine_result
-        # print(
-        #     f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}, max_reaction_time: {final_e2e[1] + final_r.period}, min_reaction_time: {final_e2e[0] + final_r.period}"
-        # )
-        # print(
-        #     f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}"
-        # )
-        # print(
-        #     f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}"
-        # )
-        return final_e2e, final_r, final_w, final_task
+        final_r, final_w, final_task = final_combine_result
+        max_reaction_time = final_w.offset + final_w.jitter - final_r.offset + final_r.period
+        print(
+            f"final_e2e: max_reaction_time: {max_reaction_time:.2f}, "
+        )
+        print(
+            f"final_r: period: {final_r.period}, offset: {final_r.offset:.2f}, jitter: {final_r.jitter:.2f}"
+        )
+        print(
+            f"final_w: period: {final_w.period}, offset: {final_w.offset:.2f}, jitter: {final_w.jitter:.2f}"
+        )
+        return max_reaction_time
     else:
-        #   print("Failed to combine predecessor and successor results.")
+        print("Failed to combine predecessor and successor results.")
         return False
 
 
@@ -551,17 +548,9 @@ print("================INIT====================")
 
 num_tasks = 5  # 任务数量
 periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-tasks = []
-for i in range(num_tasks):
-    period = random.choice(periods)
-    offset = random.randint(0, period-1)
-    jitter = 0.05*period
-    read_event = Event(event_type="read", period=period, offset=offset, jitter=jitter, id=i)
-    write_event = Event(event_type="write", period=period, offset=offset+period, jitter=jitter, id=i)
-    tasks.append(Task(read_event=read_event, write_event=write_event, id=i))
-    print(f"task_{i}: fix_period: {period}, fix_offset: {offset}, jitter_interval: [0,{jitter}]")
+tasks = RandomEvent(num_tasks, periods).tasks
 
-# all_final_e2e_max = []
+final_e2e_max = our_chain(tasks)
 # results_function = []
 # log = True
 
