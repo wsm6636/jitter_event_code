@@ -395,7 +395,7 @@ def calculate_max_reaction_time(valid_chains):
 
     
 
-def objective_function1(x, num_tasks, periods, max_offset, max_jitter):
+def objective_function(x, num_tasks, periods, max_offset, max_jitter):
     tasks = []
     for i in range(num_tasks):
         period = int(x[i * 3])
@@ -409,9 +409,9 @@ def objective_function1(x, num_tasks, periods, max_offset, max_jitter):
     valid_chains = find_valid_task_chains(tasks)
     max_reaction_time, min_reaction_time = calculate_max_reaction_time(valid_chains)
 
-    if log1 is True:
+    if log is True:
         with open(log_file1, "a") as file:
-            file.write(f"==================Iteration OTHER: {objective_function1.iteration}======================\n")
+            file.write(f"==================Iteration OTHER: {objective_function.iteration}======================\n")
             file.write(f"OTHER Maximized reaction time: {max_reaction_time:.2f}\n")
             file.write(f"Tasks:\n")
             for i, task in enumerate(tasks):
@@ -427,51 +427,12 @@ def objective_function1(x, num_tasks, periods, max_offset, max_jitter):
                 file.write(f"\n")
 
 
-    objective_function1.iteration += 1
-    results_function1.append(max_reaction_time)
+    objective_function.iteration += 1
+    results_function.append(max_reaction_time)
 
     return -max_reaction_time
     
 
-def objective_function2(x, num_tasks, periods, max_offset, max_jitter):
-    tasks = []
-    for i in range(num_tasks):
-        period = int(x[i * 3])
-        offset = int(x[i * 3 + 1])
-        jitter = int(x[i * 3 + 2])
-
-        read_event = Event(event_type="read", period=period, offset=offset, jitter=jitter, id=i)
-        write_event = Event(event_type="write", period=period, offset=offset+period, jitter=jitter, id=i)
-        tasks.append(Task(read_event=read_event, write_event=write_event, id=i))
-
-    our = our_chain(tasks)
-    
-    if our is False:
-        return 999
-    else:
-        final_e2e, final_r, final_w, final_task = our
-        final_e2e_max = final_e2e[1] + final_r.period
-
-    if log2 is True:
-        with open(log_file2, "a") as file:
-            file.write(f"==================Iteration AG: {objective_function2.iteration}======================\n")
-            if our is not False:
-                file.write(f"final_e2e: max_reaction_time: {final_e2e_max}\n")
-                file.write(f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}\n")
-                file.write(f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}\n")
-                file.write(f"Tasks:\n")
-                for i, task in enumerate(tasks):
-                    file.write(f"   Task {i}: {task.read_event.event_type}_{task.read_event.id}, "
-                            f"period={task.read_event.period}, offset={task.read_event.offset}, jitter={task.read_event.jitter}\n")
-                    file.write(f"   Task {i}: {task.write_event.event_type}_{task.write_event.id}, "
-                            f"period={task.write_event.period}, offset={task.write_event.offset}, jitter={task.write_event.jitter}\n")
-            else:
-                file.write(f"NULL\n")
-
-    objective_function2.iteration += 1
-    results_function2.append(final_e2e_max)
-
-    return -final_e2e_max
 
 def take_step(x):
     new_x = x.copy()
@@ -485,55 +446,37 @@ def take_step(x):
     new_x[3*i + 1] = random.randint(0, max_offset)  # 随机改变偏移
     new_x[3*i + 2] = random.randint(0, max_jitter)  # 随机改变抖动
 
+
     return new_x
 
-def maximize_reaction_time(num_tasks, periods, max_offset, max_jitter):
-    initial_guess = []
-    for _ in range(num_tasks):
-        initial_guess.extend([
-            random.choice(periods),  # period
-            random.randint(0, max_offset),           # offset
-            random.randint(0, max_jitter)            # jitter
-        ])
+
+def maximize_reaction_time(num_tasks, fix_period, fix_offset, max_jitter):
+    initial_guess = 0
     print(f"Initial guess: {initial_guess}")
     bounds = [(periods[0], periods[-1]), (0, max_offset), (0, max_jitter)] * num_tasks
 
     minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds}
 
     # 使用闭包封装 objective_function
-    def objective1(x):
-        return objective_function1(x, num_tasks, periods, max_offset, max_jitter)
-    def objective2(x):
-        return objective_function2(x, num_tasks, periods, max_offset, max_jitter)
+    def objective(x):
+        return objective_function(x, num_tasks, periods, max_offset, max_jitter)
 
-    objective_function1.iteration = 0
-    objective_function2.iteration = 0
+    objective_function.iteration = 0
 
-    result1 = basinhopping(
-        objective1,
+    result = basinhopping(
+        objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=200,
+        niter=100,
         T=1.0,
         take_step=lambda x: take_step(x),
         accept_test=lambda x_new, x_old, **kwargs: True
     )
 
-    result2 = basinhopping(
-        objective2,
-        initial_guess,
-        minimizer_kwargs=minimizer_kwargs,
-        niter=200,
-        T=1.0,
-        take_step=lambda x: take_step(x),
-        accept_test=lambda x_new, x_old, **kwargs: True
-    )   
+    max_reaction_time = -result.fun
+    return max_reaction_time
 
-    max_reaction_time1 = -result1.fun
-    max_reaction_time2 = -result2.fun
-    return max_reaction_time1, max_reaction_time2
-
-def plot_reaction_time_distribution(results1, results2, title="Max Reaction Time Distribution", fig_file=None):
+def plot_reaction_time_distribution(results1, title="Max Reaction Time Distribution", fig_file=None):
     """
     绘制两个目标函数的最大反应时间分布的箱形图，并显示最大值、最小值和平均值。
 
@@ -546,7 +489,6 @@ def plot_reaction_time_distribution(results1, results2, title="Max Reaction Time
     # 将结果转换为适合绘图的格式
     data = {
         "OTHER": results1,
-        "AG2": results2 if results2 else [0]
     }
 
     # 计算统计信息
@@ -555,26 +497,18 @@ def plot_reaction_time_distribution(results1, results2, title="Max Reaction Time
         "min": np.min(results1),
         "mean": np.mean(results1)
     }
-    if not results2:
-        AG2 = {"max": 0, "min": 0, "mean": 0}
-    else:
-        AG2 = {
-            "max": np.max(results2),
-            "min": np.min(results2),
-            "mean": np.mean(results2)
-        }
+
     # 创建箱形图
     plt.figure(figsize=(12, 6))
     sns.boxplot(data=data)
     plt.title(title)
     plt.ylabel("Max Reaction Time")
     plt.xlabel(f"num_tasks {num_tasks}\n"
-        f"OTHER (Max: {OTHER['max']:.2f}, Min: {OTHER['min']:.2f}, Mean: {OTHER['mean']:.2f}), "
-        f"AG2 (Max: {AG2['max']:.2f}, Min: {AG2['min']:.2f}, Mean: {AG2['mean']:.2f})")
+        f"OTHER (Max: {OTHER['max']:.2f}, Min: {OTHER['min']:.2f}, Mean: {OTHER['mean']:.2f})")
 
 
     # 添加标注
-    stats = [OTHER, AG2]  # 将两个目标函数的统计信息存储在一个列表中
+    stats = [OTHER]  # 将两个目标函数的统计信息存储在一个列表中
     for i, values in enumerate(stats):
         max_val = values["max"]
         min_val = values["min"]
@@ -592,43 +526,66 @@ def plot_reaction_time_distribution(results1, results2, title="Max Reaction Time
     plt.savefig(fig_file)
     plt.show()
 
+def plot_scatter(results1, title="Max Reaction Time Scatter Plot", fig_file=None):
+    """
+    绘制两个目标函数的最大反应时间的散点图。
+
+    参数:
+    results1 (list): 第一个目标函数的结果列表。
+    results2 (list): 第二个目标函数的结果列表。
+    title (str): 图表的标题，默认为 "Max Reaction Time Scatter Plot"。
+    fig_file (str): 保存图表的文件路径。
+    """
+    plt.figure(figsize=(10, 6))
+    plt.scatter(range(len(results1)), results1, label="OTHER", color="blue", alpha=0.6)
+    plt.title(title)
+    plt.xlabel("Iteration")
+    plt.ylabel("Max Reaction Time")
+    plt.legend()
+    if fig_file:
+        plt.savefig(fig_file)
+    plt.show()
 
 # init
 print("================INIT====================")
 
 num_tasks = 5  # 任务数量
 periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-# periods = [1, 2, 5, 10, 20]
-max_offset = 4  # 最大偏移量
-max_jitter = 3  # 最大抖动
-all_final_e2e_max = []
-results_function1 = []
-results_function2 = []
-log1 = log2 = True
+tasks = []
+for i in range(num_tasks):
+    period = random.choice(periods)
+    offset = random.randint(0, period-1)
+    jitter = 0.05*period
+    read_event = Event(event_type="read", period=period, offset=offset, jitter=jitter, id=i)
+    write_event = Event(event_type="write", period=period, offset=offset+period, jitter=jitter, id=i)
+    tasks.append(Task(read_event=read_event, write_event=write_event, id=i))
+    print(f"task_{i}: fix_period: {period}, fix_offset: {offset}, jitter_interval: [0,{jitter}]")
 
+# all_final_e2e_max = []
+# results_function = []
+# log = True
 
-print(f"num_tasks: {num_tasks}, max_offset: {max_offset}, max_jitter: {max_jitter}")
+# timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+# log_file = f"OTHER_{num_tasks}_{timestamp}.txt"
+# fig_file = f"box_{num_tasks}_{timestamp}.png"
 
-timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-log_file1 = f"no-jitter-free-200-200/OTHER_{num_tasks}_{timestamp}.txt"
-log_file2 = f"no-jitter-free-200-200/AG_{num_tasks}_{timestamp}.txt"
-fig_file = f"no-jitter-free-200-200/box_{num_tasks}_{timestamp}.png"
+# print("================REACTION TIME ANALYSIS====================")
+# max_reaction_time1 = maximize_reaction_time(num_tasks, periods, fix_offset, max_jitter)
+# max_reaction_time2 = maximize_reaction_time(num_tasks, periods, fix_offset, max_jitter)
+# print(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}")
+# print(f"AG Maximized reaction time: {max_reaction_time2:.2f}")
 
-print("================REACTION TIME ANALYSIS====================")
-max_reaction_time1,max_reaction_time2 = maximize_reaction_time(num_tasks, periods, max_offset, max_jitter)
-print(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}")
-print(f"AG Maximized reaction time: {max_reaction_time2:.2f}")
+# if log is True :
+#     with open(log_file, "a") as file:
+#         file.write(f"==================Final OTHER======================\n")
+#         file.write(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}\n")
+#         file.write(f"==================Final AG======================\n")
+#         file.write(f"AG Maximized reaction time: {max_reaction_time2:.2f}\n")
+#     print(f"Results written to {log_file} ")
 
-if log1 is True and log2 is True:
-    with open(log_file1, "a") as file:
-        file.write(f"==================Final OTHER======================\n")
-        file.write(f"OTHER Maximized reaction time: {max_reaction_time1:.2f}\n")
-    with open(log_file2, "a") as file:  
-        file.write(f"==================Final AG======================\n")
-        file.write(f"AG Maximized reaction time: {max_reaction_time2:.2f}\n")
-    print(f"Results written to {log_file1} and {log_file2}")
+# print("================PLOTTING====================")
+# # 绘制箱形图
+# plot_reaction_time_distribution(results_function, title="Max Reaction Time Distribution", fig_file=fig_file)
 
-print("================PLOTTING====================")
-# 绘制箱形图
-plot_reaction_time_distribution(results_function1, results_function2, title="Max Reaction Time Distribution", fig_file=fig_file)
-
+# scatter_fig_file = f"scatter_{num_tasks}_{timestamp}.png"
+# plot_scatter(results_function, title="Max Reaction Time Scatter Plot", fig_file=scatter_fig_file)
