@@ -81,10 +81,8 @@ class RandomEvent:
                 0, (period - 1)
             )
             # LET
-            # write_offset = random.randint(
-            #     read_offset + 1, period - 1
-            # )
-            write_offset = read_offset + period
+            write_offset = random.randint(read_offset + 1, period)
+            # write_offset = read_offset + period
 
             # 随机生成抖动
             maxjitter = 0.05*period
@@ -307,10 +305,10 @@ def chain_asc_no_free_jitter(tasks):
             (r, w) = result
             #  print("================UPDATE combined task====================")
             current_task = Task(read_event=r, write_event=w, id=r.id)
-    if r.offset < 0:
-        print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
-        w.offset -= r.offset
-        r.offset = 0
+    # if r.offset < 0:
+    #     print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
+    #     w.offset -= r.offset
+    #     r.offset = 0
         # r.offset += r.period
         # w.offset += r.period
     return  r, w
@@ -403,7 +401,6 @@ def objective_function(x, tasks):
 
         objective_function.iteration += 1
         results_function.append(max_reaction_time)
-
         return -max_reaction_time
     else:
         return float("inf")
@@ -414,6 +411,9 @@ def take_step(x, bounds):
     for i in range(len(x)):
         lower, upper = bounds[i]
         new_x[i] = random.uniform(lower, upper)
+    # for i in range(len(new_x)):
+    #     print(f"new_x[{i}]: {new_x[i]}")
+
     return new_x
 
 
@@ -449,6 +449,7 @@ def maximize_reaction_time(tasks, niter):
         minimizer_kwargs=minimizer_kwargs,
         niter=niter,
         T=1.0,
+        stepsize=0.01,
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
     )
@@ -537,10 +538,11 @@ def plot_scatter(results1, title="Max Reaction Time Scatter Plot", fig_file=None
 # init
 print("================INIT====================")
 
-niter = 1  # 迭代次数
-num_tasks = 5  # 任务数量
+niter = 10  # 迭代次数
+num_tasks = 5 # 任务数量
 periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
 # periods = [1, 2, 5, 10, 20, 50]
+# periods = [1, 2, 3, 4, 5]
 tasks = RandomEvent(num_tasks, periods).tasks
 
 print("================OUR====================")
@@ -584,5 +586,5 @@ else:
     # 绘制箱形图
     plot_reaction_time_distribution(results_function, title="Max Reaction Time Distribution", fig_file=fig_file)
 
-    # scatter_fig_file = f"scatter_{num_tasks}_{timestamp}.png"
-    # plot_scatter(results_function, title="Max Reaction Time Scatter Plot", fig_file=scatter_fig_file)
+    scatter_fig_file = f"result/scatter_{num_tasks}_{niter}_{timestamp}.png"
+    plot_scatter(results_function, title="Max Reaction Time Scatter Plot", fig_file=scatter_fig_file)
