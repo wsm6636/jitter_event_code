@@ -61,11 +61,14 @@ class RandomEvent:
     def __init__(
         self,
         num_tasks,
-        periods
+        periods,
+        per_jitter
     ):
         self.num_tasks = num_tasks
         self.periods = periods
+        self.per_jitter = per_jitter
         self.tasks = self.generate_events_tasks()
+        
 
     def generate_events_tasks(self):
         read_events = []
@@ -85,7 +88,8 @@ class RandomEvent:
             # write_offset = read_offset + period
 
             # 随机生成抖动
-            maxjitter = 0.05*period
+            maxjitter = self.per_jitter*period
+            # maxjitter = 0
 
             # 创建读事件和写事件
             read_event = Event(
@@ -235,6 +239,83 @@ def effective_event(w, r):
 
     return (w_star, r_star)
 
+# Algorithm 2 line 1
+# only with jitter section4A
+def effective_event2(w, r):
+    w_star = None
+    r_star = None
+    delta = r.offset - w.offset
+    #    print(f"delta: {delta}.")
+    (G, pw, pr) = euclide_extend(w.period, r.period)
+    # print(f"G: {G}.")
+    T_star = max(w.period, r.period)
+    #    print(f"T_star: {T_star}.")
+
+    if w.period == r.period:  # Theorem 12
+        #   print(f"periods are equal. Theorem 12.")
+        if (
+            w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)
+        ):  # Formula (14)
+            w_jitter_star = w.maxjitter
+            r_jitter_star = r.maxjitter  # Formula (15)
+            if delta < 0:
+                # print(f"delta < 0. Formula (15).")
+                w_offser_star = w.offset
+                r_offset_star = w.offset + (delta % T_star)  # Formula (15)
+            else:
+                # print(f"delta >= 0. Formula (15).")
+                w_offser_star = r.offset - (delta % T_star)  # Formula (15)
+                r_offset_star = r.offset
+        else:
+            print(f"Does not conform to Theorem 12, Formula (14).")
+            return False
+    elif w.period > r.period:
+        if (r.period + r.maxjitter) <= (
+            w.period - w.maxjitter
+        ):  # Formula (17) Theorem (13)
+            #  print(f"w.period > r.period, with maxjitter. Theorem (13), Formula (17).")
+            kw = max(0, ((delta + r.maxjitter - r.period) // w.period) + 1)  # Formula (19)
+            w_offser_star = w.offset + kw * w.period
+            w_jitter_star = w.maxjitter
+            r_offset_star = w_offser_star
+            r_jitter_star = r.period + w.maxjitter  # Formula (18)
+        else:
+            print(f"Does not conform to Theorem (13), Formula (17).")
+            return False
+    elif w.period < r.period:
+        if (w.period + w.maxjitter) <= (
+            r.period - r.maxjitter
+        ):  # Formula (22) Theorem (14)
+            #  print(f"w.period < r.period, with maxjitter. Theorem (14), Formula (22).")
+            kr = max(0, math.ceil((w.maxjitter - delta) / r.period))  # Formula (25)
+            r_offset_star = r.offset + kr * r.period
+            r_jitter_star = r.maxjitter  # Formula (23)
+            w_offser_star = r_offset_star - w.period
+            w_jitter_star = w.period + r.maxjitter  # Formula (24)
+        else:
+            print(f"Does not conform to Theorem (14), Formula (22).")
+            return False
+    else:
+        print(f"Does not exist effective write/read event series.")
+        return False
+
+    w_star = Event(
+        id=w.id,
+        event_type="write_star",
+        period=T_star,
+        offset=w_offser_star,
+        maxjitter=w_jitter_star,
+    )
+    r_star = Event(
+        id=r.id,
+        event_type="read_star",
+        period=T_star,
+        offset=r_offset_star,
+        maxjitter=r_jitter_star,
+    )
+
+    return (w_star, r_star)
+
 
 def combine_no_free_jitter(task1, task2):
     r1 = task1.read_event
@@ -243,6 +324,58 @@ def combine_no_free_jitter(task1, task2):
     w2 = task2.write_event
 
     result = effective_event(w1, r2)
+    # print(result)
+    if result:
+        (w1_star, r2_star) = result
+    else:
+        # print("==========FAILED TO EFFECTIVE EVENT==========")
+        return False
+    T_star = w1_star.period  # line 2
+    if task1.period > task2.period:  # line 4
+        r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5
+        r_1_2_jitter = r1.maxjitter  # line 6
+        m2 = w2.offset - r2.offset - r2.maxjitter
+        M2 = w2.offset - r2.offset + w2.maxjitter  # line 7
+        w_1_2_offset = r2_star.offset + m2
+        w_1_2_jitter = r2_star.maxjitter + M2 - m2  # line 8
+    elif task1.period < task2.period:  # line 9
+        w_1_2_offset = w2.offset + r2_star.offset - r2.offset  # line 10
+        w_1_2_jitter = w2.maxjitter  # line 11
+        m1 = w1.offset - r1.offset - r1.maxjitter
+        M1 = w1.offset - r1.offset + w1.maxjitter  # line 12
+        r_1_2_offset = w1_star.offset - M1
+        r_1_2_jitter = w1_star.maxjitter + M1 - m1  # line 13
+    else:  # line 14
+        r_1_2_offset = r1.offset + w1_star.offset - w1.offset
+        r_1_2_jitter = r1.maxjitter
+        w_1_2_offset = w2.offset + r2_star.offset - r2.offset
+        w_1_2_jitter = w2.maxjitter
+
+    combined_id = f"{task1.id}_{task2.id}"
+    r_1_2 = Event(
+        id=combined_id,
+        event_type="read_combined",
+        period=T_star,
+        offset=r_1_2_offset,
+        maxjitter=r_1_2_jitter,
+    )  # line 19
+    w_1_2 = Event(
+        id=combined_id,
+        event_type="write_combined",
+        period=T_star,
+        offset=w_1_2_offset,
+        maxjitter=w_1_2_jitter,
+    )  # line 20
+
+    return (r_1_2, w_1_2)
+
+def combine_no_free_jitter2(task1, task2):
+    r1 = task1.read_event
+    w1 = task1.write_event
+    r2 = task2.read_event
+    w2 = task2.write_event
+
+    result = effective_event2(w1, r2)
     # print(result)
     if result:
         (w1_star, r2_star) = result
@@ -313,15 +446,38 @@ def chain_asc_no_free_jitter(tasks):
         # w.offset += r.period
     return  r, w
 
+def chain_asc_no_free_jitter2(tasks):
+    #    print("================CHAIN_ASC====================")
+    n = len(tasks)
+    current_task = tasks[0]
+
+    for i in range(1, n):
+        #   print(f"================Combining task {current_task.id} and {tasks[i].id}====================")
+        result = combine_no_free_jitter2(current_task, tasks[i])
+        if result is False:
+            #  print("================CHAIN_ASC END====================")
+            # print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
+            return False
+        else:
+            (r, w) = result
+            #  print("================UPDATE combined task====================")
+            current_task = Task(read_event=r, write_event=w, id=r.id)
+    # if r.offset < 0:
+    #     print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
+    #     w.offset -= r.offset
+    #     r.offset = 0
+        # r.offset += r.period
+        # w.offset += r.period
+    return  r, w
 
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
         final_r, final_w = final_combine_result
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        print(
-            f"final_e2e: max_reaction_time: {max_reaction_time:.2f}, "
-        )
+        # print(
+        #     f"final_e2e: max_reaction_time: {max_reaction_time:.2f}, "
+        # )
         print(
             f"final_r: period: {final_r.period}, offset: {final_r.offset:.2f}, maxjitter: {final_r.maxjitter:.2f}"
         )
@@ -333,6 +489,25 @@ def our_chain(tasks):
         print("Failed to combine predecessor and successor results.")
         return False
 
+
+def our_chain2(tasks):
+    final_combine_result = chain_asc_no_free_jitter2(tasks)
+    if final_combine_result:
+        final_r, final_w = final_combine_result
+        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+        print(
+            f"22 final_e2e: max_reaction_time: {max_reaction_time:.2f}, "
+        )
+        print(
+            f"final_r: period: {final_r.period}, offset: {final_r.offset:.2f}, maxjitter: {final_r.maxjitter:.2f}"
+        )
+        print(
+            f"final_w: period: {final_w.period}, offset: {final_w.offset:.2f}, maxjitter: {final_w.maxjitter:.2f}"
+        )
+        return max_reaction_time
+    else:
+        print("22 Failed to combine predecessor and successor results.")
+        return False
 
 def find_valid_task_chains(tasks):
 
@@ -367,12 +542,6 @@ def find_valid_task_chains(tasks):
 
     # 检查生成的任务链是否有效
     if len(task_chain) == len(tasks) * 2:
-        if log is True:
-            with open(log_file, "a") as file:
-                file.write(f"==================Iteration: {objective_function.iteration}======================\n")
-                for i, (event, time, instance) in enumerate(task_chain):
-                    file.write(f"   Event {i}: {event.event_type}_{event.id}_{instance} at {time:.2f}\n")
-                file.write(f"   Reaction time: {task_chain[-1][1] - task_chain[0][1] + task_chain[0][0].period:.2f}\n")
         return task_chain
     else:
         print("Invalid task chain generated.")
@@ -411,10 +580,6 @@ def take_step(x, bounds):
     for i in range(len(x)):
         lower, upper = bounds[i]
         new_x[i] = random.uniform(lower, upper)
-    if log is True:
-            with open(log_file, "a") as file:
-                for i in range(len(new_x)):
-                    file.write(f"   x[{i}]: {new_x[i]}\n")
 
     return new_x
 
@@ -425,7 +590,7 @@ def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
             return False
     return True
     
-def maximize_reaction_time(tasks, niter):
+def maximize_reaction_time(tasks, niter,log=False, log_file=None):
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
     for i, task in enumerate(tasks):
@@ -442,7 +607,6 @@ def maximize_reaction_time(tasks, niter):
         return objective_function(x, tasks)
     def accept(f_new, x_new, f_old, x_old, **kwargs):
         return accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
-    
 
 
     result = basinhopping(
@@ -455,138 +619,50 @@ def maximize_reaction_time(tasks, niter):
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
     )
-
     max_reaction_time = -result.fun
-
     
     return max_reaction_time
 
 
 
+def run_analysis(num_tasks, periods, per_jitter, niter):
+    # init
+    print("================INIT====================")
 
+    tasks = RandomEvent(num_tasks, periods, per_jitter).tasks
 
+    print("================OUR====================")
+    final_e2e_max = our_chain(tasks)
 
-def plot_reaction_time_distribution(results1, title="Max Reaction Time Distribution", fig_file=None):
-    """
-    绘制两个目标函数的最大反应时间分布的箱形图，并显示最大值、最小值和平均值。
+    # only with jitter section4A
+    # final_e2e_max2 = our_chain2(tasks)
 
-    参数:
-    results1 (list): 第一个目标函数的结果列表。
-    results2 (list): 第二个目标函数的结果列表。
-    title (str): 图表的标题，默认为 "Max Reaction Time Distribution"。
-    """
-
-    # 将结果转换为适合绘图的格式
-    data = {
-        "OTHER": results1,
-    }
-
-    # 计算统计信息
-    OTHER = {
-        "max": np.max(results1),
-        "min": np.min(results1),
-        "mean": np.mean(results1)
-    }
-
-    # 创建箱形图
-    plt.figure(figsize=(12, 6))
-    sns.boxplot(data=data)
-    plt.title(title)
-    plt.ylabel("Max Reaction Time")
-    plt.xlabel(f"num_tasks {num_tasks}; "
-               f"OUR: {final_e2e_max:.2f}\n"
-        f"OTHER (Max: {OTHER['max']:.2f}, Min: {OTHER['min']:.2f}, Mean: {OTHER['mean']:.2f})")
-
-
-    # 添加标注
-    stats = [OTHER]  # 将两个目标函数的统计信息存储在一个列表中
-    for i, values in enumerate(stats):
-        max_val = values["max"]
-        min_val = values["min"]
-        mean_val = values["mean"]
+    if final_e2e_max is False:
+        final_e2e_max = 0
         
-        # 添加最大值标注
-        plt.text(i, max_val, f"Max: {max_val:.2f}", ha="center", va="bottom", fontsize=10, color="blue")
-        
-        # 添加最小值标注
-        plt.text(i, min_val, f"Min: {min_val:.2f}", ha="center", va="top", fontsize=10, color="red")
-        
-        # 添加平均值标注
-        plt.text(i, mean_val, f"Mean: {mean_val:.2f}", ha="center", va="bottom", fontsize=10, color="black")
-
-    plt.savefig(fig_file)
-    plt.show()
-
-def plot_scatter(results1, title="Max Reaction Time Scatter Plot", fig_file=None):
-    """
-    绘制两个目标函数的最大反应时间的散点图。
-
-    参数:
-    results1 (list): 第一个目标函数的结果列表。
-    results2 (list): 第二个目标函数的结果列表。
-    title (str): 图表的标题，默认为 "Max Reaction Time Scatter Plot"。
-    fig_file (str): 保存图表的文件路径。
-    """
-    plt.figure(figsize=(10, 6))
-    plt.scatter(range(len(results1)), results1, label="OTHER", color="blue", alpha=0.6)
-    plt.title(title)
-    plt.xlabel("Iteration")
-    plt.ylabel("Max Reaction Time")
-    plt.legend()
-    if fig_file:
-        plt.savefig(fig_file)
-    plt.show()
-
-# init
-print("================INIT====================")
-
-niter = 1000  # 迭代次数
-num_tasks = 5 # 任务数量
-periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-# periods = [1, 2, 5, 10, 20, 50]
-# periods = [1, 2, 3, 4, 5]
-tasks = RandomEvent(num_tasks, periods).tasks
-
-print("================OUR====================")
-final_e2e_max = our_chain(tasks)
-
-results_function = []
-log = True
-
-if final_e2e_max is False:
-    print("Failed to combine tasks.")
-    exit(1)
-else:
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_file = f"result/OTHER_{num_tasks}_{niter}_{timestamp}.txt"
-    fig_file = f"result/box_{num_tasks}_{niter}_{timestamp}.png"
-
-    if log is True:
-        with open(log_file, "a") as file:
-            file.write(f"INIT: {num_tasks} tasks\n")
-            for i, task in enumerate(tasks):
-                file.write(f"task_{i}: read_event: {task.read_event.event_type}_{task.read_event.id}, "
-                        f"period: {task.read_event.period}, offset: {task.read_event.offset}, maxjitter: {task.read_event.maxjitter};\n")
-                file.write(f"task_{i}: write_event: {task.write_event.event_type}_{task.write_event.id}, "
-                        f"period: {task.write_event.period}, offset: {task.write_event.offset}, maxjitter: {task.write_event.maxjitter}.\n")
-
-    print("================REACTION TIME ANALYSIS====================")
-    max_reaction_time = maximize_reaction_time(tasks, niter)
-    
-    print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
     print(f"AG Maximized reaction time: {final_e2e_max:.2f}")
 
-    if log is True :
-        with open(log_file, "a") as file:
-            file.write(f"==================Final OTHER======================\n")
-            file.write(f"OTHER Maximized reaction time: {max_reaction_time:.2f}\n")
-            file.write(f"==================Final AG======================\n")
-            file.write(f"AG Maximized reaction time: {final_e2e_max:.2f}\n")
-        print(f"Results written to {log_file} ")
+    reaction_time_a = maximize_reaction_time(tasks, niter)
+    reaction_time_b = max(results_function)
+    max_reaction_time = max(reaction_time_a, reaction_time_b)
+    print("================OTHER====================")
+    # print(f"reaction_time_a global: {reaction_time_a:.2f}")
+    # print(f"reaction_time_b: {reaction_time_b:.2f}")
+    print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
 
-    print("================PLOTTING====================")
-    # 绘制箱形图
-    plot_reaction_time_distribution(results_function, title="Max Reaction Time Distribution", fig_file=fig_file)
+    return final_e2e_max, max_reaction_time
 
-    scatter_fig_file = f"result/scatter_{num_tasks}_{niter}_{timestamp}.png"
-    plot_scatter(results_function, title="Max Reaction Time Scatter Plot", fig_file=scatter_fig_file)
+
+# 测试代码（可选，用于单独测试此文件）
+if __name__ == "__main__":
+    niter = 10  # 迭代次数
+    num_tasks = 5 # 任务数量
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
+    per_jitter = 0.05 # 抖动百分比
+    print(f"num_tasks: {num_tasks}, niter: {niter}, periods: {periods}, per_jitter: {per_jitter}")
+
+    results_function = []
+
+    final_e2e_max, max_reaction_time = run_analysis(num_tasks, periods, per_jitter, niter)
+
+
