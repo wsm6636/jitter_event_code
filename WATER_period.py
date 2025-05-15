@@ -294,7 +294,6 @@ def combine_no_free_jitter(task1, task2):
     return (r_1_2, w_1_2)
 
 
-
 def chain_asc_no_free_jitter(tasks):
     #    print("================CHAIN_ASC====================")
     n = len(tasks)
@@ -312,11 +311,11 @@ def chain_asc_no_free_jitter(tasks):
             #  print("================UPDATE combined task====================")
             current_task = Task(read_event=r, write_event=w, id=r.id)
     # if r.offset < 0:
-    #     print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
-    #     w.offset -= r.offset
-    #     r.offset = 0
-        # r.offset += r.period
-        # w.offset += r.period
+    #   print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
+    #   w.offset -= r.offset
+    #   r.offset = 0
+    #   r.offset += r.period
+    #   w.offset += r.period
     return  r, w
 
 
@@ -334,7 +333,7 @@ def our_chain(tasks):
         print(
             f"final_w: period: {final_w.period}, offset: {final_w.offset:.2f}, maxjitter: {final_w.maxjitter:.2f}"
         )
-        return max_reaction_time
+        return max_reaction_time, final_r, final_w
     else:
         print("Failed to combine predecessor and successor results.")
         return False
@@ -421,7 +420,7 @@ def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
             return False
     return True
     
-def maximize_reaction_time(tasks, niter,log=False, log_file=None):
+def maximize_reaction_time(tasks, niter):
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
     for i, task in enumerate(tasks):
@@ -455,21 +454,27 @@ def maximize_reaction_time(tasks, niter,log=False, log_file=None):
     return max_reaction_time
 
 
+results_function = []
 
 def run_analysis(num_tasks, periods, per_jitter, niter):
+    global results_function
+    results_function = []  # 清空结果列表
     # init
     print("================INIT====================")
-
+    # results_function = []
     tasks = RandomEvent(num_tasks, periods, per_jitter).tasks
 
     print("================OUR====================")
-    final_e2e_max = our_chain(tasks)
-
-    # only with jitter section4A
-    # final_e2e_max2 = our_chain2(tasks)
-
-    if final_e2e_max is False:
+    final = our_chain(tasks)
+    
+    if final is False:
         final_e2e_max = 0
+        final_r = None
+        final_w = None
+    else:
+        final_e2e_max = final[0]
+        final_r = final[1]
+        final_w = final[2]
         
     print(f"AG Maximized reaction time: {final_e2e_max:.2f}")
 
@@ -481,7 +486,7 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
     # print(f"reaction_time_b: {reaction_time_b:.2f}")
     print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
 
-    return final_e2e_max, max_reaction_time
+    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 
 # 测试代码（可选，用于单独测试此文件）
