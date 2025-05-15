@@ -411,8 +411,10 @@ def take_step(x, bounds):
     for i in range(len(x)):
         lower, upper = bounds[i]
         new_x[i] = random.uniform(lower, upper)
-    # for i in range(len(new_x)):
-    #     print(f"new_x[{i}]: {new_x[i]}")
+    if log is True:
+            with open(log_file, "a") as file:
+                for i in range(len(new_x)):
+                    file.write(f"   x[{i}]: {new_x[i]}\n")
 
     return new_x
 
@@ -449,7 +451,7 @@ def maximize_reaction_time(tasks, niter):
         minimizer_kwargs=minimizer_kwargs,
         niter=niter,
         T=1.0,
-        stepsize=0.01,
+        # stepsize=0.01,
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
     )
@@ -538,7 +540,7 @@ def plot_scatter(results1, title="Max Reaction Time Scatter Plot", fig_file=None
 # init
 print("================INIT====================")
 
-niter = 10  # 迭代次数
+niter = 1000  # 迭代次数
 num_tasks = 5 # 任务数量
 periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
 # periods = [1, 2, 5, 10, 20, 50]
