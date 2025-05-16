@@ -410,7 +410,7 @@ def take_step(x, bounds):
     for i in range(len(x)):
         lower, upper = bounds[i]
         new_x[i] = random.uniform(lower, upper)
-
+    # print(f"take_step: {new_x}")
     return new_x
 
 
@@ -428,7 +428,7 @@ def maximize_reaction_time(tasks, niter):
         bounds[i+ len(tasks)] = (0, task.write_event.maxjitter)
         initial_guess[i] = random.uniform(0, task.read_event.maxjitter)
         initial_guess[i + len(tasks)] = random.uniform(0, task.write_event.maxjitter)
-
+    # print(f"initial_guess: {initial_guess}")
     minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds}
 
     objective_function.iteration = 0
@@ -481,6 +481,7 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
     reaction_time_a = maximize_reaction_time(tasks, niter)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
+    print("len(results_function):", len(results_function))
     print("================OTHER====================")
     # print(f"reaction_time_a global: {reaction_time_a:.2f}")
     # print(f"reaction_time_b: {reaction_time_b:.2f}")
@@ -499,6 +500,6 @@ if __name__ == "__main__":
 
     results_function = []
 
-    final_e2e_max, max_reaction_time = run_analysis(num_tasks, periods, per_jitter, niter)
+    run_analysis(num_tasks, periods, per_jitter, niter)
 
 
