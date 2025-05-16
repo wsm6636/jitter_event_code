@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    num_repeats = 1  # 重复次数
+    num_repeats = 100  # 重复次数
     niter = 1  # 迭代次数
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # 周期列表
     jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]
