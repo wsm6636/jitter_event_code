@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 
 def main():
-    num_repeats = 1000  # 重复次数
+    num_repeats = 100  # 重复次数
     niter = 10  # 迭代次数
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # 周期列表
     jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]
@@ -44,7 +44,7 @@ def main():
             # 计算 final_e2e_max = 0 的百分比
             zero_percentage = (zero_counts / num_repeats) * 100
             false_results[num_tasks][per_jitter].append(zero_percentage)
-            print(f"Percentage of False: {zero_percentage:.2f}%")
+            # print(f"Percentage of False: {zero_percentage:.2f}%")
 
 
     # 打印结果
@@ -60,39 +60,7 @@ def main():
                 else:
                     print(f"    Final E2E Max: {final_e2e_max:.2f}, Maximized Reaction Time: {max_reaction_time:.2f}, R = None")
 
-    # 打印最终结果
-    if printlog is True:
-        with open(file_name, "a") as file:
-            for num_tasks in num_chains:
-                file.write(f"==================Number of Tasks: {num_tasks}==================\n")
-                for per_jitter in jitters:
-                    zero_percentage = false_results[num_tasks][per_jitter][0]  # 取第一个元素
-                    file.write(f"per_jitter {per_jitter}: Percentage of False: {zero_percentage:.2f}\n")
-                    for i,(final_e2e_max, max_reaction_time, r, tasks) in enumerate(results[num_tasks][per_jitter]):
-                        file.write(f"repeat {i}\n")
-                        for task in tasks:
-                            file.write(f"   read_event: {task.read_event.event_type}_{task.read_event.id}, "
-                                    f"period: {task.read_event.period}, offset: {task.read_event.offset}, maxjitter: {task.read_event.maxjitter};\n")
-                            file.write(f"   write_event: {task.write_event.event_type}_{task.write_event.id}, "
-                                    f"period: {task.write_event.period}, offset: {task.write_event.offset}, maxjitter: {task.write_event.maxjitter}.\n")
-
-                        
-                        if final_e2e_max != 0:
-                            file.write(f"   Final R: period:{final_r.period}, offset:{final_r.offset:.2f}, jitter:{final_r.maxjitter:.2f}\n")
-                            file.write(f"   Final W: period:{final_w.period}, offser:{final_w.offset:.2f}, jitter:{final_w.maxjitter:.2f}\n")
-                        else:
-                            file.write(f"   Final R and Final W None\n")
-
-                        file.write(f"   Final E2E Max: {final_e2e_max:.2f}\n")
-                        file.write(f"   Maximized Reaction Time: {max_reaction_time:.2f}\n")
-
-                        if r is not None:
-                            file.write(f"   R = max_reaction_time / final_e2e_max {r:.2f}\n")
-                        else:
-                            file.write(f"   R: None\n")
-
-        print(f"Results saved to {file_name}")
-
+    
 
     
     # 绘制折线图
@@ -140,6 +108,38 @@ def main():
     print(f"R plot saved to {R_plot_name}")
 
 
+# 打印最终结果
+    if printlog is True:
+        with open(file_name, "a") as file:
+            for num_tasks in num_chains:
+                file.write(f"==================Number of Tasks: {num_tasks}==================\n")
+                for per_jitter in jitters:
+                    zero_percentage = false_results[num_tasks][per_jitter][0]  # 取第一个元素
+                    file.write(f"per_jitter {per_jitter}: Percentage of False: {zero_percentage:.2f}\n")
+                    for i,(final_e2e_max, max_reaction_time, r, tasks) in enumerate(results[num_tasks][per_jitter]):
+                        file.write(f"repeat {i}\n")
+                        for task in tasks:
+                            file.write(f"   read_event: {task.read_event.event_type}_{task.read_event.id}, "
+                                    f"period: {task.read_event.period}, offset: {task.read_event.offset}, maxjitter: {task.read_event.maxjitter};\n")
+                            file.write(f"   write_event: {task.write_event.event_type}_{task.write_event.id}, "
+                                    f"period: {task.write_event.period}, offset: {task.write_event.offset}, maxjitter: {task.write_event.maxjitter}.\n")
+
+                        
+                        if final_e2e_max != 0:
+                            file.write(f"   Final R: period:{final_r.period}, offset:{final_r.offset:.2f}, jitter:{final_r.maxjitter:.2f}\n")
+                            file.write(f"   Final W: period:{final_w.period}, offser:{final_w.offset:.2f}, jitter:{final_w.maxjitter:.2f}\n")
+                        else:
+                            file.write(f"   Final R and Final W None\n")
+
+                        file.write(f"   Final E2E Max: {final_e2e_max:.2f}\n")
+                        file.write(f"   Maximized Reaction Time: {max_reaction_time:.2f}\n")
+
+                        if r is not None:
+                            file.write(f"   R = max_reaction_time / final_e2e_max {r:.2f}\n")
+                        else:
+                            file.write(f"   R: None\n")
+
+        print(f"Results saved to {file_name}")
 
 if __name__ == "__main__":
     main()

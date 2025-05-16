@@ -113,11 +113,11 @@ class RandomEvent:
             task = Task(read_event=read_event, write_event=write_event, id=i)
             tasks.append(task)
 
-            print(
-                f"task_{i}: read_event: {read_event.event_type}_{read_event.id}, "
-                f"period: {read_event.period}, offset: {read_event.offset}, maxjitter: {read_event.maxjitter};")
-            print(f"task_{i}: write_event: {write_event.event_type}_{write_event.id}, "
-                f"period: {write_event.period}, offset: {write_event.offset}, maxjitter: {write_event.maxjitter}.\n")
+            # print(
+            #     f"task_{i}: read_event: {read_event.event_type}_{read_event.id}, "
+            #     f"period: {read_event.period}, offset: {read_event.offset}, maxjitter: {read_event.maxjitter};")
+            # print(f"task_{i}: write_event: {write_event.event_type}_{write_event.id}, "
+            #     f"period: {write_event.period}, offset: {write_event.offset}, maxjitter: {write_event.maxjitter}.\n")
 
         return tasks
 
@@ -176,7 +176,7 @@ def effective_event(w, r):
                 w_offser_star = r.offset - (delta % T_star)  # Formula (15)
                 r_offset_star = r.offset
         else:
-            print(f"Does not conform to Theorem 12, Formula (14).")
+            # print(f"Does not conform to Theorem 12, Formula (14).")
             return False
     elif w.period > r.period:
         if w.maxjitter == r.maxjitter == 0:  # Lemma (15)
@@ -196,7 +196,7 @@ def effective_event(w, r):
             r_offset_star = w_offser_star
             r_jitter_star = r.period + w.maxjitter  # Formula (18)
         else:
-            print(f"Does not conform to Theorem (13), Formula (17).")
+            # print(f"Does not conform to Theorem (13), Formula (17).")
             return False
     elif w.period < r.period:
         if w.maxjitter == r.maxjitter == 0:  # Lemma (16)
@@ -216,10 +216,10 @@ def effective_event(w, r):
             w_offser_star = r_offset_star - w.period
             w_jitter_star = w.period + r.maxjitter  # Formula (24)
         else:
-            print(f"Does not conform to Theorem (14), Formula (22).")
+            # print(f"Does not conform to Theorem (14), Formula (22).")
             return False
     else:
-        print(f"Does not exist effective write/read event series.")
+        # print(f"Does not exist effective write/read event series.")
         return False
 
     w_star = Event(
@@ -327,15 +327,15 @@ def our_chain(tasks):
         # print(
         #     f"final_e2e: max_reaction_time: {max_reaction_time:.2f}, "
         # )
-        print(
-            f"final_r: period: {final_r.period}, offset: {final_r.offset:.2f}, maxjitter: {final_r.maxjitter:.2f}"
-        )
-        print(
-            f"final_w: period: {final_w.period}, offset: {final_w.offset:.2f}, maxjitter: {final_w.maxjitter:.2f}"
-        )
+        # print(
+        #     f"final_r: period: {final_r.period}, offset: {final_r.offset:.2f}, maxjitter: {final_r.maxjitter:.2f}"
+        # )
+        # print(
+        #     f"final_w: period: {final_w.period}, offset: {final_w.offset:.2f}, maxjitter: {final_w.maxjitter:.2f}"
+        # )
         return max_reaction_time, final_r, final_w
     else:
-        print("Failed to combine predecessor and successor results.")
+        # print("Failed to combine predecessor and successor results.")
         return False
 
 
@@ -374,7 +374,7 @@ def find_valid_task_chains(tasks):
     if len(task_chain) == len(tasks) * 2:
         return task_chain
     else:
-        print("Invalid task chain generated.")
+        # print("Invalid task chain generated.")
         return False
 
 
@@ -445,6 +445,9 @@ def maximize_reaction_time(tasks, niter):
         minimizer_kwargs=minimizer_kwargs,
         niter=niter,
         T=1.0,
+        stepsize=0.5,
+        interval=50,
+        niter_success=10,
         # stepsize=0.01,
         take_step=lambda x: take_step(x, bounds),
         accept_test=accept
@@ -460,11 +463,11 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
     global results_function
     results_function = []  # 清空结果列表
     # init
-    print("================INIT====================")
+    # print("================INIT====================")
     # results_function = []
     tasks = RandomEvent(num_tasks, periods, per_jitter).tasks
 
-    print("================OUR====================")
+    # print("================OUR====================")
     final = our_chain(tasks)
     
     if final is False:
@@ -476,16 +479,16 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
         final_r = final[1]
         final_w = final[2]
         
-    print(f"AG Maximized reaction time: {final_e2e_max:.2f}")
+    # print(f"AG Maximized reaction time: {final_e2e_max:.2f}")
 
     reaction_time_a = maximize_reaction_time(tasks, niter)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
-    print("len(results_function):", len(results_function))
-    print("================OTHER====================")
+    # print("len(results_function):", len(results_function))
+    # print("================OTHER====================")
     # print(f"reaction_time_a global: {reaction_time_a:.2f}")
     # print(f"reaction_time_b: {reaction_time_b:.2f}")
-    print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
+    # print(f"OTHER Maximized reaction time: {max_reaction_time:.2f}")
 
     return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
@@ -496,7 +499,7 @@ if __name__ == "__main__":
     num_tasks = 5 # 任务数量
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # 抖动百分比
-    print(f"num_tasks: {num_tasks}, niter: {niter}, periods: {periods}, per_jitter: {per_jitter}")
+    # print(f"num_tasks: {num_tasks}, niter: {niter}, periods: {periods}, per_jitter: {per_jitter}")
 
     results_function = []
 
