@@ -11,8 +11,10 @@ def main():
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # 周期列表
     jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]
     num_chains = [3,5,8,10]
+    # num_chains = [3]
 
     printlog = True  # 是否打印日志
+
 
 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -45,7 +47,7 @@ def main():
             false_results[num_tasks][per_jitter].append(zero_percentage)
             # print(f"Percentage of False: {zero_percentage:.2f}%")
 
-
+    r1 = []
     # 打印结果
     print("\n================== Results ==================")
     for num_tasks in num_chains:
@@ -55,11 +57,13 @@ def main():
             print(f"per_jitter {per_jitter}: Percentage of False: {zero_percentage:.2f}%")
             for (final_e2e_max, max_reaction_time, r,_) in results[num_tasks][per_jitter]:
                 if r is not None:
+                    if r > 1:
+                        r1.append(r)
                     print(f"    Final E2E Max: {final_e2e_max:.2f}, Maximized Reaction Time: {max_reaction_time:.2f}, R = {r:.2f}")
                 else:
                     print(f"    Final E2E Max: {final_e2e_max:.2f}, Maximized Reaction Time: {max_reaction_time:.2f}, R = None")
 
-    
+    print(f"R>1: {r1}")
 
     
     # 绘制折线图
@@ -71,9 +75,9 @@ def main():
         plt.plot(jitter_percent, percentages, label=f"num_tasks={num_tasks}", marker='o')
 
 
-    plt.title("Zero Percentage vs. Jitter for Different Number of Tasks")
+    plt.title("False Percentage vs. Jitter for Different Number of Tasks")
     plt.xlabel("Jitter Percentage (%)")
-    plt.ylabel("Zero Percentage (%)")
+    plt.ylabel("False Percentage (%)")
     plt.legend()
     plt.grid(True)
     plt.xticks(jitter_percent)  # 设置 x 轴刻度为完整的 jitter_percent
@@ -96,7 +100,7 @@ def main():
     # 设置 y 轴范围从 0 开始
     plt.ylim(0, 1.1)
     plt.xlim(0, index + 1)  # 设置 x 轴范围
-    plt.title("Scatter Plot of R Values for Different Jitter Percent")
+    plt.title("Scatter Plot of R Values")
     plt.xlabel("R Value Index (Order)")
     plt.ylabel("R = max_reaction_time / final_e2e_max")
     plt.legend()
