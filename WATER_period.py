@@ -35,7 +35,7 @@ class Event:
         )
 
     def get_trigger_time(self, j):
-        # random_jitter = random.uniform(0, self.maxjitter)
+        self.random_jitter = random.uniform(0, self.maxjitter)
         tj = j * self.period + self.offset + self.random_jitter
         return tj
 
@@ -372,6 +372,12 @@ def find_valid_task_chains(tasks):
 
     # 检查生成的任务链是否有效
     if len(task_chain) == len(tasks) * 2:
+        # print(f"read_event: {task_chain[0][0].event_type}_{task_chain[0][0].id}, "
+        #       f"period: {task_chain[0][0].period}, offset: {task_chain[0][0].offset}, "
+        #       f"jitter: {task_chain[0][0].random_jitter}")
+        # print(f"write_event: {task_chain[-1][0].event_type}_{task_chain[-1][0].id}, "       
+        #       f"period: {task_chain[-1][0].period}, offset: {task_chain[-1][0].offset}, "
+        #       f"jitter: {task_chain[-1][0].random_jitter}")
         return task_chain
     else:
         # print("Invalid task chain generated.")
@@ -495,7 +501,7 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
 
 # 测试代码（可选，用于单独测试此文件）
 if __name__ == "__main__":
-    niter = 10  # 迭代次数
+    niter = 1  # 迭代次数
     num_tasks = 5 # 任务数量
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # 抖动百分比
