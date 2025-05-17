@@ -35,7 +35,7 @@ class Event:
         )
 
     def get_trigger_time(self, j):
-        # random_jitter = random.uniform(0, self.maxjitter)
+        self.random_jitter = random.uniform(0, self.maxjitter)
         tj = j * self.period + self.offset + self.random_jitter
         return tj
 
