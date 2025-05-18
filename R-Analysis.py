@@ -95,7 +95,7 @@ def main():
     plt.axhline(y=1, color='r', linestyle='--', label='R=1')
 
     # 设置 y 轴范围从 0 开始
-    plt.ylim(0, max(r_values) * 1.1)
+    plt.ylim(0, 1.1)
     plt.xlim(0, index + 1)  # 设置 x 轴范围
     plt.title("Scatter Plot of R Values for Different Jitter Percent")
     plt.xlabel("R Value Index (Order)")
