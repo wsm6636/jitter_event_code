@@ -9,13 +9,10 @@ from plot import plot_histogram_from_csv
 from plot import plot_line_chart_from_csv
 
 def main():
-    num_repeats = 10  # number of repeats
+    num_repeats = 1000  # number of repeats
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
     num_chains = [3,5,8,10] 
-
-    # jitters = [0,0.01]  
-    # num_chains = [3,5] 
 
     # log 
     timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
