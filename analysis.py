@@ -373,7 +373,7 @@ def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
     return True
     
 # Maximize the reaction time of the general task chain
-def maximize_reaction_time(tasks, niter):
+def maximize_reaction_time(tasks):
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
     for i, task in enumerate(tasks):
@@ -397,7 +397,7 @@ def maximize_reaction_time(tasks, niter):
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=niter,
+        niter=1,
         T=1.0,
         stepsize=0.5,  # Step size for the random walk
         interval=50,  # Interval for the random walk
@@ -414,7 +414,7 @@ def maximize_reaction_time(tasks, niter):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods, per_jitter, niter):
+def run_analysis(num_tasks, periods, per_jitter):
     global results_function
     results_function = []  
 
@@ -432,7 +432,7 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
         final_w = final[2]
         
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(tasks, niter)
+    reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
 
@@ -441,14 +441,12 @@ def run_analysis(num_tasks, periods, per_jitter, niter):
 
 # test the code
 if __name__ == "__main__":
-    niter = 10  # Iterations
     num_tasks = 5 
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # percent jitter
-    # print(f"num_tasks: {num_tasks}, niter: {niter}, periods: {periods}, per_jitter: {per_jitter}")
 
     results_function = []
 
-    run_analysis(num_tasks, periods, per_jitter, niter)
+    run_analysis(num_tasks, periods, per_jitter)
 
 

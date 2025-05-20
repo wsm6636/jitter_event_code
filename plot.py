@@ -1,13 +1,14 @@
 import matplotlib.pyplot as plt
 import csv
 import numpy as np
-import argparse  # 导入 argparse 模块用于处理命令行参数
+import argparse 
 from scipy.stats import gaussian_kde
 
-def plot_histogram_from_csv(csv_file):
+def plot_histogram_from_csv(csv_file,R_plot_name):
     jitter_to_r_values = {}
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
+        # r_values_count = 0  
         for row in reader:
             per_jitter = float(row['per_jitter'])
             r_value = float(row['R']) if row['R'] else None
@@ -17,47 +18,35 @@ def plot_histogram_from_csv(csv_file):
                 jitter_to_r_values[per_jitter].append(r_value)
                 if r_value > 1:
                     print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
+                # r_values_count += 1  
 
-    # 绘制分组直方图和趋势曲线
     plt.figure(figsize=(12, 8))
-    num_bins = 15
-    bin_range = (0, 1)  # 设置直方图的范围
+    num_bins = 20
+    bin_range = (0, 1.1)  
     bin_width = (bin_range[1] - bin_range[0]) / num_bins
 
-    # 获取所有 per_jitter 的值
     jitters = sorted(jitter_to_r_values.keys())
     num_groups = len(jitters)
-    group_width = bin_width / (num_groups + 1)  # 每个组的宽度
-
-    # 绘制每个组的直方图和趋势曲线
+    group_width = bin_width / (num_groups + 1)  
+    # print(f"Number of valid R values: {r_values_count}")  # 打印有效 R 值计数
     for idx, per_jitter in enumerate(jitters):
         r_values = jitter_to_r_values[per_jitter]
-        #分组
+        
+        # Grouped Histogram
         offset = (idx - num_groups / 2) * group_width
         counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        plt.bar(bin_centers + offset, counts, width=group_width, alpha=0.5, label=f'per_jitter={per_jitter}', align='center')
+        plt.bar(bin_centers + offset, counts, width=group_width, alpha=0.3, align='center')
 
-        #重叠
-        # counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
-        # bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        # plt.bar(bin_centers, counts, width=bin_width, alpha=0.3, label=f'per_jitter={per_jitter}',align='center', color=plt.cm.tab10(idx))
-
-        # 绘制阶梯直方图
-        # counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
-        # plt.stairs(counts, bin_edges, alpha=1, label=f'per_jitter={per_jitter}', color=plt.cm.tab10(idx))
-
-        # #趋势
-        # if len(r_values) > 1:  # 确保数据集中有足够的数据点
-        #     kde = gaussian_kde(r_values)
-        #     x = np.linspace(bin_range[0], bin_range[1], 1000)
-        #     y = kde(x)
-        #     # # 放大趋势线的 y 轴值，使其比直方图更高
-        #     # max_count = max(counts) if counts.size > 0 else 1
-        #     # y = y * max_count
-        #     plt.plot(x, y * len(r_values) * bin_width, linestyle='-', label=f'per_jitter={per_jitter}',color=plt.cm.tab10(idx))
-        # else:
-        #     print(f"Skipping KDE for per_jitter={per_jitter} due to insufficient data points.")
+        # trend line
+        if len(r_values) > 1:  
+            kde = gaussian_kde(r_values)
+            x = np.linspace(bin_range[0], bin_range[1], 1000)
+            y = kde(x)
+            plt.plot(x, y * len(r_values) * bin_width, linestyle='-', label=f'per_jitter={per_jitter}',color=plt.cm.tab10(idx))
+        else:
+            print(f"Skipping KDE for per_jitter={per_jitter} due to insufficient data points.")
+    
 
     plt.title("Distribution of R Values for Different Jitter Percentages")
     plt.xlabel("R = max_reaction_time / final_e2e_max")
@@ -65,20 +54,19 @@ def plot_histogram_from_csv(csv_file):
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{R_plot_name}")
-    plt.show()
+    # plt.show()
 
     
 
 
-def plot_line_chart_from_csv(csv_file):
-    # 读取 CSV 文件中的数据
+def plot_line_chart_from_csv(csv_file, percent_plot_name):
     jitter_to_false_percentage = {}
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
         for row in reader:
             per_jitter = float(row['per_jitter'])
-            false_percentage = float(row['false_percentage'])  # 使用 false_percentage 字段
-            num_tasks = int(row['num_tasks'])  # 使用 num_tasks 字段
+            false_percentage = float(row['false_percentage'])  
+            num_tasks = int(row['num_tasks'])  
 
             if num_tasks not in jitter_to_false_percentage:
                 jitter_to_false_percentage[num_tasks] = {}
@@ -88,7 +76,6 @@ def plot_line_chart_from_csv(csv_file):
 
             jitter_to_false_percentage[num_tasks][per_jitter].append(false_percentage)
 
-    # 绘制折线图
     plt.figure(figsize=(10, 6))
     for num_tasks, jitter_data in jitter_to_false_percentage.items():
         jitter_percent = [jitter * 100 for jitter in sorted(jitter_data.keys())]
@@ -100,20 +87,17 @@ def plot_line_chart_from_csv(csv_file):
     plt.ylabel("False Percentage (%)")
     plt.legend()
     plt.grid(True)
-    plt.xticks(jitter_percent)  # 设置 x 轴刻度为完整的 jitter_percent
+    plt.xticks(jitter_percent)  
     plt.savefig(f"{percent_plot_name}")
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
-    # 使用 argparse 解析命令行参数
-    parser = argparse.ArgumentParser(description="Plot histograms and line charts from a CSV file.")
-    parser.add_argument("name", type=str, help="Path to the CSV file containing the data.")
+    parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
+    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
+    parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
     args = parser.parse_args()
 
-    csv_file = f"{args.name}.csv" 
-    percent_plot_name = f"{args.name}_percent.png"
-    R_plot_name = f"{args.name}_R.png"
-
-    plot_histogram_from_csv(csv_file)
-    plot_line_chart_from_csv(csv_file)
+    plot_histogram_from_csv(args.csv_file, args.R_plot_name)
+    plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
