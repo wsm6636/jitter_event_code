@@ -12,33 +12,33 @@ pip install numpy matplotlib scipy seaborn
 
 ### filetree
 
-**analysis.py**: Implementation of Algorithm 2 and the general task chain, and calculation of the maximum reaction time.
+1. **analysis.py**: Implementation of Algorithm 2 and the general task chain, and calculation of the maximum reaction time.
 
-**evaluation.py**: Set parameters and output ".csv" result file and two plots
+2. **evaluation.py**: Set parameters and output ".csv" result file and two plots
 
-**parameters:**
-num_repeats: number of repeats
+    parameters:
+  
+    - num_repeats: number of repeats
 
-periods: periods set
+    - periods: periods set
 
-jitters: percent jitter set, used by max_jitter = percent_jitter * period
+    - jitters: percent jitter set, used by max_jitter = percent_jitter * period
 
+    - num_chains: set of number tasks of per chain
 
-num_chains: set of number tasks of per chain
+3. **data_{num_repeats}_{timestamp}.csv**
 
-**data_{num_repeats}_{timestamp}.csv**
-results_csv: data file with
+    results_csv: data file with
+  
+    - R value = max_reaction_time_of_general_task_chain / max_reaction_time_of_Algorithm2
+  
+    - fales percent: is the percentage of failures of Algorithm 2, which because of FINDEFFECTIVESERIES no return value (Alg2 line1)
 
-R value = max_reaction_time_of_general_task_chain / max_reaction_time_of_Algorithm2
+4. **percent_{num_repeats}_{timestamp}.png:** Relationship between jitter percentage and failure percentage
 
+5. **R_{num_repeats}_{timestamp}.png:** R_value distribution of different jitter percentage
 
-fales percent: is the percentage of failures of Algorithm 2, which because of FINDEFFECTIVESERIES no return value (Alg2 line1)
-
-**percent_{num_repeats}_{timestamp}.png:** Relationship between jitter percentage and failure percentage
-
-**R_{num_repeats}_{timestamp}.png:** R_value distribution of different jitter percentage
-
-**plot.py**: Read ".csv" file and draw the two plots.
+6. **plot.py**: Read ".csv" file and draw the two plots.
 
 ### use
 
