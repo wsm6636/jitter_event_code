@@ -21,14 +21,14 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
                 # r_values_count += 1  
 
     plt.figure(figsize=(12, 8))
-    num_bins = 20
-    bin_range = (0, 1.1)  
+    num_bins = 50
+    bin_range = (0, 1.05)  
     bin_width = (bin_range[1] - bin_range[0]) / num_bins
 
     jitters = sorted(jitter_to_r_values.keys())
     num_groups = len(jitters)
     group_width = bin_width / (num_groups + 1)  
-    # print(f"Number of valid R values: {r_values_count}")  # 打印有效 R 值计数
+    # print(f"Number of valid R values: {r_values_count}")  
     for idx, per_jitter in enumerate(jitters):
         r_values = jitter_to_r_values[per_jitter]
         
@@ -51,6 +51,7 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
     plt.title("Distribution of R Values for Different Jitter Percentages")
     plt.xlabel("R = max_reaction_time / final_e2e_max")
     plt.ylabel("Frequency")
+    plt.xlim(bin_range)
     plt.legend()
     plt.grid(True)
     plt.savefig(f"{R_plot_name}")

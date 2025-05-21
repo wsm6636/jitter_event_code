@@ -10,7 +10,6 @@ It implements the methods described in the paper
 @author: Shumo Wang
 """
 
-# Event and Task classes
 import datetime
 import math
 import random
@@ -18,6 +17,8 @@ import numpy as np
 from scipy.optimize import basinhopping
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+
 
 class Event:
     def __init__(self, event_type, period, offset, maxjitter, id=None):
@@ -61,10 +62,14 @@ class RandomEvent:
         self,
         num_tasks,
         periods,
+        read_offsets,
+        write_offsets,
         per_jitter
     ):
         self.num_tasks = num_tasks
         self.periods = periods
+        self.read_offsets = read_offsets
+        self.write_offsets = write_offsets
         self.per_jitter = per_jitter
         self.tasks = self.generate_events_tasks()
         
@@ -75,15 +80,9 @@ class RandomEvent:
         tasks = []
         for i in range(self.num_tasks):
             # randomly select a period from the list
-            period = random.choice(self.periods)
-
-            read_offset = random.randint(
-                0, (period - 1)
-            )
-            # LET 
-            # write_offset = random.randint(read_offset + 1, period)
-            write_offset = read_offset + period
-
+            period = self.periods[i]
+            read_offset = self.read_offsets[i]
+            write_offset = self.write_offsets[i]
             # x% * period
             maxjitter = self.per_jitter*period
 
@@ -110,6 +109,8 @@ class RandomEvent:
             task = Task(read_event=read_event, write_event=write_event, id=i)
             tasks.append(task)
 
+            # print(f"task {i}: read_event: period: {read_event.period}, offset: {read_event.offset}, maxjitter: {read_event.maxjitter}")
+            # print(f"task {i}: write_event: period: {write_event.period}, offset: {write_event.offset}, maxjitter: {write_event.maxjitter}")
         return tasks
 
     def get_tasks(self):
@@ -322,12 +323,6 @@ def find_valid_task_chains(tasks):
 
     # check if the task chain is valid
     if len(task_chain) == len(tasks) * 2:
-        # print(f"read_event: {task_chain[0][0].event_type}_{task_chain[0][0].id}, "
-        #       f"period: {task_chain[0][0].period}, offset: {task_chain[0][0].offset}, "
-        #       f"jitter: {task_chain[0][0].random_jitter}")
-        # print(f"write_event: {task_chain[-1][0].event_type}_{task_chain[-1][0].id}, "       
-        #       f"period: {task_chain[-1][0].period}, offset: {task_chain[-1][0].offset}, "
-        #       f"jitter: {task_chain[-1][0].random_jitter}")
         return task_chain
     else:
         # print("Invalid task chain generated.")
@@ -420,11 +415,11 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods, per_jitter):
+def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
-    tasks = RandomEvent(num_tasks, periods, per_jitter).tasks
+    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
     final = our_chain(tasks)
     
@@ -441,23 +436,18 @@ def run_analysis(num_tasks, periods, per_jitter):
     reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
-
+    # max_reaction_time = 0
     return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 
 # test the code
 if __name__ == "__main__":
-<<<<<<< HEAD:WATER_period.py
-    niter = 1  # 迭代次数
-    num_tasks = 5 # 任务数量
-=======
     num_tasks = 5 
->>>>>>> refs/remotes/origin/main:analysis.py
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # percent jitter
-
+    read_offsets = [0, 0, 0, 0, 0]
     results_function = []
 
-    run_analysis(num_tasks, periods, per_jitter)
+    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 
