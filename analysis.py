@@ -223,6 +223,7 @@ def combine_no_free_jitter(task1, task2):
         r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5
         r_1_2_jitter = r1.maxjitter  # line 6
         m2 = w2.offset - r2.offset - r2.maxjitter
+        m2 = max(0, m2)  # Formula (19)
         M2 = w2.offset - r2.offset + w2.maxjitter  # line 7
         w_1_2_offset = r2_star.offset + m2
         w_1_2_jitter = r2_star.maxjitter + M2 - m2  # line 8
@@ -230,6 +231,7 @@ def combine_no_free_jitter(task1, task2):
         w_1_2_offset = w2.offset + r2_star.offset - r2.offset  # line 10
         w_1_2_jitter = w2.maxjitter  # line 11
         m1 = w1.offset - r1.offset - r1.maxjitter
+        m1 = max(0, m1)
         M1 = w1.offset - r1.offset + w1.maxjitter  # line 12
         r_1_2_offset = w1_star.offset - M1
         r_1_2_jitter = w1_star.maxjitter + M1 - m1  # line 13
@@ -446,6 +448,7 @@ if __name__ == "__main__":
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # percent jitter
     read_offsets = [0, 0, 0, 0, 0]
+    # Write_offsets = [0, 0, 0, 0, 0]
     results_function = []
 
     run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)

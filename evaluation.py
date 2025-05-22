@@ -24,16 +24,16 @@ def generate_periods_and_offsets(num_tasks, periods, seed):
     random.seed(seed)  
     selected_periods = random.choices(periods,  k=num_tasks)
     selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]  
-    selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
-
-    print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}, seed: {seed}")
+    # selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
+    selected_write_offsets = [random.randint(read_offset, read_offset+period) for read_offset, period in zip(selected_read_offsets, selected_periods)]
+    # print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}, seed: {seed}")
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
 
 def main():
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 5  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
