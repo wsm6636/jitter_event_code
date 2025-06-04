@@ -12,7 +12,7 @@ import random
 import time
 
 
-def generate_periods_and_offsets(num_tasks, periods, seed):
+def generate_periods_and_offsets(num_tasks, periods):
     """
     generate periods and offsets for tasks
     :param num_tasks: number of tasks
@@ -20,20 +20,19 @@ def generate_periods_and_offsets(num_tasks, periods, seed):
     :param jitter_factor: jitter percentage
     :param seed: random seed
     :return: periods, read_offsets, write_offsets
-    """
-    random.seed(seed)  
+    """  
     selected_periods = random.choices(periods,  k=num_tasks)
     selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]  
-    # selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
-    selected_write_offsets = [random.randint(read_offset, read_offset+period) for read_offset, period in zip(selected_read_offsets, selected_periods)]
-    # print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}, seed: {seed}")
+    selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
+
+    print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
 
 def main():
     # INCREASE here to have more experiments per same settings
-    num_repeats = 5  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats =10  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
@@ -42,11 +41,11 @@ def main():
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
     
     # num_chains = [3,5,8,10] 
-    num_chains  = [3,5]  
+    num_chains  = [3,5]  # for test
 
     # below we are setting the random seed. Depending on the need, it may be set to a fixed value or a time-dependent value
     # RANDOM SEED: set it to time to avoid repetition. Or to a given value for reproducibility
-    random_seed = time.time()
+    random_seed = int(time.time())
     # random_seed = 100  # fixed seed
 
     # name for log file
@@ -63,9 +62,9 @@ def main():
     # TODO: add random_seed to the filename
     # run analysis
     for i in range(num_repeats):            # loop on number of repetitions
-        # random.seed(random_seed)
+        random.seed(random_seed)
         for num_tasks in num_chains:        # on number of tasks in a chain
-            selected_periods, selected_read_offsets, selected_write_offsets = generate_periods_and_offsets(num_tasks, periods, random_seed)
+            selected_periods, selected_read_offsets, selected_write_offsets = generate_periods_and_offsets(num_tasks, periods)
             for per_jitter in jitters:      # on relative (to period) magnitude of jitter
                 # generate the jitter
                 # only generate the jitter
