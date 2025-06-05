@@ -3,6 +3,8 @@ import csv
 import numpy as np
 import argparse 
 from scipy.stats import gaussian_kde
+import pandas as pd
+import ast
 
 def plot_histogram_from_csv(csv_file,R_plot_name):
     jitter_to_r_values = {}
@@ -80,7 +82,7 @@ def plot_line_chart_from_csv(csv_file, percent_plot_name):
     plt.figure(figsize=(10, 6))
     for num_tasks, jitter_data in jitter_to_false_percentage.items():
         jitter_percent = [jitter * 100 for jitter in sorted(jitter_data.keys())]
-        false_percentages = [np.mean(jitter_data[jitter]) for jitter in sorted(jitter_data.keys())]
+        false_percentages = [np.mean(jitter_data[jitter]) * 100 for jitter in sorted(jitter_data.keys())]
         plt.plot(jitter_percent, false_percentages, label=f"num_tasks={num_tasks}", marker='o')
 
     plt.title("False Percentage vs. Jitter for Different Number of Tasks")
@@ -92,13 +94,63 @@ def plot_line_chart_from_csv(csv_file, percent_plot_name):
     plt.savefig(f"{percent_plot_name}")
     # plt.show()
 
+def plot_ratio_for_num_chains(csv_file, plot_name):
+    # 使用 pandas 读取 CSV 文件
+    df = pd.read_csv(csv_file)
+
+    # 按 num_tasks 分组
+    grouped_by_num_tasks = df.groupby('num_tasks')
+
+    # 计算子图的行列数
+    num_tasks = len(grouped_by_num_tasks)
+    num_columns = 2  # 每行显示 2 个子图
+    num_rows = (num_tasks + num_columns - 1) // num_columns
+
+    # 创建子图
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()  # 将二维数组展平为一维数组
+
+    for idx, (num_tasks, task_group) in enumerate(grouped_by_num_tasks):
+        ax = axes[idx]
+
+        # 按 ratios 分组
+        grouped_by_ratios = task_group.groupby('ratios')
+        
+
+        for ratio, ratio_group in grouped_by_ratios:
+            # 按 jitter percent 排序
+            sorted_group = ratio_group.sort_values(by='per_jitter')
+            jitter_percent = sorted_group['per_jitter'] * 100
+            false_percentages = sorted_group['false_percentage'] * 100
+
+            # 绘制折线图
+            ax.plot(jitter_percent, false_percentages, label=f"Ratio = {ratio:.2f}", marker='o')
+
+        # 设置子图标题和标签
+        ax.set_title(f"num_tasks = {num_tasks}")
+        ax.set_xlabel("Jitter Percentage (%)")
+        ax.set_ylabel("False Percentage (%)")
+        ax.legend()
+        ax.grid(True)
+
+    # 隐藏多余的子图
+    for idx in range(num_tasks, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    # 调整子图间距
+    plt.tight_layout()
+    plt.savefig(plot_name)
+    plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
     parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-    parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
-    parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
+    # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
+    # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
+    parser.add_argument("ratio_plot_name", type=str, help="Name of the output plot file for false percentages.")
     args = parser.parse_args()
 
-    plot_histogram_from_csv(args.csv_file, args.R_plot_name)
-    plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
+    # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
+    # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
+    plot_ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
