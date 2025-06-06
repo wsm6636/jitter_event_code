@@ -96,7 +96,7 @@ def plot_line_chart_from_csv(csv_file, percent_plot_name):
 
 
 def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
-    ratio_to_r_values = {}
+    num_tasks_to_r_values = {}
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
         for row in reader:
@@ -105,46 +105,38 @@ def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
             ratio = float(row['ratios'])
             num_tasks = int(row['num_tasks'])
             
-            if per_jitter == 0.2 and r_value is not None:
-                if ratio not in ratio_to_r_values:
-                    ratio_to_r_values[ratio] = {}
-                if num_tasks not in ratio_to_r_values[ratio]:
-                    ratio_to_r_values[ratio][num_tasks] = []
-                ratio_to_r_values[ratio][num_tasks].append(r_value)
-                if r_value > 1:
-                    print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
+            if per_jitter == 0.2 and ratio == 2 and r_value is not None:
+                if num_tasks not in num_tasks_to_r_values:
+                    num_tasks_to_r_values[num_tasks] = []
+                num_tasks_to_r_values[num_tasks].append(r_value)
 
-    num_ratios = len(ratio_to_r_values)
+    num_num_tasks = len(num_tasks_to_r_values)
     num_columns = 2  # 每行显示 2 个子图
-    num_rows = (num_ratios + num_columns - 1) // num_columns
+    num_rows = (num_num_tasks + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
-    for idx, (ratio, num_tasks_to_r_values) in enumerate(ratio_to_r_values.items()):
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+
+    for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
         ax = axes[idx]
         num_bins = 50
         bin_range = (0, 1.05)
         bin_width = (bin_range[1] - bin_range[0]) / num_bins
 
-        for num_tasks, r_values in num_tasks_to_r_values.items():
-            counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-            ax.bar(bin_centers, counts, width=bin_width, alpha=0.3, align='center', label=f'num_tasks={num_tasks}')
+        counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
-            if len(r_values) > 1:
-                kde = gaussian_kde(r_values)
-                x = np.linspace(bin_range[0], bin_range[1], 1000)
-                y = kde(x)
-                ax.plot(x, y * len(r_values) * bin_width, linestyle='-', label=f'num_tasks={num_tasks}', color=plt.cm.tab10(num_tasks % 10))
-
-        ax.set_title(f"R Value Distribution for Ratio = {ratio} (per_jitter=0.2)")
+        data_count = len(r_values)
+        ax.set_title(f"num_tasks = {num_tasks} (ratio=2, per_jitter=0.2) - Data Count: {data_count}")
         ax.set_xlabel("R = max_reaction_time / final_e2e_max")
         ax.set_ylabel("Frequency")
         ax.legend()
         ax.grid(True)
 
-    for idx in range(num_ratios, num_rows * num_columns):
+    for idx in range(num_num_tasks, num_rows * num_columns):
         axes[idx].axis('off')
 
     plt.tight_layout()
