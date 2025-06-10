@@ -50,9 +50,9 @@ def main():
 
     # name for log file
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
-    percent_plot_name = f"percent_{num_repeats}_{timestamp}.png"
-    R_plot_name = f"R_{num_repeats}_{timestamp}.png"
-    results_csv = f"data_{num_repeats}_{timestamp}.csv" 
+    percent_plot_name = f"result/percent_{num_repeats}_{timestamp}.png"
+    R_plot_name = f"result/R_{num_repeats}_{timestamp}.png"
+    results_csv = f"result/data_{num_repeats}_{timestamp}.csv" 
 
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
@@ -84,7 +84,7 @@ def main():
     # algorithm2 failed percentage 
     for num_tasks in num_chains:
         for per_jitter in jitters:
-            false_percentage = (false_results[num_tasks][per_jitter] / num_repeats) * 100
+            false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
             false_results[num_tasks][per_jitter] = false_percentage
 
     # save results to csv

@@ -138,50 +138,85 @@ def euclide_extend(a, b):
         t1 = new_t
     return (r0, s0, t0)
 
-def check_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
-    delta_mod_period = (read_offset - write_offset) % period
-
-    # Check if the current offsets satisfy the condition
-    if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):
-        return True  # Current offsets are valid
-    else:
-        return False  # Current offsets are not valid
 
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
-    result = check_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
-    if result:    
-        return read_offset, write_offset, read_offset - write_offset
+    ad_scuss = False
+    delta_mod_period = (read_offset - write_offset) % period
+    if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
+        return read_offset, write_offset, read_offset - write_offset, ad_scuss
+    else:
+        print(f"------------------adjust-----------------")
+
+    r_offsets = []
+    w_offsets = []
+    # for read_offset in range(0, period):
+    #     write_offset = random.randint(read_offset + 1, read_offset+period+1)  # Random write offset within the period
+    #     delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
+    #     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):
+    #         r_offsets.append(read_offset)
+    #         w_offsets.append(write_offset)
+
+    step=0.1
+    for read_offset in np.arange(0, period, step):
+        write_offset = random.uniform(read_offset + step, period)
+        delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
+
+        if write_jitter <= delta_mod_period < (period - read_jitter):
+            r_offsets.append(read_offset)
+            w_offsets.append(write_offset)
+            # break  # Found a valid pair, break the loop
+
+    if r_offsets and w_offsets:
+        i = random.randint(0, len(r_offsets) - 1)
+        read_offset = r_offsets[i]
+        write_offset = w_offsets[i]
+        print(f"Adjusted read_offset: {read_offset}, write_offset: {write_offset}")
+        ad_scuss = True
+        return read_offset, write_offset, read_offset - write_offset, ad_scuss
+    else:
+        print("No valid offsets found within the given constraints.")
+        return read_offset, write_offset, read_offset - write_offset, ad_scuss
     
-
-    while result is False:
-        read_offset = random.uniform(0, period)  # Random read offset within the period
-        r = random.uniform(write_jitter, period - read_jitter)  # Randomly select a valid r
-        write_offset = (read_offset - r) % period  # Calculate write_offset
-        # print(f"r:{r}, write_jitter: {write_jitter}, read_jitter: {read_jitter}, period: {period}, read_offset: {read_offset}, write_offset: {write_offset}")
-        result = check_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
-        
-
-    print(f"Adjusted offsets: read_offset: {read_offset}, write_offset: {write_offset}, period: {period}, r: {r}, write_jitter: {write_jitter}, read_jitter: {read_jitter}")
-    return read_offset, write_offset, read_offset - write_offset
-
 
 # find effective event
 # Algorithm 2 line 1
-def effective_event(w, r):
+def effective_event(task1,task2):
+    r1 = task1.read_event
+    w = task1.write_event
+    r = task2.read_event
+    w2 = task2.write_event
+    
     w_star = None
     r_star = None
+    
+    adjust = False
+
+    r_of_old = r.offset
+    w_of_old = w.offset
+    r1_of_old = r1.offset
+    w2_of_old = w2.offset
+
     delta = r.offset - w.offset
 
     (G, pw, pr) = euclide_extend(w.period, r.period)
     T_star = max(w.period, r.period)
 
     if w.period == r.period:  # Theorem 2
-        if (w.maxjitter + r.maxjitter) <= T_star: 
-            print(f"r.offset: {r.offset}, w.offset: {w.offset}, delta: {delta}, r.jitter: {r.maxjitter}, w.jitter: {w.maxjitter}")
-            r.offset, w.offset, delta = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
-        else:
-            print(f"Does not conform to Theorem 2, Formula (16).")
-            return False
+        # if w.maxjitter < (T_star + r.maxjitter): 
+        #     r_of_new, w_of_new, delta, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
+        #     if adjust:
+        #         r1.offset = w_of_new - w_of_old + r1_of_old
+        #         w2.offset = r_of_new - r_of_old + w2_of_old
+        #         r.offset = r_of_new
+        #         w.offset = w_of_new
+        #         task1.read_event = r1
+        #         task1.write_event = w
+        #         task2.read_event = r
+        #         task2.write_event = w2
+        #         print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
+        # else:
+        #     print(f"Does not conform write_jitter {w.maxjitter} < T_star {T_star} + read_jitter {r.maxjitter}.")
+            
         if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (16)
             w_jitter_star = w.maxjitter
             r_jitter_star = r.maxjitter  # Formula (17)
@@ -233,7 +268,7 @@ def effective_event(w, r):
         maxjitter=r_jitter_star,
     )
     # (w_star, r_star) the reslut of effective event (line 1)
-    return (w_star, r_star)
+    return (w_star, r_star, adjust)
 
 
 # Algorithm 2
@@ -243,10 +278,11 @@ def combine_no_free_jitter(task1, task2):
     r2 = task2.read_event
     w2 = task2.write_event
     # line 1
-    result = effective_event(w1, r2)
+    result = effective_event(task1,task2)  # effective event for w1 and r2
+    
 
     if result:
-        (w1_star, r2_star) = result
+        (w1_star, r2_star, adjust) = result
     else:
         # print("==========FAILED TO EFFECTIVE EVENT==========")
         return False
@@ -288,20 +324,20 @@ def combine_no_free_jitter(task1, task2):
         maxjitter=w_1_2_jitter,
     )  # line 20
 
-    return (r_1_2, w_1_2)
+    return (r_1_2, w_1_2, adjust)
 
 # asc index order chain 
 def chain_asc_no_free_jitter(tasks):
     n = len(tasks)
     current_task = tasks[0]
-
+    adjust = False
     for i in range(1, n):
         result = combine_no_free_jitter(current_task, tasks[i])
         if result is False:
             # print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
             return False
         else:
-            (r, w) = result
+            (r, w, adjust) = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
     # if r.offset < 0:
     #   print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
@@ -309,16 +345,16 @@ def chain_asc_no_free_jitter(tasks):
     #   r.offset = 0
     #   r.offset += r.period
     #   w.offset += r.period
-    return  r, w
+    return  r, w, adjust
 
 # max reaction time of our paper
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
-        final_r, final_w = final_combine_result
+        final_r, final_w, adjust = final_combine_result
         # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        return max_reaction_time, final_r, final_w
+        return max_reaction_time, final_r, final_w, adjust
     else:
         # print("Failed to combine predecessor and successor results.")
         return False
@@ -453,24 +489,30 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
     results_function = []  
 
     tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
+    tasksold = tasks  # keep the original tasks for later use
+    # print(f"old tasks: {tasksold}")
 
     final = our_chain(tasks)
     
+    # print(f"new tasks: {tasks}")
+
     if final is False:
         final_e2e_max = 0
         final_r = None
         final_w = None
+        adjust = False
     else:
         final_e2e_max = final[0]
         final_r = final[1]
         final_w = final[2]
+        adjust = final[3]
         
     # check if the final result is valid
-    # reaction_time_a = maximize_reaction_time(tasks)
-    # reaction_time_b = max(results_function)
-    # max_reaction_time = max(reaction_time_a, reaction_time_b)
-    max_reaction_time = 0
-    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
+    reaction_time_a = maximize_reaction_time(tasks)
+    reaction_time_b = max(results_function)
+    max_reaction_time = max(reaction_time_a, reaction_time_b)
+    # max_reaction_time = 0
+    return final_e2e_max, max_reaction_time, final_r, final_w, adjust
 
 
 # test the code

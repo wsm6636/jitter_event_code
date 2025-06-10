@@ -74,10 +74,10 @@ def main():
     print(f"Ratios: {ratios}")
     # name for log file
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
-    percent_plot_name = f"percent_{num_repeats}_{timestamp}.png"
-    R_plot_name = f"R_{num_repeats}_{timestamp}.png"
-    results_csv = f"data_{num_repeats}_{timestamp}.csv" 
-    ratio_plot_name = f"ratios_{num_repeats}_{timestamp}.png"
+    percent_plot_name = f"ratio/percent_{num_repeats}_{timestamp}.png"
+    R_plot_name = f"ratio/R_{num_repeats}_{timestamp}.png"
+    results_csv = f"ratio/data_{num_repeats}_{timestamp}.csv" 
+    ratio_plot_name = f"ratio/ratios_{num_repeats}_{timestamp}.png"
 
     # preparing list for storing result
     results = {num_tasks: {per_jitter: {ratio: [] for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
