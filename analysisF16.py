@@ -202,20 +202,20 @@ def effective_event(task1,task2):
     T_star = max(w.period, r.period)
 
     if w.period == r.period:  # Theorem 2
-        # if w.maxjitter < (T_star + r.maxjitter): 
-        #     r_of_new, w_of_new, delta, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
-        #     if adjust:
-        #         r1.offset = w_of_new - w_of_old + r1_of_old
-        #         w2.offset = r_of_new - r_of_old + w2_of_old
-        #         r.offset = r_of_new
-        #         w.offset = w_of_new
-        #         task1.read_event = r1
-        #         task1.write_event = w
-        #         task2.read_event = r
-        #         task2.write_event = w2
-        #         print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
-        # else:
-        #     print(f"Does not conform write_jitter {w.maxjitter} < T_star {T_star} + read_jitter {r.maxjitter}.")
+        if w.maxjitter < (T_star + r.maxjitter): 
+            r_of_new, w_of_new, delta, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
+            if adjust:
+                r1.offset = w_of_new - w_of_old + r1_of_old
+                w2.offset = r_of_new - r_of_old + w2_of_old
+                r.offset = r_of_new
+                w.offset = w_of_new
+                task1.read_event = r1
+                task1.write_event = w
+                task2.read_event = r
+                task2.write_event = w2
+                print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
+        else:
+            print(f"Does not conform write_jitter {w.maxjitter} < T_star {T_star} + read_jitter {r.maxjitter}.")
             
         if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (16)
             w_jitter_star = w.maxjitter
@@ -508,7 +508,7 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
         adjust = final[3]
         
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(tasks)
+    reaction_time_a = maximize_reaction_time(tasksold)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
