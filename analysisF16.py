@@ -149,13 +149,6 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
 
     r_offsets = []
     w_offsets = []
-    # for read_offset in range(0, period):
-    #     write_offset = random.randint(read_offset + 1, read_offset+period+1)  # Random write offset within the period
-    #     delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
-    #     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):
-    #         r_offsets.append(read_offset)
-    #         w_offsets.append(write_offset)
-
     step=0.1
     for read_offset in np.arange(0, period, step):
         write_offset = random.uniform(read_offset + step, period)
@@ -202,6 +195,8 @@ def effective_event(task1,task2):
     T_star = max(w.period, r.period)
 
     if w.period == r.period:  # Theorem 2
+        
+        #### Check if the write event can be adjusted to conform to the read event
         if w.maxjitter < (T_star + r.maxjitter): 
             r_of_new, w_of_new, delta, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
             if adjust:
@@ -216,7 +211,8 @@ def effective_event(task1,task2):
                 print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
         else:
             print(f"Does not conform write_jitter {w.maxjitter} < T_star {T_star} + read_jitter {r.maxjitter}.")
-            
+        ######
+
         if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (16)
             w_jitter_star = w.maxjitter
             r_jitter_star = r.maxjitter  # Formula (17)
