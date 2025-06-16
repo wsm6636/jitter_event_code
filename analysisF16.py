@@ -486,11 +486,11 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
 
     tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
     tasksold = tasks  # keep the original tasks for later use
-    # print(f"old tasks: {tasksold}")
+    print(f"old tasks: {tasksold}")
 
     final = our_chain(tasks)
     
-    # print(f"new tasks: {tasks}")
+    print(f"new tasks: {tasks}")
 
     if final is False:
         final_e2e_max = 0
@@ -504,7 +504,7 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
         adjust = final[3]
         
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(tasksold)
+    reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0

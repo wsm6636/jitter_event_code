@@ -26,14 +26,14 @@ def generate_periods_and_offsets(num_tasks, periods):
     selected_read_offsets = [random.uniform(0, period - 1) for period in selected_periods]  # read offset is in range [0, period-1]
     selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
 
-    print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
+    # print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
 
 def main():
     # INCREASE here to have more experiments per same settings
-    num_repeats =100  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats =10  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
@@ -77,7 +77,7 @@ def main():
                 # generate the jitter
                 # only generate the jitter
 
-                print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
+                # print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
                 final_e2e_max, max_reaction_time,  final_r, final_w, adjust = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
