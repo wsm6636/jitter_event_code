@@ -70,7 +70,7 @@ class RandomEvent:
         self.periods = periods
         self.read_offsets = read_offsets
         self.write_offsets = write_offsets
-        self.per_jitter = per_jitter  # percent jitter
+        self.per_jitter = per_jitter
         self.tasks = self.generate_events_tasks()
         
     def generate_events_tasks(self):
@@ -85,7 +85,6 @@ class RandomEvent:
             write_offset = self.write_offsets[i]
             # x% * period
             maxjitter = self.per_jitter*period
-            # maxjitter = self.maxjitter[i]
 
             # create read and write events
             read_event = Event(
@@ -116,33 +115,6 @@ class RandomEvent:
 
     def get_tasks(self):
         return self.tasks
-    
-def set_offsets(tasks):
-    for i, task in enumerate(tasks):
-        if i == 0:
-            # For the first task, no need to adjust offset based on previous task
-            continue
-
-        current_period = task.period
-        current_read_offset = task.read_event.offset
-        current_read_jitter = task.read_event.maxjitter
-
-        prev_task = tasks[i - 1]
-        prev_period = prev_task.period
-        prev_write_offset = prev_task.write_event.offset
-        prev_write_jitter = prev_task.write_event.maxjitter
-
-
-        if current_period == prev_period:            # If periods are the same, adjust read offset based on previous write offset
-            read_offset, write_offset =adjust_offsets(current_read_offset, prev_write_offset, current_period, prev_write_jitter, current_read_jitter)
-            task.read_event.offset = read_offset
-            task.write_event.offset = write_offset
-        else:
-            continue
-    # Print the adjusted tasks for debugging
-    
-    return tasks
-
 
 # Euclide's algorithm for coefficients of Bezout's identity
 def euclide_extend(a, b):
@@ -166,45 +138,11 @@ def euclide_extend(a, b):
     return (r0, s0, t0)
 
 
-def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
-    delta_mod_period = (read_offset - write_offset) % period
-    if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
-        return read_offset, write_offset
-    else:
-        print(f"------------------adjust-----------------")
-
-    r_offsets = []
-    w_offsets = []
-    step=0.1
-    for read_offset in np.arange(0, period, step):
-        write_offset = random.uniform(read_offset + step, period)
-        delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
-
-        if write_jitter <= delta_mod_period < (period - read_jitter):
-            r_offsets.append(read_offset)
-            w_offsets.append(write_offset)
-            # break  # Found a valid pair, break the loop
-
-    if r_offsets and w_offsets:
-        i = random.randint(0, len(r_offsets) - 1)
-        read_offset = r_offsets[i]
-        write_offset = w_offsets[i]
-        print(f"Adjusted read_offset: {read_offset}, write_offset: {write_offset}")
-        return read_offset, write_offset
-    else:
-        print("No valid offsets found within the given constraints.")
-        return read_offset, write_offset
-
-
 # find effective event
 # Algorithm 2 line 1
-def effective_event(task1,task2):
-    w = task1.write_event
-    r = task2.read_event
-    
+def effective_event(w, r):
     w_star = None
     r_star = None
-    
     delta = r.offset - w.offset
 
     (G, pw, pr) = euclide_extend(w.period, r.period)
@@ -221,7 +159,7 @@ def effective_event(task1,task2):
                 w_offser_star = r.offset - (delta % T_star)  # Formula (17)
                 r_offset_star = r.offset
         else:
-            print(f"Does not conform to Theorem 2, Formula (16).")
+            # print(f"Does not conform to Theorem 2, Formula (16).")
             return False
     elif w.period > r.period:
         if (r.period + r.maxjitter) <= (w.period - w.maxjitter):  # Formula (19) Theorem (3)
@@ -272,8 +210,7 @@ def combine_no_free_jitter(task1, task2):
     r2 = task2.read_event
     w2 = task2.write_event
     # line 1
-    result = effective_event(task1,task2)  # effective event for w1 and r2
-    
+    result = effective_event(w1, r2)
 
     if result:
         (w1_star, r2_star) = result
@@ -324,6 +261,7 @@ def combine_no_free_jitter(task1, task2):
 def chain_asc_no_free_jitter(tasks):
     n = len(tasks)
     current_task = tasks[0]
+
     for i in range(1, n):
         result = combine_no_free_jitter(current_task, tasks[i])
         if result is False:
@@ -477,21 +415,14 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter):
+def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
-    tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
-    # print(f"old tasks: {tasks}")
-
-    # tasks = set_offsets(tasks)  # adjust offsets of tasks
-    # tasksold = tasks  # keep the original tasks for later use
-    
+    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
     final = our_chain(tasks)
     
-    # print(f"new tasks: {tasks}")
-
     if final is False:
         final_e2e_max = 0
         final_r = None
@@ -506,7 +437,7 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-    return final_e2e_max, max_reaction_time, final_r, final_w
+    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 
 # test the code
@@ -515,10 +446,8 @@ if __name__ == "__main__":
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # percent jitter
     read_offsets = [0, 0, 0, 0, 0]
-    write_offsets = [0, 0, 0, 0, 0]
-    maxjitters = [per_jitter * p for p in periods]  # maxjitter = percent jitter * period
     results_function = []
 
-    run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 

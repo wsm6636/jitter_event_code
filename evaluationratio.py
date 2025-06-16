@@ -1,7 +1,7 @@
 # 文件名：main.py
 import csv
 import datetime
-from analysis import run_analysis
+from analysisratio import run_analysis
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
@@ -9,7 +9,7 @@ from scipy.stats import gaussian_kde
 from plot import ratio_histogram_from_csv
 from plot import ratio_line_chart_from_csv
 from plot import ratio_for_num_chains
-from analysis import RandomEvent
+from analysisratio import RandomEvent
 import random
 import time
 

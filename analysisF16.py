@@ -143,32 +143,25 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
     ad_scuss = False
     delta_mod_period = (read_offset - write_offset) % period
     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
-        return read_offset, write_offset, read_offset - write_offset, ad_scuss
+        return read_offset, ad_scuss
     else:
         print(f"------------------adjust-----------------")
 
     r_offsets = []
-    w_offsets = []
     step=0.1
-    for read_offset in np.arange(0, period, step):
-        write_offset = random.uniform(read_offset + step, period)
+    for current_read_offset in np.arange(0, period, step):
         delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
-
         if write_jitter <= delta_mod_period < (period - read_jitter):
-            r_offsets.append(read_offset)
-            w_offsets.append(write_offset)
-            # break  # Found a valid pair, break the loop
+            r_offsets.append(current_read_offset)
 
-    if r_offsets and w_offsets:
+    if r_offsets:
         i = random.randint(0, len(r_offsets) - 1)
         read_offset = r_offsets[i]
-        write_offset = w_offsets[i]
-        print(f"Adjusted read_offset: {read_offset}, write_offset: {write_offset}")
         ad_scuss = True
-        return read_offset, write_offset, read_offset - write_offset, ad_scuss
+        return read_offset, ad_scuss
     else:
         print("No valid offsets found within the given constraints.")
-        return read_offset, write_offset, read_offset - write_offset, ad_scuss
+        return read_offset, ad_scuss
     
 
 # find effective event
@@ -185,8 +178,6 @@ def effective_event(task1,task2):
     adjust = False
 
     r_of_old = r.offset
-    w_of_old = w.offset
-    r1_of_old = r1.offset
     w2_of_old = w2.offset
 
     delta = r.offset - w.offset
@@ -198,14 +189,11 @@ def effective_event(task1,task2):
         
         #### Check if the write event can be adjusted to conform to the read event
         if w.maxjitter < (T_star + r.maxjitter): 
-            r_of_new, w_of_new, delta, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
+            r_of_new, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
+            delta = r_of_new - w.offset  # Update delta after adjustment
             if adjust:
-                r1.offset = w_of_new - w_of_old + r1_of_old
                 w2.offset = r_of_new - r_of_old + w2_of_old
                 r.offset = r_of_new
-                w.offset = w_of_new
-                task1.read_event = r1
-                task1.write_event = w
                 task2.read_event = r
                 task2.write_event = w2
                 print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
@@ -486,11 +474,11 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
 
     tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
     tasksold = tasks  # keep the original tasks for later use
-    print(f"old tasks: {tasksold}")
+    # print(f"old tasks: {tasksold}")
 
     final = our_chain(tasks)
     
-    print(f"new tasks: {tasks}")
+    # print(f"new tasks: {tasks}")
 
     if final is False:
         final_e2e_max = 0

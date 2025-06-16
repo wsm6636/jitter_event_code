@@ -5,7 +5,7 @@ from analysisF16 import run_analysis
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
-from plot import plot_histogram_from_csv 
+from plot import plot_histogram_adjust
 from plot import plot_line_chart_from_csv
 from analysisF16 import RandomEvent
 import random
@@ -52,13 +52,13 @@ def main():
     # name for log file
     # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
     # percent_plot_name = f"F16/percent_{num_repeats}_{timestamp}.png"
-    # R_plot_name = f"F16/R_{num_repeats}_{timestamp}.png"
+    # adjust_plot_name = f"F16/R_{num_repeats}_{timestamp}.png"
     # results_csv = f"F16/data_{num_repeats}_{timestamp}.csv" 
 
     random_seed = 100  # fixed seed
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
     percent_plot_name = f"F16/percent_{num_repeats}_{random_seed}_{timestamp}_taskold.png"
-    R_plot_name = f"F16/R_{num_repeats}_{random_seed}_{timestamp}_taskold.png"
+    adjust_plot_name = f"F16/adjust_{num_repeats}_{random_seed}_{timestamp}_taskold.png"
     results_csv = f"F16/data_{num_repeats}_{random_seed}_{timestamp}_taskold.csv" 
     
 
@@ -77,7 +77,7 @@ def main():
                 # generate the jitter
                 # only generate the jitter
 
-                # print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
+                print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
                 final_e2e_max, max_reaction_time,  final_r, final_w, adjust = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
@@ -110,8 +110,8 @@ def main():
     print(f"All results saved to {results_csv}")
 
     # plotting: uncomment to have plots made automatically
-    plot_histogram_from_csv(results_csv, R_plot_name)
-    print(f"Plots generated and saved to {R_plot_name}")
+    plot_histogram_adjust(results_csv, adjust_plot_name)
+    print(f"Plots generated and saved to {adjust_plot_name}")
     plot_line_chart_from_csv(results_csv, percent_plot_name)
     print(f"Plots generated and saved to {percent_plot_name}")
 
