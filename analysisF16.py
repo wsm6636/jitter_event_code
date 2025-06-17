@@ -140,7 +140,7 @@ def euclide_extend(a, b):
 
 
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
-    ad_scuss = False
+    ad_scuss = None
     delta_mod_period = (read_offset - write_offset) % period
     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
         return read_offset, ad_scuss
@@ -150,16 +150,18 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
     r_offsets = []
     step=0.1
     for current_read_offset in np.arange(0, period, step):
-        delta_mod_period = (read_offset - write_offset) % period  # Calculate the difference modulo period
+        delta_mod_period = (current_read_offset - write_offset) % period  # Calculate the difference modulo period
         if write_jitter <= delta_mod_period < (period - read_jitter):
             r_offsets.append(current_read_offset)
 
     if r_offsets:
-        i = random.randint(0, len(r_offsets) - 1)
-        read_offset = r_offsets[i]
+        # i = random.randint(0, len(r_offsets) - 1)
+        # read_offset = r_offsets[i]
+        read_offset = random.choice(r_offsets)  # Randomly select a valid read offset
         ad_scuss = True
         return read_offset, ad_scuss
     else:
+        ad_scuss = False
         print("No valid offsets found within the given constraints.")
         return read_offset, ad_scuss
     
@@ -188,17 +190,14 @@ def effective_event(task1,task2):
     if w.period == r.period:  # Theorem 2
         
         #### Check if the write event can be adjusted to conform to the read event
-        if w.maxjitter < (T_star + r.maxjitter): 
-            r_of_new, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
-            delta = r_of_new - w.offset  # Update delta after adjustment
-            if adjust:
-                w2.offset = r_of_new - r_of_old + w2_of_old
-                r.offset = r_of_new
-                task2.read_event = r
-                task2.write_event = w2
-                print(f"Adjusted offsets: r1.id: {r1.id}, w2.id: {w2.id}")
-        else:
-            print(f"Does not conform write_jitter {w.maxjitter} < T_star {T_star} + read_jitter {r.maxjitter}.")
+        r_of_new, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
+        delta = r_of_new - w.offset  # Update delta after adjustment
+        if adjust:
+            w2.offset = r_of_new - r_of_old + w2_of_old
+            r.offset = r_of_new
+            task2.read_event = r
+            task2.write_event = w2
+            print(f"Adjusted offsets: w.id {w.id}, with r.id {r.id}. r_of_old {r_of_old}, r.offset{r.offset}. w2_of_old {w2_of_old}, w2.offset {w2.offset}.")
         ######
 
         if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (16)
@@ -496,7 +495,7 @@ def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_writ
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-    return final_e2e_max, max_reaction_time, final_r, final_w, adjust
+    return final_e2e_max, max_reaction_time, final_r, final_w, tasks, adjust
 
 
 # test the code

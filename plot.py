@@ -7,129 +7,149 @@ import pandas as pd
 import ast
 
 def plot_histogram_from_csv(csv_file,R_plot_name):
-    jitter_to_r_values = {}
+    num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
-    adjust_success_count = 0
     total_rows = 0 
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
-        # r_values_count = 0  
         for row in reader:
             total_rows += 1 
             per_jitter = float(row['per_jitter'])
             r_value = float(row['R']) if row['R'] else None
-            if r_value is not None:
-                if per_jitter not in jitter_to_r_values:
-                    jitter_to_r_values[per_jitter] = []
-                jitter_to_r_values[per_jitter].append(r_value)
+            num_tasks = int(row['num_tasks'])
+
+            if per_jitter == 0.2 and r_value is not None:  # Only consider per_jitter = 20%
+                if num_tasks not in num_tasks_to_r_values:
+                    num_tasks_to_r_values[num_tasks] = []
+                num_tasks_to_r_values[num_tasks].append(r_value)
                 if r_value > 1:
                     print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
                     r_exceed_count += 1  
 
-
+    if total_rows == 0:
+        print("No data found.")
+        return
                 
     R_exceed_percentage = r_exceed_count / total_rows * 100 if total_rows > 0 else 0
 
-    plt.figure(figsize=(12, 8))
-    num_bins = 50
-    bin_range = (0, 1.05)  
-    bin_width = (bin_range[1] - bin_range[0]) / num_bins
+    num_num_tasks = len(num_tasks_to_r_values)
+    if num_num_tasks == 0:
+        print("No valid data found for the specified conditions.")
+        return
 
-    jitters = sorted(jitter_to_r_values.keys())
-    num_groups = len(jitters)
-    group_width = bin_width / (num_groups + 1)  
-    # print(f"Number of valid R values: {r_values_count}")  
-    for idx, per_jitter in enumerate(jitters):
-        r_values = jitter_to_r_values[per_jitter]
-        
-        # Grouped Histogram
-        offset = (idx - num_groups / 2) * group_width
+    num_columns = 2  # 每行显示 2 个子图
+    num_rows = (num_num_tasks + num_columns - 1) // num_columns
+
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()
+
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+
+    for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
+        ax = axes[idx]
+        num_bins = 50
+        bin_range = (0, 1.05)
+        bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
         counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        plt.bar(bin_centers + offset, counts, width=group_width, alpha=0.3, align='center')
+        ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
-        # trend line
-        if len(r_values) > 1:  
-            kde = gaussian_kde(r_values)
-            x = np.linspace(bin_range[0], bin_range[1], 1000)
-            y = kde(x)
-            plt.plot(x, y * len(r_values) * bin_width, linestyle='-', label=f'per_jitter={per_jitter}',color=plt.cm.tab10(idx))
-        else:
-            print(f"Skipping KDE for per_jitter={per_jitter} due to insufficient data points.")
-    
+        # 计算 R > 1 的百分比
+        r_values_greater_than_1 = len([r for r in r_values if r > 1])
+        percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-    plt.title("Distribution of R values for different Jitter Percentages")
-    plt.xlabel("R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
-    plt.ylabel("Frequency")
-    plt.xlim(bin_range)
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"{R_plot_name}")
+        ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - Data Count: {len(r_values)}")
+        ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        ax.grid(True)
+
+    for idx in range(num_num_tasks, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    plt.tight_layout()
+    plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%),R_exceed_percentage={R_exceed_percentage}", fontsize=16, y=1.05)
+
+
+    plt.savefig(R_plot_name)
     # plt.show()
 
 
 def plot_histogram_adjust(csv_file,adjust_plot_name):
-    jitter_to_r_values = {}
+    num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     adjust_success_count = 0
     total_rows = 0 
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
-        # r_values_count = 0  
         for row in reader:
             total_rows += 1 
             per_jitter = float(row['per_jitter'])
             r_value = float(row['R']) if row['R'] else None
-            if r_value is not None:
-                if per_jitter not in jitter_to_r_values:
-                    jitter_to_r_values[per_jitter] = []
-                jitter_to_r_values[per_jitter].append(r_value)
-                if r_value > 1:
-                    print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
-                    r_exceed_count += 1  
-            if row['adjust'] == 'True':  # Assuming there is a column 'adjust_success' in the CSV
-                adjust_success_count += 1
+            num_tasks = int(row['num_tasks'])
 
+            if per_jitter == 0.2 and r_value is not None:  # Only consider per_jitter = 20%
+                if num_tasks not in num_tasks_to_r_values:
+                    num_tasks_to_r_values[num_tasks] = []
+                num_tasks_to_r_values[num_tasks].append(r_value)
+                if r_value > 1:
+                    r_exceed_count += 1
+            if row.get('adjust') == 'True':  # Assuming there is a column 'adjust' in the CSV
+                adjust_success_count += 1
                 
+    if total_rows == 0:
+        print("No data found.")
+        return
+
     R_exceed_percentage = r_exceed_count / total_rows * 100 if total_rows > 0 else 0
     adjust_success_percentage = (adjust_success_count / total_rows) * 100 if total_rows > 0 else 0
 
 
-    plt.figure(figsize=(12, 8))
-    num_bins = 50
-    bin_range = (0, 1.05)  
-    bin_width = (bin_range[1] - bin_range[0]) / num_bins
+    num_num_tasks = len(num_tasks_to_r_values)
+    if num_num_tasks == 0:
+        print("No valid data found for the specified conditions.")
+        return
 
-    jitters = sorted(jitter_to_r_values.keys())
-    num_groups = len(jitters)
-    group_width = bin_width / (num_groups + 1)  
-    # print(f"Number of valid R values: {r_values_count}")  
-    for idx, per_jitter in enumerate(jitters):
-        r_values = jitter_to_r_values[per_jitter]
-        
-        # Grouped Histogram
-        offset = (idx - num_groups / 2) * group_width
+    num_columns = 2  # 每行显示 2 个子图
+    num_rows = (num_num_tasks + num_columns - 1) // num_columns
+
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()
+
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+
+    for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
+        ax = axes[idx]
+        num_bins = 50
+        bin_range = (0, 1.05)
+        bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
         counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        plt.bar(bin_centers + offset, counts, width=group_width, alpha=0.3, align='center')
+        ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
-        # trend line
-        if len(r_values) > 1:  
-            kde = gaussian_kde(r_values)
-            x = np.linspace(bin_range[0], bin_range[1], 1000)
-            y = kde(x)
-            plt.plot(x, y * len(r_values) * bin_width, linestyle='-', label=f'per_jitter={per_jitter}',color=plt.cm.tab10(idx))
-        else:
-            print(f"Skipping KDE for per_jitter={per_jitter} due to insufficient data points.")
-    
+        # 计算 R > 1 的百分比
+        r_values_greater_than_1 = len([r for r in r_values if r > 1])
+        percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-    plt.title("Distribution of R values for different Jitter Percentages")
-    plt.xlabel("R_exceed_percentage = {:.2f}%".format(R_exceed_percentage)+ "adjust_success_percentage = {:.2f}%".format(adjust_success_percentage))
-    plt.ylabel("Frequency")
-    plt.xlim(bin_range)
-    plt.legend()
-    plt.grid(True)
-    plt.savefig(f"{R_plot_name}")
+        # 设置标题和标签
+        ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - Data Count: {len(r_values)}")
+        ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%  "
+                     f"adjust_success_percentage = {adjust_success_percentage:.2f}%")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        ax.grid(True)
+
+    for idx in range(num_num_tasks, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    plt.tight_layout()
+    plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%) - "
+                 f"Overall R_exceed_percentage: {R_exceed_percentage:.2f}%", fontsize=16, y=1.05)
+
+
+    plt.savefig(adjust_plot_name)
     # plt.show()
 
 
@@ -201,8 +221,11 @@ def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
         ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
         data_count = len(r_values)
+        r_exceed_count = len([r for r in r_values if r > 1])
+        R_exceed_percentage = (r_exceed_count / data_count) * 100
+
         ax.set_title(f"num_tasks = {num_tasks} (ratio=2, per_jitter=0.2) - Data Count: {data_count}")
-        ax.set_xlabel("R = max_reaction_time / final_e2e_max")
+        ax.set_xlabel("R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
         ax.set_ylabel("Frequency")
         ax.legend()
         ax.grid(True)
@@ -307,7 +330,7 @@ def ratio_for_num_chains(csv_file, ratio_plot_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
     parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")

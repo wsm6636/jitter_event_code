@@ -446,7 +446,7 @@ if __name__ == "__main__":
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
     per_jitter = 0.05 # percent jitter
     read_offsets = [0, 0, 0, 0, 0]
-    results_function = []
+    write_offsets = [1, 1, 1, 1, 1]
 
     run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
