@@ -79,7 +79,7 @@ def compare(jitters, num_chains, num_repeats, random_seed, periods):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10
+    num_repeats = 50
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
     jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
     num_chains = [3,5,8,10] 
@@ -87,11 +87,14 @@ if __name__ == "__main__":
 
     min_period = 1  # minimum period
     max_period = 1000  # maximum period
-    ratios = np.arange(1.0, 3.0, 0.5)
+    ratios = np.arange(1.0, 5.0, 1)
     print(f"Ratios: {ratios}")
 
     random_seed = 100
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
     results, false_results, final, results_F16, false_results_F16, final_F16 = compare(jitters, num_chains, num_repeats, random_seed, periods)
     

@@ -135,7 +135,10 @@ if __name__ == "__main__":
     num_chains  = [3,5]  # for test
 
     random_seed = 100  # fixed seed
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
     
     run_results, false_results, final_task = run_F16(jitters, num_chains, num_repeats, random_seed, periods)
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
     output_results_F16(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)

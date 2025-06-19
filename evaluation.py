@@ -134,8 +134,13 @@ if __name__ == "__main__":
     
 
     random_seed = 100  # fixed seed
-    
-    run_results, false_results, final_task = run(jitters, num_chains, num_repeats, random_seed, periods)
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+
+
+    run_results, false_results, final_task = run(jitters, num_chains, num_repeats, random_seed, periods)
+    
     output_results(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)
     

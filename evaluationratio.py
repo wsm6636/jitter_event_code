@@ -115,13 +115,13 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
             random.seed(current_random_seed)        
             for num_tasks in num_chains:        # on number of tasks in a chain
                 selected_periods = generate_periods(ratio, num_tasks, min_period, max_period)
-                selected_read_offsets, selected_write_offsets = generate_periods_and_offsets_ratio(selected_periods)
+                selected_read_offsets, selected_write_offsets = generate_periods_and_offsets_ratio(selected_periods) 
 
-                print(f"================== selected_period {selected_periods}, ratio {ratio} ==================")
+                print(f"========For ratio========== selected_period {selected_periods}, ratio {ratio} ==================")
                 for per_jitter in jitters:      # on relative (to period) magnitude of jitter
                     # generate the jitter
                     # only generate the jitter
-                    print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
+                    print(f"========For ratio========== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
                     final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis_ratio(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                     # value of rate "= max_reaction_time / final_e2e_max"
                     if final_e2e_max != 0:
@@ -166,14 +166,17 @@ if __name__ == "__main__":
     min_period = 1  # minimum period
     max_period = 1000  # maximum period
 
-    ratios = np.arange(1.0, 3.0, 0.5)
+    ratios = np.arange(1.0, 5.0, 1)
     print(f"Ratios: {ratios}")
 
 
     random_seed = 100  # fixed seed
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
     run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
     output_results_ratio(num_repeats, random_seed, timestamp, run_ratio_results, false_results, num_chains, jitters, ratios)
 
     
