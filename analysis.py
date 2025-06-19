@@ -159,7 +159,7 @@ def effective_event(w, r):
                 w_offser_star = r.offset - (delta % T_star)  # Formula (17)
                 r_offset_star = r.offset
         else:
-            # print(f"Does not conform to Theorem 2, Formula (16).")
+            print(f"Does not conform to Theorem 2, Formula (16).")
             return False
     elif w.period > r.period:
         if (r.period + r.maxjitter) <= (w.period - w.maxjitter):  # Formula (19) Theorem (3)
@@ -169,7 +169,7 @@ def effective_event(w, r):
             r_offset_star = w_offser_star
             r_jitter_star = r.period + w.maxjitter  # Formula (20)
         else:
-            # print(f"Does not conform to Theorem (13), Formula (17).")
+            print(f"Does not conform to Theorem (13), Formula (17).")
             return False
     elif w.period < r.period:
         if (w.period + w.maxjitter) <= (r.period - r.maxjitter):  # Formula (24) Theorem (4)

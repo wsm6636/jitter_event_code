@@ -57,7 +57,7 @@ class Task:
 
 
 # random events generator
-class RandomEvent:
+class RandomEvent_ratio:
     def __init__(
         self,
         num_tasks,
@@ -415,11 +415,11 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis_ratio(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
-    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+    tasks = RandomEvent_ratio(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
     final = our_chain(tasks)
     

@@ -10,7 +10,7 @@ from plot import plot_line_chart_from_csv
 from analysis import RandomEvent
 import random
 import time
-
+import os
 
 def generate_periods_and_offsets(num_tasks, periods):
     """
@@ -30,37 +30,51 @@ def generate_periods_and_offsets(num_tasks, periods):
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
+def output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
 
-def main():
-    # INCREASE here to have more experiments per same settings
-    num_repeats =10  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
-    # Enrico's laptop: num_repeats=10 ==> 32 seconds
+    folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
+    folder_path = os.path.join("rtssresult", folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+
+    percent_plot_name = os.path.join(folder_path,  f"percent_{num_repeats}_{random_seed}_{timestamp}.png")
+    R_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
+    results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv" )
+    log_txt = os.path.join(folder_path, f"log_{num_repeats}_{random_seed}_{timestamp}.txt")
+
+
+    # save results to csv
+    with open(results_csv, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage"])
+        for num_tasks in num_chains:
+            for per_jitter in jitters:
+                false_percentage = false_results[num_tasks][per_jitter]
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
+                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage])
+
+    print(f"All results saved to {results_csv}")
+
+    # save log file
+    with open(log_txt, mode='w') as file:
+        writer = file.write
+        for num_tasks in num_chains:
+            for per_jitter in jitters:
+                false_percentage = false_results[num_tasks][per_jitter]
+                writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage: {false_percentage}=====================\n")
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
+                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}\n")
+                    for task in tasks:
+                        writer(f"   {task}\n")
     
-    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
-    
-    # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
-    jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
-    
-    # num_chains = [3,5,8,10] 
-    num_chains  = [3,5]  # for test
+    print(f"All results saved to {log_txt}")
 
-    # below we are setting the random seed. Depending on the need, it may be set to a fixed value or a time-dependent value
-    # RANDOM SEED: set it to time to avoid repetition. Or to a given value for reproducibility
+    # plotting: uncomment to have plots made automatically
+    plot_histogram_from_csv(results_csv, R_plot_name)
+    print(f"Plots generated and saved to {R_plot_name}")
+    plot_line_chart_from_csv(results_csv, percent_plot_name)
+    print(f"Plots generated and saved to {percent_plot_name}")
 
-    # random_seed = int(time.time())
-    # name for log file
-    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
-    # percent_plot_name = f"result/percent_{num_repeats}_{timestamp}.png"
-    # R_plot_name = f"result/R_{num_repeats}_{timestamp}.png"
-    # results_csv = f"result/data_{num_repeats}_{timestamp}.csv" 
-
-    random_seed = 100  # fixed seed
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
-    percent_plot_name = f"result/percent_{num_repeats}_{random_seed}_{timestamp}.png"
-    R_plot_name = f"result/R_{num_repeats}_{random_seed}_{timestamp}.png"
-    results_csv = f"result/data_{num_repeats}_{random_seed}_{timestamp}.csv" 
-    log_txt = f"result/log_{num_repeats}_{random_seed}_{timestamp}.txt"
-
+def run(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     final = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
@@ -100,38 +114,28 @@ def main():
             false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
             false_results[num_tasks][per_jitter] = false_percentage
 
-    # save results to csv
-    with open(results_csv, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage"])
-        for num_tasks in num_chains:
-            for per_jitter in jitters:
-                false_percentage = false_results[num_tasks][per_jitter]
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage])
+    return results, false_results, final
 
-    print(f"All results saved to {results_csv}")
 
-    # save log file
-    with open(log_txt, mode='w') as file:
-        writer = file.write
-        for num_tasks in num_chains:
-            for per_jitter in jitters:
-                false_percentage = false_results[num_tasks][per_jitter]
-                writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage: {false_percentage}=====================\n")
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}\n")
-                    for task in tasks:
-                        writer(f"   {task}\n")
     
-    print(f"All results saved to {log_txt}")
-
-    # plotting: uncomment to have plots made automatically
-    plot_histogram_from_csv(results_csv, R_plot_name)
-    print(f"Plots generated and saved to {R_plot_name}")
-    plot_line_chart_from_csv(results_csv, percent_plot_name)
-    print(f"Plots generated and saved to {percent_plot_name}")
 
 if __name__ == "__main__":
-    main()
+    # INCREASE here to have more experiments per same settings
+    num_repeats =2  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    # Enrico's laptop: num_repeats=10 ==> 32 seconds
+    
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
+    
+    # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
+    jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
+    
+    # num_chains = [3,5,8,10] 
+    num_chains  = [3,5]  # for test
+    
+
+    random_seed = 100  # fixed seed
+    
+    run_results, false_results, final_task = run(jitters, num_chains, num_repeats, random_seed, periods)
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    output_results(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)
     

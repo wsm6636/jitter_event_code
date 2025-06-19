@@ -57,7 +57,7 @@ class Task:
 
 
 # random events generator
-class RandomEvent:
+class RandomEvent_F16:
     def __init__(
         self,
         num_tasks,
@@ -467,11 +467,11 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter):
+def run_analysis_F16(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter):
     global results_function
     results_function = []  
 
-    tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
+    tasks = RandomEvent_F16(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
     tasksold = tasks  # keep the original tasks for later use
     # print(f"old tasks: {tasksold}")
 
@@ -508,6 +508,4 @@ if __name__ == "__main__":
     maxjitters = [per_jitter * p for p in periods]  # maxjitter = percent jitter * period
     results_function = []
 
-    run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
-
-
+    run_analysis_F16(num_tasks, periods, read_offsets, write_offsets, per_jitter)
