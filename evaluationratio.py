@@ -25,26 +25,43 @@ def generate_periods_and_offsets_ratio(selected_periods):
 
 def generate_periods(ratio, num_tasks, min_period, max_period):
 
-    periods = [random.uniform(min_period, max_period)]  
+    while True:
+        initial_period = random.uniform(min_period, max_period)
+        if initial_period * (ratio ** (num_tasks - 1)) <= max_period:
+            # print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}")
+            break
+
+    periods = [initial_period]
 
     for _ in range(1, num_tasks):
         last_period = periods[-1]
         count = 0
-        while True:
+        found = False
+        while count < 1000:
             new_period = random.uniform(min_period, max_period)
             r = new_period / last_period
             count += 1
+
             if r >= ratio:
+                periods.append(new_period)
+                found = True
                 break
-            if count > 1000: 
-                if new_period * ratio >= max_period: 
-                    new_period = last_period * ratio
-                    break
             
-                
-        # 添加新周期到列表  
-        periods.append(new_period)
-        
+            elif last_period * ratio <= max_period:
+                new_period = last_period * ratio
+                found = True
+                periods.append(new_period)
+                break
+            else:
+                found = False
+                continue
+    if not found:
+        periods = [initial_period]  # if no valid period found, return only the initial period
+        print(f"No valid period found for ratio {ratio} and num_tasks {num_tasks}, using only initial period: {initial_period}")
+        for i in range(1, num_tasks):
+            new_period = initial_period * (ratio ** i)
+            periods.append(new_period)
+
     return periods
 
 def output_results_ratio(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters, ratios):
@@ -151,7 +168,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats =2  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 10 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
 
     
