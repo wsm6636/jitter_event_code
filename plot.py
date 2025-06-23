@@ -5,6 +5,8 @@ import argparse
 from scipy.stats import gaussian_kde
 import pandas as pd
 import ast
+import os
+from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
 
 def plot_histogram_from_csv(csv_file,R_plot_name):
     num_tasks_to_r_values = {}
@@ -148,10 +150,52 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
     plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%) - "
                  f"Overall R_exceed_percentage: {R_exceed_percentage:.2f}%", fontsize=16, y=1.05)
 
-
     plt.savefig(adjust_plot_name)
     # plt.show()
 
+
+def compare_plot_histogram(csv_files, compare_plot_histogram_name):
+    dfs = [pd.read_csv(file) for file in csv_files]
+
+    # 选择 jitter 为 20% 的数据
+    dfs = [df[df['per_jitter'] == 0.2] for df in dfs]
+
+    # 获取所有 num_tasks 的唯一值
+    num_tasks_list = sorted(set.union(*[set(df['num_tasks'].unique()) for df in dfs]))
+
+    # 创建图表
+    fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
+    outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
+
+    # 创建颜色映射
+    colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
+
+    for idx, num_tasks in enumerate(num_tasks_list):
+        for file_idx, df in enumerate(dfs):
+            ax = fig.add_subplot(outer_grid[idx, file_idx])
+            df_task = df[df['num_tasks'] == num_tasks]
+
+            r_values = df_task['R'].dropna().values
+            r_exceed_count = (r_values > 1).sum()
+            R_exceed_percentage = (r_exceed_count / len(r_values)) * 100 if len(r_values) > 0 else 0
+
+            num_bins = 50
+            bin_range = (0, 1.05)
+            bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
+            counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks} - Data Count: {len(r_values)}')
+
+            label = os.path.dirname(csv_files[file_idx])
+            ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - {label}")
+            ax.set_xlabel("R values - R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
+            ax.set_ylabel("Frequency")
+            ax.legend()
+            ax.grid(True)
+
+    plt.savefig(compare_plot_histogram_name)
+    # plt.show()
 
 def plot_line_chart_from_csv(csv_file, percent_plot_name):
     jitter_to_false_percentage = {}
@@ -183,6 +227,55 @@ def plot_line_chart_from_csv(csv_file, percent_plot_name):
     plt.grid(True)
     plt.xticks(jitter_percent)  
     plt.savefig(f"{percent_plot_name}")
+    # plt.show()
+
+
+    
+def compare_line_chart_from_csv(csv_files, compare_plot_name):
+
+    num_csv_files = len(csv_files)
+    num_columns = 2  # 每行显示 2 个子图
+    num_rows = (num_csv_files + num_columns - 1) // num_columns
+
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()
+
+    for idx, csv_file in enumerate(csv_files):
+        ax = axes[idx]
+        try:
+            df = pd.read_csv(csv_file)
+        except FileNotFoundError:
+            print(f"File not found: {csv_file}")
+            continue
+        except pd.errors.EmptyDataError:
+            print(f"No data in CSV file: {csv_file}")
+            continue
+
+        label = os.path.dirname(csv_file)
+
+        # 按 num_tasks 分组
+        grouped_by_num_tasks = df.groupby('num_tasks')
+
+        for num_tasks, group in grouped_by_num_tasks:
+            # 按 per_jitter 排序
+            group_sorted = group.sort_values(by='per_jitter')
+
+            per_jitters = group_sorted['per_jitter'] * 100
+            false_percentages = group_sorted['false_percentage']
+
+            ax.plot(per_jitters, false_percentages, label=f'num_tasks={num_tasks}', marker='o')
+
+        ax.set_title(f"False Percentage vs. Jitter ({label})")
+        ax.set_xlabel("Jitter Percentage (%)")
+        ax.set_ylabel("False Percentage (%)")
+        ax.legend()
+        ax.grid(True)
+    
+    for idx in range(num_csv_files, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    plt.tight_layout()
+    plt.savefig(compare_plot_name)
     # plt.show()
 
 
@@ -330,21 +423,27 @@ def ratio_for_num_chains(csv_file, ratio_plot_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
-    parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
+    # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
     # parser.add_argument("ratio_R_plot_name", type=str)
     # parser.add_argument("ratio_percent_plot_name", type=str)
     # parser.add_argument("ratio_plot_name", type=str)
 
+    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
+    parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
 
     args = parser.parse_args()
 
     # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
     # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
-    plot_histogram_adjust(args.csv_file, args.adjust_plot_name)
+    # plot_histogram_adjust(args.csv_file, args.adjust_plot_name)
     # ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
     # ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
     # ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
     # print(f"Plots generated and saved to {args.ratio_R_plot_name}, {args.ratio_percent_plot_name}, {args.ratio_plot_name}")
+
+    compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
+    compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)

@@ -74,6 +74,8 @@ def output_results_F16(num_repeats, random_seed, timestamp ,results, false_resul
     plot_line_chart_from_csv(results_csv, percent_plot_name)
     print(f"Plots generated and saved to {percent_plot_name}")
 
+    return results_csv, log_txt, percent_plot_name, adjust_plot_name
+
 def run_F16(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}

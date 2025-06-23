@@ -3,16 +3,19 @@ from evaluationF16 import output_results_F16
 from evaluationratio import output_results_ratio
 
 from evaluation import generate_periods_and_offsets
-
 from evaluationratio import run_ratio
 
 from analysis import run_analysis
 from analysisF16 import run_analysis_F16
 
+from plot import compare_line_chart_from_csv
+from plot import compare_plot_histogram
+
 import random
 import datetime
 import time
 import numpy as np
+import os
 
 def compare(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
@@ -77,6 +80,20 @@ def compare(jitters, num_chains, num_repeats, random_seed, periods):
     return results, false_results, final, results_F16, false_results_F16, final_F16
 
 
+def compare_plots(csv_files, num_repeats, random_seed, timestamp):
+    folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
+    folder_path = os.path.join("compare", folder_name)
+    os.makedirs(folder_path, exist_ok=True)
+    
+    compare_percent_plot_name = os.path.join(folder_path,  f"compare_percent_{num_repeats}_{random_seed}_{timestamp}.png")
+    compare_histogram_plot_name = os.path.join(folder_path, f"compare_R_{num_repeats}_{random_seed}_{timestamp}.png")
+
+    compare_line_chart_from_csv(csv_files, compare_percent_plot_name)
+    compare_plot_histogram(csv_files, compare_histogram_plot_name)
+    
+    print(f"Compare percent plots generated and saved to {compare_percent_plot_name}")
+
+
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
     num_repeats = 100
@@ -100,8 +117,11 @@ if __name__ == "__main__":
     results, false_results, final, results_F16, false_results_F16, final_F16 = compare(jitters, num_chains, num_repeats, random_seed, periods)
     
 
-    output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
-    output_results_F16(num_repeats, random_seed, timestamp, results_F16, false_results_F16, num_chains, jitters)
+    csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
+    csv_file_F16, _, _, _ = output_results_F16(num_repeats, random_seed, timestamp, results_F16, false_results_F16, num_chains, jitters)
+
+    csv_files = [csv_file, csv_file_F16]
+    compare_plots(csv_files, num_repeats, random_seed, timestamp)
 
     print("===================RATIO========================")
     results_ratio, false_results_ratio, final_task_ratio = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
