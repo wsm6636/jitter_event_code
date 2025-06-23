@@ -27,9 +27,7 @@ def generate_periods(ratio, num_tasks, min_period, max_period):
 
     periods = [random.uniform(min_period, max_period)]  
 
-    # 生成剩余的周期
     for _ in range(1, num_tasks):
-        # 确保新周期与前一个周期的比值不小于 ratio
         last_period = periods[-1]
         count = 0
         while True:
@@ -38,8 +36,8 @@ def generate_periods(ratio, num_tasks, min_period, max_period):
             count += 1
             if r >= ratio:
                 break
-            if count > 1000:  # 防止无限循环
-                if new_period * ratio >= max_period:  # 防止无限循环
+            if count > 1000: 
+                if new_period * ratio >= max_period: 
                     new_period = last_period * ratio
                     break
             
@@ -170,11 +168,11 @@ if __name__ == "__main__":
     print(f"Ratios: {ratios}")
 
 
-    random_seed = 100  # fixed seed
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    # random_seed = 100  # fixed seed
+    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
-    # random_seed = int(time.time())
-    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+    random_seed = int(time.time())
+    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
     run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
     output_results_ratio(num_repeats, random_seed, timestamp, run_ratio_results, false_results, num_chains, jitters, ratios)

@@ -39,13 +39,13 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
         print("No valid data found for the specified conditions.")
         return
 
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2  
     num_rows = (num_num_tasks + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
-    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  
 
     for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
         ax = axes[idx]
@@ -57,7 +57,6 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
-        # 计算 R > 1 的百分比
         r_values_greater_than_1 = len([r for r in r_values if r > 1])
         percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
@@ -107,19 +106,18 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
     R_exceed_percentage = r_exceed_count / total_rows * 100 if total_rows > 0 else 0
     adjust_success_percentage = (adjust_success_count / total_rows) * 100 if total_rows > 0 else 0
 
-
     num_num_tasks = len(num_tasks_to_r_values)
     if num_num_tasks == 0:
         print("No valid data found for the specified conditions.")
         return
 
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2  
     num_rows = (num_num_tasks + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
-    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  
 
     for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
         ax = axes[idx]
@@ -131,14 +129,12 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
         ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
-        # 计算 R > 1 的百分比
         r_values_greater_than_1 = len([r for r in r_values if r > 1])
         percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-        # 设置标题和标签
         ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - Data Count: {len(r_values)}")
         ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%  "
-                     f"adjust_success_percentage = {adjust_success_percentage:.2f}%")
+                    f"adjust_success_percentage = {adjust_success_percentage:.2f}%")
         ax.set_ylabel("Frequency")
         ax.legend()
         ax.grid(True)
@@ -148,7 +144,7 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
 
     plt.tight_layout()
     plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%) - "
-                 f"Overall R_exceed_percentage: {R_exceed_percentage:.2f}%", fontsize=16, y=1.05)
+                f"Overall R_exceed_percentage: {R_exceed_percentage:.2f}%", fontsize=16, y=1.05)
 
     plt.savefig(adjust_plot_name)
     # plt.show()
@@ -157,19 +153,15 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
 def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     dfs = [pd.read_csv(file) for file in csv_files]
 
-    # 选择 jitter 为 20% 的数据
     dfs = [df[df['per_jitter'] == 0.2] for df in dfs]
 
-    # 获取所有 num_tasks 的唯一值
     num_tasks_list = sorted(set.union(*[set(df['num_tasks'].unique()) for df in dfs]))
 
-    # 创建图表
     fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
-    # 创建颜色映射
     colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
-
+    
     for idx, num_tasks in enumerate(num_tasks_list):
         for file_idx, df in enumerate(dfs):
             ax = fig.add_subplot(outer_grid[idx, file_idx])
@@ -234,7 +226,7 @@ def plot_line_chart_from_csv(csv_file, percent_plot_name):
 def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
     num_csv_files = len(csv_files)
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2
     num_rows = (num_csv_files + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
@@ -252,12 +244,10 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
             continue
 
         label = os.path.dirname(csv_file)
-
-        # 按 num_tasks 分组
+        
         grouped_by_num_tasks = df.groupby('num_tasks')
 
         for num_tasks, group in grouped_by_num_tasks:
-            # 按 per_jitter 排序
             group_sorted = group.sort_values(by='per_jitter')
 
             per_jitters = group_sorted['per_jitter'] * 100
@@ -295,13 +285,13 @@ def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
                 num_tasks_to_r_values[num_tasks].append(r_value)
 
     num_num_tasks = len(num_tasks_to_r_values)
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2  
     num_rows = (num_num_tasks + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
-    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  # 生成不同的颜色
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks)) 
 
     for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
         ax = axes[idx]
@@ -349,7 +339,7 @@ def ratio_line_chart_from_csv(csv_file, ratio_percent_plot_name):
             ratio_to_false_percentage[ratio][num_tasks][per_jitter].append(false_percentage)
 
     num_ratios = len(ratio_to_false_percentage)
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2  
     num_rows = (num_ratios + num_columns - 1) // num_columns
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
@@ -378,45 +368,36 @@ def ratio_line_chart_from_csv(csv_file, ratio_percent_plot_name):
 def ratio_for_num_chains(csv_file, ratio_plot_name):
     df = pd.read_csv(csv_file)
 
-    # 按 num_tasks 分组
     grouped_by_num_tasks = df.groupby('num_tasks')
 
-    # 计算子图的行列数
     num_tasks = len(grouped_by_num_tasks)
-    num_columns = 2  # 每行显示 2 个子图
+    num_columns = 2  
     num_rows = (num_tasks + num_columns - 1) // num_columns
 
-    # 创建子图
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
     for idx, (num_tasks, task_group) in enumerate(grouped_by_num_tasks):
         ax = axes[idx]
 
-        # 按 ratios 分组
         grouped_by_ratios = task_group.groupby('ratios')
 
         for ratio, ratio_group in grouped_by_ratios:
-            # 按 per_jitter 排序
             sorted_group = ratio_group.sort_values(by='per_jitter')
             per_jitters = sorted_group['per_jitter'] * 100
             false_percentages = sorted_group['false_percentage']
 
-            # 绘制折线图
             ax.plot(per_jitters, false_percentages, label=f"Ratio = {ratio:.2f}", marker='o')
 
-        # 设置子图标题和标签
         ax.set_title(f"num_tasks = {num_tasks}")
         ax.set_xlabel("Jitter Percentage (%)")
         ax.set_ylabel("False Percentage (%)")
         ax.legend()
         ax.grid(True)
 
-    # 隐藏多余的子图
     for idx in range(num_tasks, num_rows * num_columns):
         axes[idx].axis('off')
 
-    # 调整子图间距
     plt.tight_layout()
     plt.savefig(ratio_plot_name)
     # plt.show()

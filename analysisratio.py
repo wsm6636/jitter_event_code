@@ -448,6 +448,6 @@ if __name__ == "__main__":
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    run_analysis_ratio(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 
