@@ -24,17 +24,17 @@ def generate_periods_and_offsets_ratio(selected_periods):
 
 
 def generate_periods(ratio, num_tasks, min_period, max_period):
-    count = 0
+    # count = 0
 
     while True:
         initial_period = random.uniform(min_period, max_period)
-        count += 1
+        # count += 1
         if initial_period * (ratio ** (num_tasks - 1)) <= max_period:
             # print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}")
             break
-        elif count >= 1000:
-            initial_period = 1
-            break
+        # elif count >= 1000:
+        #     initial_period = 1
+        #     break
         
 
     periods = [initial_period]
@@ -62,11 +62,19 @@ def generate_periods(ratio, num_tasks, min_period, max_period):
                 found = False
                 continue
     if not found:
+        initial_period = random.uniform(1.0, 2.0)
+        
+        if num_tasks == 10 and initial_period == 2.0:
+            initial_period = random.uniform(1.0, 1.99)
+        
         periods = [initial_period]  # if no valid period found, return only the initial period
         print(f"No valid period found for ratio {ratio} and num_tasks {num_tasks}, using only initial period: {initial_period}")
         for i in range(1, num_tasks):
             new_period = initial_period * (ratio ** i)
             periods.append(new_period)
+
+    # if not found:
+    #     periods = None
 
     return periods
 
@@ -107,8 +115,9 @@ def output_results_ratio(num_repeats, random_seed, timestamp, results, false_res
                     writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, ratio: {ratio}, false_percentage: {false_percentage}=====================\n")
                     for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter][ratio]:
                         writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}\n")
-                        for task in tasks:
-                            writer(f"   {task}\n")
+                        if tasks is not None:
+                            for task in tasks:
+                                writer(f"   {task}\n")
 
                         
     print(f"All logs saved to {log_txt}")
@@ -136,29 +145,38 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
             random.seed(current_random_seed)        
             for num_tasks in num_chains:        # on number of tasks in a chain
                 selected_periods = generate_periods(ratio, num_tasks, min_period, max_period)
-                selected_read_offsets, selected_write_offsets = generate_periods_and_offsets_ratio(selected_periods) 
 
-                print(f"========For ratio {ratio}========== selected_period {selected_periods}, ratio {ratio} ==================")
-                for per_jitter in jitters:      # on relative (to period) magnitude of jitter
-                    # generate the jitter
-                    # only generate the jitter
-                    print(f"========For ratio {ratio}========== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
-                    final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis_ratio(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
-                    # value of rate "= max_reaction_time / final_e2e_max"
-                    if final_e2e_max != 0:
-                        r = max_reaction_time / final_e2e_max
-                        if r > 1:
-                            exceed = "exceed"
+                if selected_periods is None:
+                    for per_jitter in jitters:
+                        print(f"========For ratio {ratio}========== num_tasks {num_tasks} Repeat {i} random_seed {current_random_seed} ==================")
+                        results[num_tasks][per_jitter][ratio].append((None, None, None, None, current_random_seed, None))
+                        final[num_tasks][per_jitter][ratio].append((None, None))
+                        false_results[num_tasks][per_jitter][ratio] += 1
+                    continue
+                else:
+                    selected_read_offsets, selected_write_offsets = generate_periods_and_offsets_ratio(selected_periods) 
+
+                    print(f"========For ratio {ratio}========== selected_period {selected_periods}, ratio {ratio} ==================")
+                    for per_jitter in jitters:      # on relative (to period) magnitude of jitter
+                        # generate the jitter
+                        # only generate the jitter
+                        print(f"========For ratio {ratio}========== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
+                        final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis_ratio(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                        # value of rate "= max_reaction_time / final_e2e_max"
+                        if final_e2e_max != 0:
+                            r = max_reaction_time / final_e2e_max
+                            if r > 1:
+                                exceed = "exceed"
+                            else:
+                                exceed = "safe"
                         else:
-                            exceed = "safe"
-                    else:
-                        r = None
-                        exceed = None
-                        false_results[num_tasks][per_jitter][ratio] += 1  # algorithm failed
+                            r = None
+                            exceed = None
+                            false_results[num_tasks][per_jitter][ratio] += 1  # algorithm failed
 
-                    results[num_tasks][per_jitter][ratio].append((final_e2e_max, max_reaction_time,r,tasks,current_random_seed,exceed))
-                    final[num_tasks][per_jitter][ratio].append((final_r, final_w))
-                    
+                        results[num_tasks][per_jitter][ratio].append((final_e2e_max, max_reaction_time,r,tasks,current_random_seed,exceed))
+                        final[num_tasks][per_jitter][ratio].append((final_r, final_w))
+                        
             current_random_seed = current_random_seed+1
 
     # algorithm2 failed percentage 
@@ -187,18 +205,18 @@ if __name__ == "__main__":
     min_period = 1  # minimum period
     max_period = 1000  # maximum period
 
-    ratios = np.arange(1.0, 5.0, 1)
+    # ratios = np.arange(1.0, 2.0, 0.5)
+    # ratios = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+    ratios = [1.0, 1.5, 2.0]
     print(f"Ratios: {ratios}")
 
 
     # random_seed = 100  # fixed seed
     # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
-    # random_seed = int(time.time())
-    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+    random_seed = int(time.time())
+    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
-    random_seed = 1750777072
-    timestamp = "20250624_165752"
     run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
     output_results_ratio(num_repeats, random_seed, timestamp, run_ratio_results, false_results, num_chains, jitters, ratios)
 
