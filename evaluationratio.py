@@ -24,17 +24,12 @@ def generate_periods_and_offsets_ratio(selected_periods):
 
 
 def generate_periods(ratio, num_tasks, min_period, max_period):
-    # count = 0
 
     while True:
         initial_period = random.uniform(min_period, max_period)
-        # count += 1
         if initial_period * (ratio ** (num_tasks - 1)) <= max_period:
             # print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}")
             break
-        # elif count >= 1000:
-        #     initial_period = 1
-        #     break
         
 
     periods = [initial_period]
@@ -61,6 +56,7 @@ def generate_periods(ratio, num_tasks, min_period, max_period):
             else:
                 found = False
                 continue
+
     if not found:
         initial_period = random.uniform(1.0, 2.0)
         
@@ -72,9 +68,6 @@ def generate_periods(ratio, num_tasks, min_period, max_period):
         for i in range(1, num_tasks):
             new_period = initial_period * (ratio ** i)
             periods.append(new_period)
-
-    # if not found:
-    #     periods = None
 
     return periods
 
@@ -192,7 +185,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 100 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 1000 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
 
     
@@ -206,8 +199,8 @@ if __name__ == "__main__":
     max_period = 1000  # maximum period
 
     # ratios = np.arange(1.0, 2.0, 0.5)
-    # ratios = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
-    ratios = [1.0, 1.5, 2.0]
+    ratios = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
+    # ratios = [1.0, 1.5, 2.0]
     print(f"Ratios: {ratios}")
 
 

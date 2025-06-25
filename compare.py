@@ -124,7 +124,8 @@ if __name__ == "__main__":
     compare_plots(csv_files, num_repeats, random_seed, timestamp)
 
     print("===================RATIO========================")
-    results_ratio, false_results_ratio, final_task_ratio = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
-    output_results_ratio(num_repeats, random_seed, timestamp, results_ratio, false_results_ratio, num_chains, jitters, ratios)
+    ratio_repeats = 1000
+    results_ratio, false_results_ratio, final_task_ratio = run_ratio(jitters, num_chains, ratio_repeats, random_seed, ratios, min_period, max_period)
+    output_results_ratio(ratio_repeats, random_seed, timestamp, results_ratio, false_results_ratio, num_chains, jitters, ratios)
 
 
