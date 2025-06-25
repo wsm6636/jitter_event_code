@@ -24,12 +24,18 @@ def generate_periods_and_offsets_ratio(selected_periods):
 
 
 def generate_periods(ratio, num_tasks, min_period, max_period):
+    count = 0
 
     while True:
         initial_period = random.uniform(min_period, max_period)
+        count += 1
         if initial_period * (ratio ** (num_tasks - 1)) <= max_period:
             # print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}")
             break
+        elif count >= 1000:
+            initial_period = 1
+            break
+        
 
     periods = [initial_period]
 
@@ -132,11 +138,11 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
                 selected_periods = generate_periods(ratio, num_tasks, min_period, max_period)
                 selected_read_offsets, selected_write_offsets = generate_periods_and_offsets_ratio(selected_periods) 
 
-                print(f"========For ratio========== selected_period {selected_periods}, ratio {ratio} ==================")
+                print(f"========For ratio {ratio}========== selected_period {selected_periods}, ratio {ratio} ==================")
                 for per_jitter in jitters:      # on relative (to period) magnitude of jitter
                     # generate the jitter
                     # only generate the jitter
-                    print(f"========For ratio========== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
+                    print(f"========For ratio {ratio}========== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {current_random_seed} ==================")
                     final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis_ratio(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                     # value of rate "= max_reaction_time / final_e2e_max"
                     if final_e2e_max != 0:
@@ -168,15 +174,15 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 100 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
 
     
     # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
 
-    # num_chains = [3,5,8,10] 
-    num_chains  = [3,5]  # for test
+    num_chains = [3,5,8,10] 
+    # num_chains  = [3,5]  # for test
 
     min_period = 1  # minimum period
     max_period = 1000  # maximum period
@@ -188,9 +194,11 @@ if __name__ == "__main__":
     # random_seed = 100  # fixed seed
     # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
-    random_seed = int(time.time())
-    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
+    random_seed = 1750777072
+    timestamp = "20250624_165752"
     run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
     output_results_ratio(num_repeats, random_seed, timestamp, run_ratio_results, false_results, num_chains, jitters, ratios)
 
