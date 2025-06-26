@@ -39,7 +39,7 @@ def output_results_F16(num_repeats, random_seed, timestamp ,results, false_resul
     percent_plot_name = os.path.join(folder_path, f"percent_{num_repeats}_{random_seed}_{timestamp}.png")
     adjust_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv" )
-    log_txt = os.path.join(folder_path, f"log_{num_repeats}_{random_seed}_{timestamp}.txt")
+    log_txt = os.path.join(f"log/F16_log_{num_repeats}_{random_seed}_{timestamp}.txt")
 
 
     # save results to csv

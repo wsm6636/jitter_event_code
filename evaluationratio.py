@@ -52,7 +52,7 @@ def output_results_ratio(num_repeats, random_seed, timestamp, results, false_res
     percent_plot_name = os.path.join(folder_path, f"percent_{num_repeats}_{random_seed}_{timestamp}.png")
     R_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv") 
-    log_txt = os.path.join(folder_path, f"log_{num_repeats}_{random_seed}_{timestamp}.txt")
+    log_txt = os.path.join(f"log/ratio_log_{num_repeats}_{random_seed}_{timestamp}.txt")
     ratio_plot_name = os.path.join(folder_path, f"ratios_{num_repeats}_{timestamp}.png")
 
 
@@ -157,7 +157,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 1000 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 10 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
 
     
