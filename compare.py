@@ -17,6 +17,8 @@ import time
 import numpy as np
 import os
 
+
+
 def compare(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}

@@ -24,52 +24,24 @@ def generate_periods_and_offsets_ratio(selected_periods):
 
 
 def generate_periods(ratio, num_tasks, min_period, max_period):
-
-    while True:
-        initial_period = random.uniform(min_period, max_period)
-        if initial_period * (ratio ** (num_tasks - 1)) <= max_period:
-            # print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, min_period: {min_period}, max_period: {max_period}")
-            break
         
+    max_initial_period = (max_period / (ratio ** (num_tasks - 1))) ** (1 / num_tasks)
+    initial_period = random.uniform(min_period, min(max_initial_period, max_period))
+    print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, max_initial_period: {max_initial_period}")
 
     periods = [initial_period]
-
-    for _ in range(1, num_tasks):
-        last_period = periods[-1]
-        count = 0
-        found = False
-        while count < 1000:
-            new_period = random.uniform(min_period, max_period)
-            r = new_period / last_period
-            count += 1
-
-            if r >= ratio:
-                periods.append(new_period)
-                found = True
-                break
             
-            elif last_period * ratio <= max_period:
-                new_period = last_period * ratio
-                found = True
-                periods.append(new_period)
-                break
-            else:
-                found = False
-                continue
+    for n in range(1, num_tasks):
+        min_period_n = periods[-1] * ratio
+        max_period_n = max_period  / (ratio ** (num_tasks - n - 1))
 
-    if not found:
-        initial_period = random.uniform(1.0, 2.0)
-        
-        if num_tasks == 10 and initial_period == 2.0:
-            initial_period = random.uniform(1.0, 1.99)
-        
-        periods = [initial_period]  # if no valid period found, return only the initial period
-        print(f"No valid period found for ratio {ratio} and num_tasks {num_tasks}, using only initial period: {initial_period}")
-        for i in range(1, num_tasks):
-            new_period = initial_period * (ratio ** i)
-            periods.append(new_period)
+        new_period = random.uniform(min_period_n, max_period_n)
+        print(f"New period for task {n}: {new_period}, min_period_n: {min_period_n}, max_period_n: {max_period_n}")
+        periods.append(new_period)
 
+                
     return periods
+
 
 def output_results_ratio(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters, ratios):
 
