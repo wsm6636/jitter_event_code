@@ -143,7 +143,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period)
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10
+    num_repeats = 100
     
     # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
