@@ -16,32 +16,18 @@ import os
 
 def generate_periods_and_offsets_ratio(selected_periods):
 
-    # selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]
-    selected_read_offsets = [random.uniform(0, period - 1) for period in selected_periods]    
+    selected_read_offsets = [random.uniform(0, period) for period in selected_periods]    
     selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
 
     return selected_read_offsets, selected_write_offsets
 
-
-def generate_periods(ratio, num_tasks, min_period, max_period):
-        
-    max_initial_period = (max_period / (ratio ** (num_tasks - 1))) ** (1 / num_tasks)
-    initial_period = random.uniform(min_period, min(max_initial_period, max_period))
-    print(f"Initial period: {initial_period}, ratio: {ratio}, num_tasks: {num_tasks}, max_initial_period: {max_initial_period}")
-
-    periods = [initial_period]
-            
-    for n in range(1, num_tasks):
-        min_period_n = periods[-1] * ratio
-        max_period_n = max_period  / (ratio ** (num_tasks - n - 1))
-
-        new_period = random.uniform(min_period_n, max_period_n)
-        print(f"New period for task {n}: {new_period}, min_period_n: {min_period_n}, max_period_n: {max_period_n}")
+def generate_periods(ratio, num_tasks, min_period):
+    periods = []
+    for n in range(num_tasks):  
+        new_period = round(min_period * ratio ** n)
         periods.append(new_period)
-
-                
+    
     return periods
-
 
 def output_results_ratio(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters, ratios):
 
@@ -96,7 +82,7 @@ def output_results_ratio(num_repeats, random_seed, timestamp, results, false_res
     print(f"Plots generated and saved to {ratio_plot_name}")
 
 
-def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period):
+def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period):
     # preparing list for storing result
     results = {num_tasks: {per_jitter: {ratio: [] for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
     final = {num_tasks: {per_jitter: {ratio: [] for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
@@ -109,7 +95,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
         for i in range(num_repeats):            # loop on number of repetitions
             random.seed(current_random_seed)        
             for num_tasks in num_chains:        # on number of tasks in a chain
-                selected_periods = generate_periods(ratio, num_tasks, min_period, max_period)
+                selected_periods = generate_periods(ratio, num_tasks, min_period)
 
                 if selected_periods is None:
                     for per_jitter in jitters:
@@ -157,9 +143,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period,
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10 # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
-    # Enrico's laptop: num_repeats=10 ==> 32 seconds
-
+    num_repeats = 10
     
     # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
@@ -168,11 +152,9 @@ if __name__ == "__main__":
     # num_chains  = [3,5]  # for test
 
     min_period = 1  # minimum period
-    max_period = 1000  # maximum period
 
-    # ratios = np.arange(1.0, 2.0, 0.5)
-    ratios = [1.0, 1.2, 1.4, 1.6, 1.8, 2.0]
-    # ratios = [1.0, 1.5, 2.0]
+    ratios = np.arange(1.0, 6.0, 0.5)
+
     print(f"Ratios: {ratios}")
 
 
@@ -182,7 +164,7 @@ if __name__ == "__main__":
     random_seed = int(time.time())
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
-    run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period, max_period)
+    run_ratio_results, false_results, final_task = run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period)
     output_results_ratio(num_repeats, random_seed, timestamp, run_ratio_results, false_results, num_chains, jitters, ratios)
 
     

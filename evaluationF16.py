@@ -22,8 +22,8 @@ def generate_periods_and_offsets_F16(num_tasks, periods):
     :return: periods, read_offsets, write_offsets
     """  
     selected_periods = random.choices(periods,  k=num_tasks)
-    selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]  
-    # selected_read_offsets = [random.uniform(0, period - 1) for period in selected_periods]  # read offset is in range [0, period-1]
+    # selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]  
+    selected_read_offsets = [random.uniform(0, period) for period in selected_periods]  # read offset is in range [0, period-1]
     selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
 
     print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
