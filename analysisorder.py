@@ -276,10 +276,10 @@ def chain_asc_no_free_jitter(tasks):
     #   r.offset = 0
     #   r.offset += r.period
     #   w.offset += r.period
-    return  r, w
+    return  r, w, current_task
 
 #chain: sort by desc index
-def chain_desc(tasks):
+def chain_desc_no_free_jitter(tasks):
     n = len(tasks)
     current_task = tasks[-1]
 
@@ -290,124 +290,115 @@ def chain_desc(tasks):
         else:
             (r,w) = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
-    return r, w
+    return r, w, current_task
 
 #chain max period order
 def chain_max_period(tasks):
     max_period_task = max(tasks, key=lambda x: x.period) #taski
     max_period_index = tasks.index(max_period_task)
-    print(f"max_period = {max_period_task.period}, task_id = {max_period_task.id}")
 
     #Grouping
     predecessor_group = tasks[:max_period_index + 1]  #task0~i
     successor_group = tasks[max_period_index:]       #taski~n
     final_tasks = []
-    final_e2es = []
+
     #task0~i chain
-    print("===============Processing Predecessor Group (desc)===============")
     if len(predecessor_group) > 1:
-        predecessor_result = chain_desc(predecessor_group)
-        predecessor_task_e2e, r_predecessor, w_predecessor, predecessor_task = predecessor_result
-        final_tasks.append(predecessor_task)
-        final_e2es.append(predecessor_task_e2e)
+        predecessor_result = chain_desc_no_free_jitter(predecessor_group)
+        if predecessor_result is not False:
+            _, _, predecessor_task = predecessor_result
+            final_tasks.append(predecessor_task)
     else:
         print(f"predecessor chain is only one task.")
 
     #taski~n chain
-    print("===============Processing Successor Group (asc)===============")
     if len(successor_group) > 1:
-        successor_result = chain_asc(successor_group)
-        successor_task_e2e, r_successor, w_successor, successor_task = successor_result
-        final_tasks.append(successor_task)
-        final_e2es.append(successor_task_e2e)
+        successor_result = chain_asc_no_free_jitter(successor_group)
+        if successor_result is not False:
+            _, _, successor_task = successor_result
+            final_tasks.append(successor_task)
     else:
         print(f"successor chain is only one task.")
 
-    print("===============Combining Predecessor and Successor Results===============")
     if len(final_tasks) == 1:
-        print(f"================Final: Only one task in the final chain================")
-        print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}")
-        print(f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}")
-        print(f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}")
-        return True
+        max_reaction_time = final_tasks[0].write_event.offset + final_tasks[0].write_event.maxjitter - final_tasks[0].read_event.offset + final_tasks[0].read_event.period
+        return max_reaction_time, final_tasks[0].read_event, final_tasks[0].write_event
     elif len(final_tasks) > 1:
-        final_combine_result = chain_asc(final_tasks)
+        final_combine_result = chain_asc_no_free_jitter(final_tasks)
         if final_combine_result:
-            final_e2e, final_r, final_w, final_task = final_combine_result
-            print("================Final Combined Result====================")
-            print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}")
-            print(f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}")
-            print(f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}")
-            return True
+            final_r, final_w, _ = final_combine_result
+            max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+            return max_reaction_time, final_r, final_w
     else:
-        print("Failed to combine predecessor and successor results.")
-        return False
+        # return False
+        return 0, None, None
 
 #chain min period order
 def chain_min_period(tasks):
-   print("================CHAIN_MIN_PERIOD====================")
-   min_period_task = min(tasks, key=lambda x: x.period) #taski
-   min_period_index = tasks.index(min_period_task)
-   print(f"min_period = {min_period_task.period}, task_id = {min_period_task.id}")
+    min_period_task = min(tasks, key=lambda x: x.period) #taski
+    min_period_index = tasks.index(min_period_task)
 
-   #Grouping
-   predecessor_group = tasks[:min_period_index + 1]  #task0~i
-   successor_group = tasks[min_period_index:]       #taski~n
-   final_tasks = []
-   final_e2es = []
-   #task0~i chain
-   print("===============Processing Predecessor Group (desc)===============")
-   if len(predecessor_group) > 1:
-      predecessor_result = chain_desc(predecessor_group)
-      predecessor_task_e2e, r_predecessor, w_predecessor, predecessor_task = predecessor_result
-      final_tasks.append(predecessor_task)
-      final_e2es.append(predecessor_task_e2e)
-   else:
-      print(f"predecessor chain is only one task.")
+    #Grouping
+    predecessor_group = tasks[:min_period_index + 1]  #task0~i
+    successor_group = tasks[min_period_index:]       #taski~n
+    final_tasks = []
 
-   #taski~n chain
-   print("===============Processing Successor Group (asc)===============")
-   if len(successor_group) > 1:
-      successor_result = chain_asc(successor_group)
-      successor_task_e2e, r_successor, w_successor, successor_task = successor_result
-      final_tasks.append(successor_task)
-      final_e2es.append(successor_task_e2e)
-   else:
-      print(f"successor chain is only one task.")
+    #task0~i chain
+    if len(predecessor_group) > 1:
+        predecessor_result = chain_desc_no_free_jitter(predecessor_group)
+        if predecessor_result is not False:
+            _, _, predecessor_task = predecessor_result
+            final_tasks.append(predecessor_task)
+    else:
+        print(f"predecessor chain is only one task.")
 
-   print("===============Combining Predecessor and Successor Results===============")
-   if len(final_tasks) == 1:
-      print(f"================Final: Only one task in the final chain================")
-      print(f"final_e2e: min_e2e: {final_e2es[0][0]}, max_e2e: {final_e2es[0][1]}")
-      print(f"final_r: period: {final_tasks[0].read_event.period}, offset: {final_tasks[0].read_event.offset}, jitter: {final_tasks[0].read_event.jitter}")
-      print(f"final_w: period: {final_tasks[0].write_event.period}, offset: {final_tasks[0].write_event.offset}, jitter: {final_tasks[0].write_event.jitter}")
-      return True
-   elif len(final_tasks) > 1:
-      final_combine_result = chain_asc(final_tasks)
-      if final_combine_result:
-         final_e2e, final_r, final_w, final_task = final_combine_result
-         print("================Final Combined Result====================")
-         print(f"final_e2e: min_e2e: {final_e2e[0]}, max_e2e: {final_e2e[1]}")
-         print(f"final_r: period: {final_r.period}, offset: {final_r.offset}, jitter: {final_r.jitter}")
-         print(f"final_w: period: {final_w.period}, offset: {final_w.offset}, jitter: {final_w.jitter}")
-         return True
-   else:
-      print("Failed to combine predecessor and successor results.")
-      return False
-   
+    #taski~n chain
+    if len(successor_group) > 1:
+        successor_result = chain_asc_no_free_jitter(successor_group)
+        if successor_result is not False:
+            _, _, successor_task = successor_result
+            final_tasks.append(successor_task)
+    else:
+        print(f"successor chain is only one task.")
 
+    if len(final_tasks) == 1:
+        max_reaction_time = final_tasks[0].write_event.offset + final_tasks[0].write_event.maxjitter - final_tasks[0].read_event.offset + final_tasks[0].read_event.period
+        return max_reaction_time, final_tasks[0].read_event, final_tasks[0].write_event
+    elif len(final_tasks) > 1:
+        final_combine_result = chain_asc_no_free_jitter(final_tasks)
+        if final_combine_result:
+            final_r, final_w, _ = final_combine_result
+            max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+            return max_reaction_time, final_r, final_w
+    else:
+        # return False
+        return 0, None, None
 
 # max reaction time of our paper
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
-        final_r, final_w = final_combine_result
+        final_r, final_w, _ = final_combine_result
         # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
         return max_reaction_time, final_r, final_w
     else:
         # print("Failed to combine predecessor and successor results.")
-        return False
+        # return False
+        return 0, None, None
+
+def our_chain_desc(tasks):
+    final_combine_result = chain_desc_no_free_jitter(tasks)
+    if final_combine_result:
+        final_r, final_w, _ = final_combine_result
+        # max reaction time need to add the period of the first read event
+        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+        return max_reaction_time, final_r, final_w
+    else:
+        # print("Failed to combine predecessor and successor results.")
+        # return False
+        return 0, None, None
+
 
 # general task chain
 # Satisfy the order of read and write times
@@ -540,24 +531,29 @@ def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
-    final = our_chain(tasks)
-    
-    if final is False:
-        final_e2e_max = 0
-        final_r = None
-        final_w = None
-    else:
-        final_e2e_max = final[0]
-        final_r = final[1]
-        final_w = final[2]
+    chain_functions = {
+        'asc': our_chain,
+        'desc': our_chain_desc,
+        'max_period': chain_max_period,
+        'min_period': chain_min_period,
+    }
+
+    results = {}
+    for name, func in chain_functions.items():
+        result = func(tasks)
+        if result:
+            max_reaction_time, final_r, final_w = result
+            results[name] = (max_reaction_time, final_r, final_w)
+        else:
+            results[name] = (0, None, None)
         
     # check if the final result is valid
     reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
+    return results, max_reaction_time, tasks
 
 # test the code
 if __name__ == "__main__":

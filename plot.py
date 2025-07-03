@@ -402,29 +402,96 @@ def ratio_for_num_chains(csv_file, ratio_plot_name):
     plt.savefig(ratio_plot_name)
     # plt.show()
 
+
+def plot_percent_order(order_file_name, csv_file):
+    # Load data from CSV
+    df = pd.read_csv(csv_file)
+    
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    per_jitter_values = df['per_jitter'].unique()
+    
+    # Create subplots
+    fig, axs = plt.subplots(1, len(chain_types), figsize=(15, 5), sharey=True)
+    
+    for i, chain_type in enumerate(chain_types):
+        ax = axs[i]
+        for num_tasks in num_tasks_values:
+            subset = df[(df['chain_type'] == chain_type) & (df['num_tasks'] == num_tasks)]
+            ax.plot(subset['per_jitter'], subset['false_percentage'], marker='o', label=f'num_tasks={num_tasks}')
+        
+        ax.set_title(f'Failure Rates for {chain_type}')
+        ax.set_xlabel('Jitter')
+        ax.set_ylabel('Failure Rate')
+        ax.legend()
+        ax.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(order_file_name)
+    print(f"Plot generated and saved to {order_file_name}")
+    plt.close()
+
+def plot_r_histogram_order(order_r_plot_name, csv_file):
+    # Load data from CSV
+    df = pd.read_csv(csv_file)
+    per_jitter=0.2
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    
+    # Create subplots
+    fig, axs = plt.subplots(len(num_tasks_values), len(chain_types), figsize=(15, 10), sharey=True)
+    
+    for i, num_tasks in enumerate(num_tasks_values):
+        for j, chain_type in enumerate(chain_types):
+            ax = axs[i, j]
+            subset = df[(df['chain_type'] == chain_type) & (df['num_tasks'] == num_tasks) & (df['per_jitter'] == per_jitter)]
+            r_values = subset['R'].dropna()
+            ax.hist(r_values, bins=20, alpha=0.75)
+            
+            ax.set_title(f'num_tasks={num_tasks}, {chain_type}')
+            ax.set_xlabel('R Value')
+            ax.set_ylabel('Frequency')
+            ax.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(order_r_plot_name)
+    print(f"Plot generated and saved to {order_r_plot_name}")
+    plt.close()
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
     parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
     # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
-    parser.add_argument("ratio_R_plot_name", type=str)
-    parser.add_argument("ratio_percent_plot_name", type=str)
-    parser.add_argument("ratio_plot_name", type=str)
+    # parser.add_argument("ratio_R_plot_name", type=str)
+    # parser.add_argument("ratio_percent_plot_name", type=str)
+    # parser.add_argument("ratio_plot_name", type=str)
 
     # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
+
+    parser.add_argument("order_file_name", type=str, help="Name of the output plot file for percent order. ")
+    parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
+
 
     args = parser.parse_args()
 
     # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
     # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
     # plot_histogram_adjust(args.csv_file, args.adjust_plot_name)
-    ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
-    ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
-    ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
-    print(f"Plots generated and saved to {args.ratio_R_plot_name}, {args.ratio_percent_plot_name}, {args.ratio_plot_name}")
+    # ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
+    # ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
+    # ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
+    # print(f"Plots generated and saved to {args.ratio_R_plot_name}, {args.ratio_percent_plot_name}, {args.ratio_plot_name}")
 
     # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
     # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
+
+    plot_percent_order(args.order_file_name, args.csv_file)
+    plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
