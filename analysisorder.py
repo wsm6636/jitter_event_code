@@ -294,12 +294,12 @@ def chain_desc_no_free_jitter(tasks):
 
 #chain max period order
 def chain_max_period(tasks):
-    max_period_task = max(tasks, key=lambda x: x.period) #taski
+    max_period_task = max(tasks, key=lambda x: (x.period, -tasks.index(x)))
     max_period_index = tasks.index(max_period_task)
 
     #Grouping
     predecessor_group = tasks[:max_period_index + 1]  #task0~i
-    successor_group = tasks[max_period_index:]       #taski~n
+    successor_group = tasks[max_period_index + 1:]       #taski+1~n
     final_tasks = []
 
     #task0~i chain
@@ -307,40 +307,36 @@ def chain_max_period(tasks):
         predecessor_result = chain_desc_no_free_jitter(predecessor_group)
         if predecessor_result is not False:
             _, _, predecessor_task = predecessor_result
-            final_tasks.append(predecessor_task)
-    else:
-        print(f"predecessor chain is only one task.")
+        else:
+            return 0, None, None
+    elif len(predecessor_group) == 1:
+        predecessor_task = predecessor_group[0]
 
-    #taski~n chain
-    if len(successor_group) > 1:
+    if successor_group:
+        successor_group.insert(0, predecessor_task)
+
+    if successor_group:
         successor_result = chain_asc_no_free_jitter(successor_group)
         if successor_result is not False:
-            _, _, successor_task = successor_result
-            final_tasks.append(successor_task)
-    else:
-        print(f"successor chain is only one task.")
-
-    if len(final_tasks) == 1:
-        max_reaction_time = final_tasks[0].write_event.offset + final_tasks[0].write_event.maxjitter - final_tasks[0].read_event.offset + final_tasks[0].read_event.period
-        return max_reaction_time, final_tasks[0].read_event, final_tasks[0].write_event
-    elif len(final_tasks) > 1:
-        final_combine_result = chain_asc_no_free_jitter(final_tasks)
-        if final_combine_result:
-            final_r, final_w, _ = final_combine_result
+            final_r, final_w, final_task = successor_result
             max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
             return max_reaction_time, final_r, final_w
+        else:
+            return 0, None, None
     else:
-        # return False
-        return 0, None, None
+        # 如果后继组为空，直接返回前驱组的结果
+        max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
+        return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event
 
 #chain min period order
 def chain_min_period(tasks):
-    min_period_task = min(tasks, key=lambda x: x.period) #taski
+    # 找到最小周期的任务，如果有多个，选择索引最小的那个
+    min_period_task = min(tasks, key=lambda x: (x.period, tasks.index(x)))
     min_period_index = tasks.index(min_period_task)
 
     #Grouping
     predecessor_group = tasks[:min_period_index + 1]  #task0~i
-    successor_group = tasks[min_period_index:]       #taski~n
+    successor_group = tasks[min_period_index + 1:]       #taski+1~n
     final_tasks = []
 
     #task0~i chain
@@ -348,55 +344,44 @@ def chain_min_period(tasks):
         predecessor_result = chain_desc_no_free_jitter(predecessor_group)
         if predecessor_result is not False:
             _, _, predecessor_task = predecessor_result
-            final_tasks.append(predecessor_task)
-    else:
-        print(f"predecessor chain is only one task.")
+        else:
+            return 0, None, None
+    elif len(predecessor_group) == 1:
+        predecessor_task = predecessor_group[0]
 
-    #taski~n chain
-    if len(successor_group) > 1:
+    if successor_group:
+        successor_group.insert(0, predecessor_task)
+        
+    if successor_group:
         successor_result = chain_asc_no_free_jitter(successor_group)
         if successor_result is not False:
-            _, _, successor_task = successor_result
-            final_tasks.append(successor_task)
-    else:
-        print(f"successor chain is only one task.")
-
-    if len(final_tasks) == 1:
-        max_reaction_time = final_tasks[0].write_event.offset + final_tasks[0].write_event.maxjitter - final_tasks[0].read_event.offset + final_tasks[0].read_event.period
-        return max_reaction_time, final_tasks[0].read_event, final_tasks[0].write_event
-    elif len(final_tasks) > 1:
-        final_combine_result = chain_asc_no_free_jitter(final_tasks)
-        if final_combine_result:
-            final_r, final_w, _ = final_combine_result
+            final_r, final_w, final_task = successor_result
             max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
             return max_reaction_time, final_r, final_w
+        else:
+            return 0, None, None
     else:
-        # return False
-        return 0, None, None
+        # 如果后继组为空，直接返回前驱组的结果
+        max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
+        return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event
 
 # max reaction time of our paper
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
         final_r, final_w, _ = final_combine_result
-        # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
         return max_reaction_time, final_r, final_w
     else:
-        # print("Failed to combine predecessor and successor results.")
-        # return False
         return 0, None, None
 
 def our_chain_desc(tasks):
     final_combine_result = chain_desc_no_free_jitter(tasks)
     if final_combine_result:
         final_r, final_w, _ = final_combine_result
-        # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
         return max_reaction_time, final_r, final_w
     else:
-        # print("Failed to combine predecessor and successor results.")
-        # return False
         return 0, None, None
 
 
@@ -525,21 +510,26 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter, chain_types):
     global results_function
     results_function = []  
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
-    chain_functions = {
+    # Define the available chain functions
+    available_chain_functions = {
         'asc': our_chain,
         'desc': our_chain_desc,
         'max_period': chain_max_period,
         'min_period': chain_min_period,
     }
 
+    # Create chain_functions dictionary based on the provided chain_types
+    chain_functions = {chain_type: available_chain_functions[chain_type] for chain_type in chain_types}
+
     results = {}
     for name, func in chain_functions.items():
+        print(f"Running chain type: {name}")
         result = func(tasks)
         if result:
             max_reaction_time, final_r, final_w = result
@@ -558,11 +548,12 @@ def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
 # test the code
 if __name__ == "__main__":
     num_tasks = 5 
-    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-    per_jitter = 0.05 # percent jitter
+    periods =  [200, 20, 200, 1, 100]
+    per_jitter = 0.3 # percent jitter
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    chain_types = ['asc', 'desc', 'max_period', 'min_period']
+    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter, chain_types)
 
 
