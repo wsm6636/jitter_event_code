@@ -137,7 +137,7 @@ def run(jitters, num_chains, num_repeats, random_seed, periods, chain_types):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 10  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 100  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
