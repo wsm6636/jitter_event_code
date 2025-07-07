@@ -506,8 +506,11 @@ def plot_r_histogram_order(order_r_plot_name, csv_file):
             total_samples = len(r_values_all_jitter)
             
             # Calculate the number of samples where R > 1
-            r_exceed_count = len([r for r in r_values_all_jitter if r > 1])
-            
+            r_exceed_count = 0
+            for r in r_values_all_jitter:
+                if r > 1:
+                    r_exceed_count += 1
+                    print(f"Warning: R value {r} exceeds 1.0 for num_tasks={num_tasks}, chain_type={chain_type}, per_jitter={per_jitter}. This may indicate an error in the data.")
             # Calculate the percentage of R values greater than 1
             if total_samples > 0:
                 r_exceed_percentage = (r_exceed_count / total_samples) * 100
@@ -527,6 +530,61 @@ def plot_r_histogram_order(order_r_plot_name, csv_file):
     plt.savefig(order_r_plot_name)
     print(f"Plot generated and saved to {order_r_plot_name}")
     
+def type_percent_order_boxplot(box_order_file_name, csv_file):
+    df = pd.read_csv(csv_file)
+    
+    # Check if necessary columns exist
+    required_columns = ['chain_type', 'num_tasks', 'false_percentage']
+    if not all(column in df.columns for column in required_columns):
+        raise ValueError("CSV file is missing required columns.")
+    
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    
+    # Create subplots
+    fig, axs = plt.subplots(1, len(num_tasks_values), figsize=(15, 5), sharey=True)
+    
+    # Ensure axs is iterable
+    if len(num_tasks_values) == 1:
+        axs = [axs]
+    
+    # Define colors for different chain_types
+    colors = plt.cm.rainbow(np.linspace(0, 1, len(chain_types)))
+    
+    # Prepare data for boxplot
+    for i, num_tasks in enumerate(num_tasks_values):
+        ax = axs[i]
+        
+        # Extract data for each chain_type and num_tasks
+        boxplot_data = []
+        labels = []
+        for chain_type in chain_types:
+            subset = df[(df['num_tasks'] == num_tasks) & (df['chain_type'] == chain_type)]
+            boxplot_data.append(subset['false_percentage'].dropna().values)
+            labels.append(chain_type)
+        
+        # Plot boxplot with different colors
+        bplot = ax.boxplot(boxplot_data, labels=labels, patch_artist=True)  # patch_artist=True to fill with color
+        
+        # Set colors for each box
+        for patch, color in zip(bplot['boxes'], colors):
+            patch.set_facecolor(color)
+        
+        # Set titles and labels
+        ax.set_title(f'Failure Rates for num_tasks={num_tasks}')
+        ax.set_xlabel('Chain Type')
+        ax.set_ylabel('Failure Rate')
+        ax.grid(True)
+    
+    # Create a legend with colors
+    handles = [plt.Rectangle((0, 0), 1, 1, color=colors[i]) for i in range(len(chain_types))]
+    fig.legend(handles, chain_types, title="Chain Types", loc='upper right', bbox_to_anchor=(1.1, 1.05))
+    
+    
+    plt.tight_layout()
+    plt.savefig(box_order_file_name)
+    print(f"Plot generated and saved to {box_order_file_name}")
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
@@ -542,9 +600,10 @@ if __name__ == "__main__":
     # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
 
-    parser.add_argument("order_file_name", type=str, help="Name of the output plot file for percent order. ")
-    parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
-    parser.add_argument("type_order_file_name", type=str, help="Name of the output plot file for type order. ")
+    # parser.add_argument("order_file_name", type=str, help="Name of the output plot file for percent order. ")
+    # parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
+    # parser.add_argument("type_order_file_name", type=str, help="Name of the output plot file for type order. ")
+    parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
 
 
     args = parser.parse_args()
@@ -560,6 +619,7 @@ if __name__ == "__main__":
     # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
     # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
 
-    plot_percent_order(args.order_file_name, args.csv_file)
-    plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
-    type_percent_order(args.type_order_file_name, args.csv_file)
+    # plot_percent_order(args.order_file_name, args.csv_file)
+    # plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
+    # type_percent_order(args.type_order_file_name, args.csv_file)
+    type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
