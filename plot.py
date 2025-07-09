@@ -12,6 +12,7 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     total_rows = 0 
+    TOLERANCE = 1e-9
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
         for row in reader:
@@ -24,7 +25,7 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
                 if num_tasks not in num_tasks_to_r_values:
                     num_tasks_to_r_values[num_tasks] = []
                 num_tasks_to_r_values[num_tasks].append(r_value)
-                if r_value > 1:
+                if r_value > 1 + TOLERANCE:
                     print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
                     r_exceed_count += 1  
 
@@ -82,6 +83,7 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     adjust_success_count = 0
     total_rows = 0 
+    TOLERANCE = 1e-9
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
         for row in reader:
@@ -94,7 +96,7 @@ def plot_histogram_adjust(csv_file,adjust_plot_name):
                 if num_tasks not in num_tasks_to_r_values:
                     num_tasks_to_r_values[num_tasks] = []
                 num_tasks_to_r_values[num_tasks].append(r_value)
-                if r_value > 1:
+                if r_value > 1 + TOLERANCE:
                     r_exceed_count += 1
             if row.get('adjust') == 'True':  # Assuming there is a column 'adjust' in the CSV
                 adjust_success_count += 1
@@ -161,14 +163,14 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
     colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
-    
+    TOLERANCE = 1e-9
     for idx, num_tasks in enumerate(num_tasks_list):
         for file_idx, df in enumerate(dfs):
             ax = fig.add_subplot(outer_grid[idx, file_idx])
             df_task = df[df['num_tasks'] == num_tasks]
 
             r_values = df_task['R'].dropna().values
-            r_exceed_count = (r_values > 1).sum()
+            r_exceed_count = (r_values > (1 + TOLERANCE)).sum()
             R_exceed_percentage = (r_exceed_count / len(r_values)) * 100 if len(r_values) > 0 else 0
 
             num_bins = 50
@@ -292,7 +294,7 @@ def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
     axes = axes.flatten()
 
     colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks)) 
-
+    TOLERANCE = 1e-9
     for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
         ax = axes[idx]
         num_bins = 50
@@ -304,7 +306,7 @@ def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
         ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
         data_count = len(r_values)
-        r_exceed_count = len([r for r in r_values if r > 1])
+        r_exceed_count = len([r for r in r_values if r > (1 + TOLERANCE)])
         R_exceed_percentage = (r_exceed_count / data_count) * 100
 
         ax.set_title(f"num_tasks = {num_tasks} (ratio=2, per_jitter=0.2) - Data Count: {data_count}")
@@ -475,7 +477,7 @@ def plot_r_histogram_order(order_r_plot_name, csv_file):
     chain_types = df['chain_type'].unique()
     num_tasks_values = df['num_tasks'].unique()
     per_jitter_values = df['per_jitter'].unique()
-    
+    TOLERANCE = 1e-9
     # Create subplots
     fig, axs = plt.subplots(len(num_tasks_values), len(chain_types), figsize=(20, 10), sharey=True)
     
@@ -490,6 +492,8 @@ def plot_r_histogram_order(order_r_plot_name, csv_file):
             for k, per_jitter in enumerate(per_jitter_values):
                 subset = df[(df['chain_type'] == chain_type) & (df['num_tasks'] == num_tasks) & (df['per_jitter'] == per_jitter)]
                 r_values = subset['R'].dropna()
+                # r_values = subset['R'].dropna().to_numpy(dtype=float)
+                # r_values_all_jitter = np.array(r_values_all_jitter, dtype=float)
                 r_values_all_jitter.extend(r_values)
                 # Plot histogram for each per_jitter with different color
                 hist = ax.hist(r_values, bins=20, alpha=0.5, color=colors[k])
@@ -508,7 +512,7 @@ def plot_r_histogram_order(order_r_plot_name, csv_file):
             # Calculate the number of samples where R > 1
             r_exceed_count = 0
             for r in r_values_all_jitter:
-                if r > 1:
+                if r > 1 + TOLERANCE:
                     r_exceed_count += 1
                     print(f"Warning: R value {r} exceeds 1.0 for num_tasks={num_tasks}, chain_type={chain_type}, per_jitter={per_jitter}. This may indicate an error in the data.")
             # Calculate the percentage of R values greater than 1
@@ -601,9 +605,9 @@ if __name__ == "__main__":
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
 
     # parser.add_argument("order_file_name", type=str, help="Name of the output plot file for percent order. ")
-    # parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
+    parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
     # parser.add_argument("type_order_file_name", type=str, help="Name of the output plot file for type order. ")
-    parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
+    # parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
 
 
     args = parser.parse_args()
@@ -620,6 +624,6 @@ if __name__ == "__main__":
     # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
 
     # plot_percent_order(args.order_file_name, args.csv_file)
-    # plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
+    plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
     # type_percent_order(args.type_order_file_name, args.csv_file)
-    type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
+    # type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
