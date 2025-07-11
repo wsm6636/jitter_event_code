@@ -78,6 +78,87 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
     # plt.show()
 
 
+
+def plot_line_chart_from_csv(csv_file, percent_plot_name):
+    jitter_to_false_percentage = {}
+    with open(csv_file, mode='r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            per_jitter = float(row['per_jitter'])
+            false_percentage = float(row['false_percentage'])  
+            num_tasks = int(row['num_tasks'])  
+
+            if num_tasks not in jitter_to_false_percentage:
+                jitter_to_false_percentage[num_tasks] = {}
+
+            if per_jitter not in jitter_to_false_percentage[num_tasks]:
+                jitter_to_false_percentage[num_tasks][per_jitter] = []
+
+            jitter_to_false_percentage[num_tasks][per_jitter].append(false_percentage)
+
+    plt.figure(figsize=(10, 6))
+    for num_tasks, jitter_data in jitter_to_false_percentage.items():
+        jitter_percent = [jitter * 100 for jitter in sorted(jitter_data.keys())]
+        false_percentages = [np.mean(jitter_data[jitter]) * 100 for jitter in sorted(jitter_data.keys())]
+        plt.plot(jitter_percent, false_percentages, label=f"num_tasks={num_tasks}", marker='o')
+
+    plt.title("False Percentage vs. Jitter for Different Number of Tasks")
+    plt.xlabel("Jitter Percentage (%)")
+    plt.ylabel("False Percentage (%)")
+    plt.legend()
+    plt.grid(True)
+    plt.xticks(jitter_percent)  
+    plt.savefig(f"{percent_plot_name}")
+    # plt.show()
+
+
+def plot_final_e2e_max(e2e_plot_name, csv_file):
+    # 读取 CSV 文件
+    df = pd.read_csv(csv_file)
+
+    # 检查必要列是否存在
+    required_columns = ['num_tasks', 'per_jitter', 'final_e2e_max', 'false_percentage']
+    if not all(col in df.columns for col in required_columns):
+        raise ValueError("CSV 文件缺少必要列：num_tasks, per_jitter, final_e2e_max, false_percentage")
+
+    # 获取唯一的 num_tasks 和 per_jitter
+    num_tasks_values = sorted(df['num_tasks'].unique())
+    per_jitter_values = sorted(df['per_jitter'].unique())
+
+    # 创建子图
+    fig, axs = plt.subplots(1, len(num_tasks_values), figsize=(18, 6), sharey=True)
+
+    # 如果只有一个子图，确保 axs 是列表
+    if len(num_tasks_values) == 1:
+        axs = [axs]
+
+    # 为每个 per_jitter 分配颜色
+    colors = plt.cm.viridis(np.linspace(0, 1, len(per_jitter_values)))
+
+    for i, num_tasks in enumerate(num_tasks_values):
+        ax = axs[i]
+        for j, per_jitter in enumerate(per_jitter_values):
+            subset = df[(df['num_tasks'] == num_tasks) & (df['per_jitter'] == per_jitter)]
+            if subset.empty:
+                continue
+
+            # 按失败率排序
+            subset = subset.sort_values(by='false_percentage')
+
+            # 绘制曲线
+            ax.plot(subset['false_percentage'], subset['final_e2e_max'],
+                    marker='o', label=f'jitter={per_jitter}', color=colors[j])
+
+        ax.set_title(f'num_tasks = {num_tasks}')
+        ax.set_xlabel('Failure Rate (false_percentage)')
+        ax.set_ylabel('E2E Max (final_e2e_max)')
+        ax.grid(True)
+        ax.legend()
+
+    plt.tight_layout()
+    plt.savefig(e2e_plot_name)
+    # print(f"图像已保存为：{output_image}")
+
 def plot_histogram_adjust(csv_file,adjust_plot_name):
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
@@ -190,39 +271,6 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
 
     plt.savefig(compare_plot_histogram_name)
     # plt.show()
-
-def plot_line_chart_from_csv(csv_file, percent_plot_name):
-    jitter_to_false_percentage = {}
-    with open(csv_file, mode='r') as file:
-        reader = csv.DictReader(file)
-        for row in reader:
-            per_jitter = float(row['per_jitter'])
-            false_percentage = float(row['false_percentage'])  
-            num_tasks = int(row['num_tasks'])  
-
-            if num_tasks not in jitter_to_false_percentage:
-                jitter_to_false_percentage[num_tasks] = {}
-
-            if per_jitter not in jitter_to_false_percentage[num_tasks]:
-                jitter_to_false_percentage[num_tasks][per_jitter] = []
-
-            jitter_to_false_percentage[num_tasks][per_jitter].append(false_percentage)
-
-    plt.figure(figsize=(10, 6))
-    for num_tasks, jitter_data in jitter_to_false_percentage.items():
-        jitter_percent = [jitter * 100 for jitter in sorted(jitter_data.keys())]
-        false_percentages = [np.mean(jitter_data[jitter]) * 100 for jitter in sorted(jitter_data.keys())]
-        plt.plot(jitter_percent, false_percentages, label=f"num_tasks={num_tasks}", marker='o')
-
-    plt.title("False Percentage vs. Jitter for Different Number of Tasks")
-    plt.xlabel("Jitter Percentage (%)")
-    plt.ylabel("False Percentage (%)")
-    plt.legend()
-    plt.grid(True)
-    plt.xticks(jitter_percent)  
-    plt.savefig(f"{percent_plot_name}")
-    # plt.show()
-
 
     
 def compare_line_chart_from_csv(csv_files, compare_plot_name):
@@ -595,35 +643,40 @@ if __name__ == "__main__":
     parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
+    # parser.add_argument("e2e_plot_name", type=str, help="Name of the output plot file for final e2e max values.")
+
     # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
+    
+    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
+    # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
+
     # parser.add_argument("ratio_R_plot_name", type=str)
     # parser.add_argument("ratio_percent_plot_name", type=str)
     # parser.add_argument("ratio_plot_name", type=str)
 
-    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
-    # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
-    # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
-
     # parser.add_argument("order_file_name", type=str, help="Name of the output plot file for percent order. ")
-    parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
     # parser.add_argument("type_order_file_name", type=str, help="Name of the output plot file for type order. ")
+    # parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
     # parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
-
 
     args = parser.parse_args()
 
     # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
     # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
+    # plot_final_e2e_max(args.e2e_plot_name, args.csv_file)
+
     # plot_histogram_adjust(args.csv_file, args.adjust_plot_name)
+
+    # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
+    # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
+    
     # ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
     # ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
     # ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
-    # print(f"Plots generated and saved to {args.ratio_R_plot_name}, {args.ratio_percent_plot_name}, {args.ratio_plot_name}")
-
-    # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
-    # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
 
     # plot_percent_order(args.order_file_name, args.csv_file)
-    plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
     # type_percent_order(args.type_order_file_name, args.csv_file)
+    # plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
     # type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
+

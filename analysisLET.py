@@ -26,7 +26,9 @@ class Event:
         self.event_type = event_type  # "read" or "write"
         self.period = period
         self.offset = offset
+        self.old_offset = offset
         self.maxjitter = maxjitter
+        self.old_maxjitter = maxjitter
         self.random_jitter = 0   # jitter of instance
 
     def __repr__(self):
@@ -57,7 +59,7 @@ class Task:
 
 
 # random events generator
-class RandomEvent_order:
+class RandomEvent_LET:
     def __init__(
         self,
         num_tasks,
@@ -276,113 +278,76 @@ def chain_asc_no_free_jitter(tasks):
     #   r.offset = 0
     #   r.offset += r.period
     #   w.offset += r.period
-    return  r, w, current_task
+    return  r, w
 
-#chain: sort by desc index
-def chain_desc_no_free_jitter(tasks):
-    n = len(tasks)
-    current_task = tasks[-1]
+def our_objective_function(x,tasks):
+    num_tasks = len(tasks)
+    # print(f"tasks: {num_tasks}, x: {x}")
+    for i in range(num_tasks):
+        tasks[i].write_event.maxjitter = x[i]
+        tasks[i].write_event.offset = tasks[i].write_event.old_offset + tasks[i].write_event.old_maxjitter - x[i]
+        print(f"task {i}: write_event: period: {tasks[i].write_event.period}, offset: {tasks[i].write_event.offset}, oldoffset: {tasks[i].write_event.old_offset}, maxjitter: {tasks[i].write_event.maxjitter}, old_maxjitter: {tasks[i].write_event.old_maxjitter}")
 
-    for i in range(n-2, -1,-1):  
-        result = combine_no_free_jitter(tasks[i], current_task)
-        if result is False:
-            return False
-        else:
-            (r,w) = result
-            current_task = Task(read_event=r, write_event=w, id=r.id)
-    return r, w, current_task
-
-#chain max period order
-def chain_max_period(tasks):
-    max_period_task = max(tasks, key=lambda x: (x.period, -tasks.index(x)))
-    max_period_index = tasks.index(max_period_task)
-
-    #Grouping
-    predecessor_group = tasks[:max_period_index + 1]  #task0~i
-    successor_group = tasks[max_period_index + 1:]       #taski+1~n
-    final_tasks = []
-
-    #task0~i chain
-    if len(predecessor_group) > 1:
-        predecessor_result = chain_desc_no_free_jitter(predecessor_group)
-        if predecessor_result is not False:
-            _, _, predecessor_task = predecessor_result
-        else:
-            return 0, None, None
-    elif len(predecessor_group) == 1:
-        predecessor_task = predecessor_group[0]
-
-    if successor_group:
-        successor_group.insert(0, predecessor_task)
-
-    if successor_group:
-        successor_result = chain_asc_no_free_jitter(successor_group)
-        if successor_result is not False:
-            final_r, final_w, final_task = successor_result
-            max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-            return max_reaction_time, final_r, final_w
-        else:
-            return 0, None, None
-    else:
-        # 如果后继组为空，直接返回前驱组的结果
-        max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
-        return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event
-
-#chain min period order
-def chain_min_period(tasks):
-    # 找到最小周期的任务，如果有多个，选择索引最小的那个
-    min_period_task = min(tasks, key=lambda x: (x.period, tasks.index(x)))
-    min_period_index = tasks.index(min_period_task)
-
-    #Grouping
-    predecessor_group = tasks[:min_period_index + 1]  #task0~i
-    successor_group = tasks[min_period_index + 1:]       #taski+1~n
-    final_tasks = []
-
-    #task0~i chain
-    if len(predecessor_group) > 1:
-        predecessor_result = chain_desc_no_free_jitter(predecessor_group)
-        if predecessor_result is not False:
-            _, _, predecessor_task = predecessor_result
-        else:
-            return 0, None, None
-    elif len(predecessor_group) == 1:
-        predecessor_task = predecessor_group[0]
-
-    if successor_group:
-        successor_group.insert(0, predecessor_task)
-        
-    if successor_group:
-        successor_result = chain_asc_no_free_jitter(successor_group)
-        if successor_result is not False:
-            final_r, final_w, final_task = successor_result
-            max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-            return max_reaction_time, final_r, final_w
-        else:
-            return 0, None, None
-    else:
-        # 如果后继组为空，直接返回前驱组的结果
-        max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
-        return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event
-
-# max reaction time of our paper
-def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
-        final_r, final_w, _ = final_combine_result
+        final_r, final_w = final_combine_result
+        # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        return max_reaction_time, final_r, final_w
+        our_objective_function.iteration += 1
+        out_results_function.append(max_reaction_time)
+        return -max_reaction_time
     else:
-        return 0, None, None
+        out_results_function.append(0)
+        # print("Failed to combine predecessor and successor results.")
+        return 0
 
-def our_chain_desc(tasks):
-    final_combine_result = chain_desc_no_free_jitter(tasks)
-    if final_combine_result:
-        final_r, final_w, _ = final_combine_result
-        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        return max_reaction_time, final_r, final_w
-    else:
-        return 0, None, None
+def our_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
+    for i, (lower, upper) in enumerate(bounds):
+        if not (lower <= x_new[i] <= upper):
+            return False
+    return True
+
+
+def our_take_step(x, bounds):
+    new_x = x.copy()
+    for i in range(len(x)):
+        lower, upper = bounds[i]
+        new_x[i] = random.uniform(lower, upper)
+    # print(f"take_step: {new_x}")
+    return new_x
+
+def our_max_reaction_time(tasks):
+    bounds = [(0, 0)] * len(tasks)
+    initial_guess = [0] * len(tasks)
+    for i, task in enumerate(tasks):
+        bounds[i] = (0, task.write_event.old_maxjitter)
+        # guess the initial value : random jitter of write events
+        initial_guess[i] = random.uniform(0, task.write_event.old_maxjitter)
+
+    minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds} 
+
+    our_objective_function.iteration = 0
+    def objective(x):
+        return our_objective_function(x, tasks)  
+    def accept(f_new, x_new, f_old, x_old, **kwargs):
+        return our_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
+    
+    result = basinhopping(
+        objective,
+        initial_guess,
+        minimizer_kwargs=minimizer_kwargs,
+        niter=1,
+        T=1.0,
+        stepsize=1.0,  # Step size for the random walk
+        interval=50,  # Interval for the random walk
+        niter_success=10,  # Iteration bound
+        take_step=lambda x: our_take_step(x, bounds),
+        accept_test=accept
+    )
+    max_reaction_time = -result.fun 
+
+    return max_reaction_time    
+        
 
 
 # general task chain
@@ -473,11 +438,11 @@ def maximize_reaction_time(tasks):
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
     for i, task in enumerate(tasks):
-        bounds[i] = (0, task.read_event.maxjitter)
-        bounds[i+ len(tasks)] = (0, task.write_event.maxjitter)
+        bounds[i] = (0, task.read_event.old_maxjitter)
+        bounds[i+ len(tasks)] = (0, task.write_event.old_maxjitter)
         # guess the initial value : random jitter of read and write events
-        initial_guess[i] = random.uniform(0, task.read_event.maxjitter)
-        initial_guess[i + len(tasks)] = random.uniform(0, task.write_event.maxjitter)
+        initial_guess[i] = random.uniform(0, task.read_event.old_maxjitter)
+        initial_guess[i + len(tasks)] = random.uniform(0, task.write_event.old_maxjitter)
 
     minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds}
 
@@ -508,52 +473,43 @@ def maximize_reaction_time(tasks):
 
 
 results_function = []
+out_results_function = []
 
 # outport function
-def run_analysis_order(num_tasks, periods,read_offsets,write_offsets, per_jitter, chain_types):
+def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
+    global out_results_function
     results_function = []  
+    out_results_function = []
 
-    tasks = RandomEvent_order(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+    tasks = RandomEvent_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+    
+    # final = our_chain(tasks)
+    final_e2e_max_a = our_max_reaction_time(tasks)
 
-    # Define the available chain functions
-    available_chain_functions = {
-        'asc': our_chain,
-        'desc': our_chain_desc,
-        'max_period': chain_max_period,
-        'min_period': chain_min_period,
-    }
-
-    # Create chain_functions dictionary based on the provided chain_types
-    chain_functions = {chain_type: available_chain_functions[chain_type] for chain_type in chain_types}
-
-    results = {}
-    for name, func in chain_functions.items():
-        print(f"Running chain type: {name}")
-        result = func(tasks)
-        if result:
-            max_reaction_time, final_r, final_w = result
-            results[name] = (max_reaction_time, final_r, final_w)
-        else:
-            results[name] = (0, None, None)
+    if out_results_function is None or len(out_results_function) == 0:
+        final_e2e_max_b = 0
+    # print(f"final_e2e_max_a: {final_e2e_max_a}, out_results_function: {out_results_function}")
+    final_e2e_max_b = max(out_results_function)
+    final_e2e_max = max(final_e2e_max_a, final_e2e_max_b)
         
-    # check if the final result is valid
+    # # check if the final result is valid
     reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
 
-    return results, max_reaction_time, tasks
+    return final_e2e_max, max_reaction_time, tasks
+
 
 # test the code
 if __name__ == "__main__":
     num_tasks = 5 
-    periods =  [200, 20, 200, 1, 100]
-    per_jitter = 0.3 # percent jitter
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
+    per_jitter = 0.05 # percent jitter
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    chain_types = ['asc', 'desc', 'max_period', 'min_period']
-    run_analysis_order(num_tasks, periods,read_offsets,write_offsets, per_jitter, chain_types)
+    run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 

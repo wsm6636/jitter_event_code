@@ -1,14 +1,14 @@
 # 文件名：main.py
 import csv
 import datetime
-from analysisorder import run_analysis
+from analysisorder import run_analysis_order
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 from plot import plot_percent_order 
 from plot import plot_r_histogram_order
 from plot import type_percent_order
-from analysisorder import RandomEvent
+from analysisorder import RandomEvent_order
 import random
 import time
 import os
