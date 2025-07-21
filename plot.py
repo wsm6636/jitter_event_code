@@ -644,18 +644,163 @@ def type_percent_order_boxplot(box_order_file_name, csv_file):
     plt.savefig(box_order_file_name)
     print(f"Plot generated and saved to {box_order_file_name}")
 
+
+def plot_false_percentage_rw(csv_file, RW_plot_false_name):
+    # 结构: {num_tasks: {per_jitter: {'read':[...], 'write':[...]}}}
+    data = {}
+
+    # 1. 读 CSV
+    with open(csv_file, newline='') as f:
+        for row in csv.DictReader(f):
+            nt   = int(row['num_tasks'])
+            jit  = float(row['per_jitter'])
+            fr   = float(row['false_percentage_read'])
+            fw   = float(row['false_percentage_write'])
+
+            data.setdefault(nt, {}).setdefault(jit, {'read': [], 'write': []})
+            data[nt][jit]['read'].append(fr)
+            data[nt][jit]['write'].append(fw)
+
+    # 2. 准备画布
+    plt.figure(figsize=(10, 6))
+
+    # 3. 画线：先写后读，避免图例顺序混乱
+    for nt in sorted(data):
+        j_sorted = sorted(data[nt])
+        x = [j*100 for j in j_sorted]
+
+        y_write = [np.mean(data[nt][j]['write'])*100 for j in j_sorted]
+        y_read  = [np.mean(data[nt][j]['read'])*100  for j in j_sorted]
+
+        # 写：实线
+        plt.plot(x, y_write,
+                 marker='o', linestyle='-', linewidth=2,
+                 label=f'write (num_tasks={nt})')
+
+        # 读：虚线
+        plt.plot(x, y_read,
+                 marker='s', linestyle='--', linewidth=2,
+                 label=f'read  (num_tasks={nt})')
+
+    # 4. 细节
+    plt.title('Read/Write False Percentage vs. Jitter')
+    plt.xlabel('Jitter Percentage (%)')
+    plt.ylabel('False Percentage (%)')
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+
+    # 5. 保存
+    plt.savefig(RW_plot_false_name, dpi=300)
+    print(f'Saved to {RW_plot_false_name}')
+    # plt.show()
+
+
+
+def plot_histogram_rw_from_csv(csv_file, R_plot_name_RW):
+    # 只关心 per_jitter = 0.2 (20%)
+    JITTER_FILTER = 0.2
+    TOLERANCE = 1e-9
+
+    # 数据结构：{num_tasks: {'write': [...], 'read': [...]}}
+    data = {}
+    r_exceed_write = 0
+    r_exceed_read  = 0
+    total_rows = 0
+
+    with open(csv_file, newline='') as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            total_rows += 1
+            if float(row['per_jitter']) != JITTER_FILTER:
+                continue
+
+            nt = int(row['num_tasks'])
+            rw = float(row['R_write'])
+            rr = float(row['R_read'])
+
+            data.setdefault(nt, {'write': [], 'read': []})
+            data[nt]['write'].append(rw)
+            data[nt]['read' ].append(rr)
+
+            if rw > 1 + TOLERANCE:
+                r_exceed_write += 1
+            if rr > 1 + TOLERANCE:
+                r_exceed_read  += 1
+
+    if total_rows == 0:
+        print("No data found.")
+        return
+
+    # 统一排序任务数，保证子图顺序一致
+    sorted_tasks = sorted(data.keys())
+    max_subplots = 8  # 2×4
+    if len(sorted_tasks) > 4:
+        print("Warning: more than 4 distinct num_tasks; only first 4 will be shown.")
+        sorted_tasks = sorted_tasks[:4]
+
+    # 创建 2×4 画布
+    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+    axes = axes.flatten()
+
+    colors = plt.cm.tab10(np.linspace(0, 1, len(sorted_tasks)))
+
+    # 1~4 号子图：写
+    for i, nt in enumerate(sorted_tasks):
+        ax = axes[i]
+        vals = data[nt]['write']
+        counts, edges = np.histogram(vals, bins=50, range=(0, 1.05))
+        centers = (edges[:-1] + edges[1:]) / 2
+        width = (edges[1] - edges[0])
+        ax.bar(centers, counts, width=width, color=colors[i], alpha=0.7)
+        pct = (np.array(vals) > 1).mean() * 100
+        ax.set_title(f'Write\nnum_tasks={nt} (>{1:.0f}: {pct:.1f}%)')
+        ax.set_xlim(0, 1.05)
+        ax.set_ylabel('Frequency')
+        ax.grid(True)
+
+    # 5~8 号子图：读
+    for i, nt in enumerate(sorted_tasks):
+        ax = axes[4 + i]
+        vals = data[nt]['read']
+        counts, edges = np.histogram(vals, bins=50, range=(0, 1.05))
+        centers = (edges[:-1] + edges[1:]) / 2
+        width = (edges[1] - edges[0])
+        ax.bar(centers, counts, width=width, color=colors[i], alpha=0.7)
+        pct = (np.array(vals) > 1).mean() * 100
+        ax.set_title(f'Read\nnum_tasks={nt} (>{1:.0f}: {pct:.1f}%)')
+        ax.set_xlim(0, 1.05)
+        ax.grid(True)
+
+    # 隐藏多余子图
+    for j in range(len(sorted_tasks) + 4, max_subplots):
+        axes[j].axis('off')
+
+    plt.suptitle(
+        f'Distribution of R_write (left) and R_read (right) at per_jitter={int(JITTER_FILTER*100)}%\n'
+        f'Global exceed 1.0: write={r_exceed_write}, read={r_exceed_read} (total rows {total_rows})',
+        fontsize=16, y=0.98
+    )
+    plt.tight_layout(rect=[0, 0, 1, 0.96])
+    plt.savefig(R_plot_name_RW, dpi=300)
+    print(f'Saved to {R_plot_name_RW}')
+    # plt.show()
+
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
     # parser.add_argument("e2e_plot_name", type=str, help="Name of the output plot file for final e2e max values.")
 
     # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
     
-    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
-    parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
+    # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
 
     # parser.add_argument("ratio_R_plot_name", type=str)
     # parser.add_argument("ratio_percent_plot_name", type=str)
@@ -666,6 +811,9 @@ if __name__ == "__main__":
     # parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
     # parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
 
+    parser.add_argument("plot_histogram_rw_name", type=str, help="Name of the output plot file for histogram RW.")
+    parser.add_argument("plot_false_percentage_rw_name", type=str, help="Name of the output plot file for false percentage RW.")
+
     args = parser.parse_args()
 
     # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
@@ -675,7 +823,7 @@ if __name__ == "__main__":
     # plot_histogram_adjust(args.csv_file, args.adjust_plot_name)
 
     # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
-    compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
+    # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
     
     # ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
     # ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
@@ -686,3 +834,5 @@ if __name__ == "__main__":
     # plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
     # type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
 
+    plot_histogram_rw_from_csv(args.csv_file, args.plot_histogram_rw_name)
+    plot_false_percentage_rw(args.csv_file, args.plot_false_percentage_rw_name)

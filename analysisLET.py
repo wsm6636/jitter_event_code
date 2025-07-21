@@ -280,7 +280,7 @@ def chain_asc_no_free_jitter(tasks):
     #   w.offset += r.period
     return  r, w
 
-def our_objective_function(x,tasks):
+def write_objective_function(x,tasks):
     num_tasks = len(tasks)
     # print(f"tasks: {num_tasks}, x: {x}")
     for i in range(num_tasks):
@@ -293,22 +293,22 @@ def our_objective_function(x,tasks):
         final_r, final_w = final_combine_result
         # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        our_objective_function.iteration += 1
-        out_results_function.append(max_reaction_time)
+        write_objective_function.iteration += 1
+        write_results_function.append(max_reaction_time)
         return -max_reaction_time
     else:
-        out_results_function.append(0)
+        write_results_function.append(0)
         # print("Failed to combine predecessor and successor results.")
         return 0
 
-def our_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
+def write_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
     for i, (lower, upper) in enumerate(bounds):
         if not (lower <= x_new[i] <= upper):
             return False
     return True
 
 
-def our_take_step(x, bounds):
+def write_take_step(x, bounds):
     new_x = x.copy()
     for i in range(len(x)):
         lower, upper = bounds[i]
@@ -316,7 +316,7 @@ def our_take_step(x, bounds):
     # print(f"take_step: {new_x}")
     return new_x
 
-def our_max_reaction_time(tasks):
+def write_max_reaction_time(tasks):
     bounds = [(0, 0)] * len(tasks)
     initial_guess = [0] * len(tasks)
     for i, task in enumerate(tasks):
@@ -326,11 +326,11 @@ def our_max_reaction_time(tasks):
 
     minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds} 
 
-    our_objective_function.iteration = 0
+    write_objective_function.iteration = 0
     def objective(x):
-        return our_objective_function(x, tasks)  
+        return write_objective_function(x, tasks)  
     def accept(f_new, x_new, f_old, x_old, **kwargs):
-        return our_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
+        return write_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
     
     result = basinhopping(
         objective,
@@ -341,7 +341,76 @@ def our_max_reaction_time(tasks):
         stepsize=1.0,  # Step size for the random walk
         interval=50,  # Interval for the random walk
         niter_success=10,  # Iteration bound
-        take_step=lambda x: our_take_step(x, bounds),
+        take_step=lambda x: write_take_step(x, bounds),
+        accept_test=accept
+    )
+    max_reaction_time = -result.fun 
+
+    return max_reaction_time    
+
+
+def read_objective_function(x,tasks):
+    num_tasks = len(tasks)
+    # print(f"tasks: {num_tasks}, x: {x}")
+    for i in range(num_tasks):
+        tasks[i].read_event.maxjitter = x[i]
+        tasks[i].read_event.offset = tasks[i].read_event.old_offset
+        print(f"task {i}: read_event: period: {tasks[i].read_event.period}, offset: {tasks[i].read_event.offset}, oldoffset: {tasks[i].read_event.old_offset}, maxjitter: {tasks[i].read_event.maxjitter}, old_maxjitter: {tasks[i].read_event.old_maxjitter}")
+
+    final_combine_result = chain_asc_no_free_jitter(tasks)
+    if final_combine_result:
+        final_r, final_w = final_combine_result
+        # max reaction time need to add the period of the first read event
+        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+        read_objective_function.iteration += 1
+        write_results_function.append(max_reaction_time)
+        return -max_reaction_time
+    else:
+        write_results_function.append(0)
+        # print("Failed to combine predecessor and successor results.")
+        return 0
+
+def read_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
+    for i, (lower, upper) in enumerate(bounds):
+        if not (lower <= x_new[i] <= upper):
+            return False
+    return True
+
+
+def read_take_step(x, bounds):
+    new_x = x.copy()
+    for i in range(len(x)):
+        lower, upper = bounds[i]
+        new_x[i] = random.uniform(lower, upper)
+    # print(f"take_step: {new_x}")
+    return new_x
+
+def read_max_reaction_time(tasks):
+    bounds = [(0, 0)] * len(tasks)
+    initial_guess = [0] * len(tasks)
+    for i, task in enumerate(tasks):
+        bounds[i] = (0, task.read_event.old_maxjitter)
+        # guess the initial value : random jitter of write events
+        initial_guess[i] = random.uniform(0, task.read_event.old_maxjitter)
+
+    minimizer_kwargs = {"method": "L-BFGS-B", "bounds": bounds} 
+
+    read_objective_function.iteration = 0
+    def objective(x):
+        return read_objective_function(x, tasks)  
+    def accept(f_new, x_new, f_old, x_old, **kwargs):
+        return read_accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs)
+    
+    result = basinhopping(
+        objective,
+        initial_guess,
+        minimizer_kwargs=minimizer_kwargs,
+        niter=1,
+        T=1.0,
+        stepsize=1.0,  # Step size for the random walk
+        interval=50,  # Interval for the random walk
+        niter_success=10,  # Iteration bound
+        take_step=lambda x: read_take_step(x, bounds),
         accept_test=accept
     )
     max_reaction_time = -result.fun 
@@ -473,33 +542,42 @@ def maximize_reaction_time(tasks):
 
 
 results_function = []
-out_results_function = []
+write_results_function = []
+read_results_function = []
 
 # outport function
 def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
-    global out_results_function
+    global write_results_function
+    global read_results_function
     results_function = []  
-    out_results_function = []
+    write_results_function = []
+    read_results_function = []
 
     tasks = RandomEvent_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
     
-    # final = our_chain(tasks)
-    final_e2e_max_a = our_max_reaction_time(tasks)
-
-    if out_results_function is None or len(out_results_function) == 0:
-        final_e2e_max_b = 0
-    # print(f"final_e2e_max_a: {final_e2e_max_a}, out_results_function: {out_results_function}")
-    final_e2e_max_b = max(out_results_function)
-    final_e2e_max = max(final_e2e_max_a, final_e2e_max_b)
+    final_e2e_max_write_a = write_max_reaction_time(tasks)
+    
+    if write_results_function is None or len(write_results_function) == 0:
+        final_e2e_max_write_b = 0
+    # print(f"final_e2e_max_write_a: {final_e2e_max_write_a}, write_results_function: {write_results_function}")
+    final_e2e_max_write_b = max(write_results_function)
+    final_e2e_max_write = max(final_e2e_max_write_a, final_e2e_max_write_b)
         
+    final_e2e_max_read_a = read_max_reaction_time(tasks)
+    if read_results_function is None or len(read_results_function) == 0:
+        final_e2e_max_read_b = 0
+    # print(f"final_e2e_max_read_a: {final_e2e_max_read_a}, read_results_function: {read_results_function}")
+    final_e2e_max_read_b = max(read_results_function)
+    final_e2e_max_read = max(final_e2e_max_read_a, final_e2e_max_read_b)
+
     # # check if the final result is valid
     reaction_time_a = maximize_reaction_time(tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
 
-    return final_e2e_max, max_reaction_time, tasks
+    return final_e2e_max_write, final_e2e_max_read, max_reaction_time, tasks
 
 
 # test the code

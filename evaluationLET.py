@@ -5,8 +5,8 @@ from analysisLET import run_analysis_LET
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
-from plot import plot_histogram_from_csv 
-from plot import plot_line_chart_from_csv
+from plot import plot_false_percentage_rw
+from plot import plot_histogram_rw_from_csv
 from analysisLET import RandomEvent_LET
 import random
 import time
@@ -30,7 +30,7 @@ def generate_periods_and_offsets(num_tasks, periods):
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
-def output_results_LET(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+def output_results_LET(num_repeats, random_seed, timestamp, run_results_write, false_results_write, run_results_read, false_results_read, num_chains, jitters):
 
     folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
     folder_path = os.path.join("LET", folder_name)
@@ -45,12 +45,13 @@ def output_results_LET(num_repeats, random_seed, timestamp, results, false_resul
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage"])
+        writer.writerow(["seeds","num_tasks", "per_jitter","max_reaction_time", "final_e2e_max_write",  "R_write", "exceed_write", "false_percentage_write", "final_e2e_max_read", "R_read", "exceed_read", "false_percentage_read"])
         for num_tasks in num_chains:
             for per_jitter in jitters:
-                false_percentage = false_results[num_tasks][per_jitter]
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage])
+                false_percentage_write = false_results_write[num_tasks][per_jitter]
+                false_percentage_read = false_results_read[num_tasks][per_jitter]
+                for (final_e2e_max_read, max_reaction_time, r_read, tasks, seed, exceed_read, final_e2e_max_write, r_write, exceed_write) in zip(run_results_read[num_tasks][per_jitter], run_results_write[num_tasks][per_jitter]):
+                    writer.writerow([seed, num_tasks, per_jitter, max_reaction_time, final_e2e_max_write, r_write, exceed_write, false_percentage_write, final_e2e_max_read, r_read, exceed_read, false_percentage_read])
 
     print(f"All results saved to {results_csv}")
 
@@ -59,27 +60,32 @@ def output_results_LET(num_repeats, random_seed, timestamp, results, false_resul
         writer = file.write
         for num_tasks in num_chains:
             for per_jitter in jitters:
-                false_percentage = false_results[num_tasks][per_jitter]
-                writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage: {false_percentage}=====================\n")
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}\n")
+                false_percentage_write = false_results_write[num_tasks][per_jitter]
+                false_percentage_read = false_results_read[num_tasks][per_jitter]
+                writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage_write: {false_percentage_write}, false_percentage_read: {false_percentage_read} =====================\n")
+                for (final_e2e_max_read, max_reaction_time, r_read, tasks, seed, exceed_read, final_e2e_max_write, r_write, exceed_write) in zip(run_results_read[num_tasks][per_jitter], run_results_write[num_tasks][per_jitter]):
+                    writer(f"seed: {seed}, max_reaction_time: {max_reaction_time}, final_e2e_max_write: {final_e2e_max_write}, R_write: {r_write}, {exceed_write}, final_e2e_max_read: {final_e2e_max_read},  R_read: {r_read}, {exceed_read}\n")
                     for task in tasks:
                         writer(f"   {task}\n")
     
     print(f"All results saved to {log_txt}")
 
     # plotting: uncomment to have plots made automatically
-    plot_histogram_from_csv(results_csv, R_plot_name)
+    plot_histogram_rw_from_csv(results_csv, R_plot_name)
     print(f"Plots generated and saved to {R_plot_name}")
-    plot_line_chart_from_csv(results_csv, percent_plot_name)
+    plot_false_percentage_rw(results_csv, percent_plot_name)
     print(f"Plots generated and saved to {percent_plot_name}")
 
     return results_csv, log_txt, percent_plot_name, R_plot_name
 
+
+
 def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
-    results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
-    false_results = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
+    results_write = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    false_results_write = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
+    results_read = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    false_results_read = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
 
     # TODO: add random_seed to the filename
     # run analysis
@@ -92,30 +98,43 @@ def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
                 # generate the jitter
                 # only generate the jitter
                 print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} ({jit}) Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max, max_reaction_time, tasks = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max_write, final_e2e_max_read, max_reaction_time, tasks = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
-                if final_e2e_max != 0:
-                    r = max_reaction_time / final_e2e_max
-                    if r > 1:
-                        exceed = "exceed"
+                if final_e2e_max_write != 0:
+                    r_write = max_reaction_time / final_e2e_max_write
+                    if r_write > 1:
+                        exceed_write = "exceed"
                     else:
-                        exceed = "safe"
+                        exceed_write = "safe"
                 else:
-                    r = None
-                    exceed = None
-                    false_results[num_tasks][per_jitter] += 1  # algorithm failed
+                    r_write = None
+                    exceed_write = None
+                    false_results_write[num_tasks][per_jitter] += 1  # algorithm failed
+                if final_e2e_max_read != 0:
+                    r_read = max_reaction_time / final_e2e_max_read
+                    if r_read > 1:
+                        exceed_read = "exceed"
+                    else:
+                        exceed_read = "safe"
+                else:
+                    r_read = None
+                    exceed_read = None
+                    false_results_read[num_tasks][per_jitter] += 1
 
-                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed))
+                results_write[num_tasks][per_jitter].append((final_e2e_max_write, max_reaction_time,r_write,tasks,random_seed,exceed_write))
+                results_read[num_tasks][per_jitter].append((final_e2e_max_read, max_reaction_time,r_read,tasks,random_seed,exceed_read))
 
         random_seed = random_seed+1
 
     # algorithm2 failed percentage 
     for num_tasks in num_chains:
         for per_jitter in jitters:
-            false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
-            false_results[num_tasks][per_jitter] = false_percentage
+            false_percentage_write = (false_results_write[num_tasks][per_jitter] / num_repeats)
+            false_results_write[num_tasks][per_jitter] = false_percentage_write
+            false_percentage_read = (false_results_read[num_tasks][per_jitter] / num_repeats)
+            false_results_read[num_tasks][per_jitter] = false_percentage_read
 
-    return results, false_results
+    return results_write, false_results_write, results_read, false_results_read
 
 
     
@@ -141,7 +160,7 @@ if __name__ == "__main__":
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
 
-    run_results, false_results = run_LET(jitters, num_chains, num_repeats, random_seed, periods)
+    run_results_write, false_results_write, run_results_read, false_results_read = run_LET(jitters, num_chains, num_repeats, random_seed, periods)
     
-    output_results_LET(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)
+    output_results_LET(num_repeats, random_seed, timestamp, run_results_write, false_results_write, run_results_read, false_results_read, num_chains, jitters)
     
