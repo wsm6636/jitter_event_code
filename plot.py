@@ -698,11 +698,10 @@ def plot_false_percentage_rw(csv_file, RW_plot_false_name):
 
 
 def plot_histogram_rw_from_csv(csv_file, R_plot_name_RW):
-    # 只关心 per_jitter = 0.2 (20%)
-    JITTER_FILTER = 0.2
+    JITTER_FILTER = 0.2          # 只画 20% 抖动
     TOLERANCE = 1e-9
 
-    # 数据结构：{num_tasks: {'write': [...], 'read': [...]}}
+    # 1. 收集数据：{num_tasks: {'write': [...], 'read': [...]}}
     data = {}
     r_exceed_write = 0
     r_exceed_read  = 0
@@ -716,65 +715,70 @@ def plot_histogram_rw_from_csv(csv_file, R_plot_name_RW):
                 continue
 
             nt = int(row['num_tasks'])
-            rw = float(row['R_write'])
-            rr = float(row['R_read'])
+            rw = float(row['R_write']) if row['R_write'].strip() != '' else None
+            rr = float(row['R_read'])  if row['R_read'].strip()  != '' else None
 
             data.setdefault(nt, {'write': [], 'read': []})
-            data[nt]['write'].append(rw)
-            data[nt]['read' ].append(rr)
+            if rw is not None:
+                data[nt]['write'].append(rw)
+                if rw > 1 + TOLERANCE:
+                    r_exceed_write += 1
+            if rr is not None:
+                data[nt]['read'].append(rr)
+                if rr > 1 + TOLERANCE:
+                    r_exceed_read += 1
 
-            if rw > 1 + TOLERANCE:
-                r_exceed_write += 1
-            if rr > 1 + TOLERANCE:
-                r_exceed_read  += 1
-
-    if total_rows == 0:
-        print("No data found.")
+    if not data:
+        print("No data for per_jitter = 0.2")
         return
 
-    # 统一排序任务数，保证子图顺序一致
+    # 2. 得到实际任务数
     sorted_tasks = sorted(data.keys())
-    max_subplots = 8  # 2×4
-    if len(sorted_tasks) > 4:
-        print("Warning: more than 4 distinct num_tasks; only first 4 will be shown.")
-        sorted_tasks = sorted_tasks[:4]
+    n_tasks = len(sorted_tasks)
 
-    # 创建 2×4 画布
-    fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+    # 3. 动态画布：2 行 × n_tasks 列
+    fig, axes = plt.subplots(2, n_tasks,
+                             figsize=(4 * n_tasks, 8),
+                             sharex=True, sharey=False)
+    if n_tasks == 1:
+        axes = axes.reshape(2, 1)   # 兼容 1 列时的退化情况
     axes = axes.flatten()
 
-    colors = plt.cm.tab10(np.linspace(0, 1, len(sorted_tasks)))
+    colors = plt.cm.tab10(np.linspace(0, 1, n_tasks))
 
-    # 1~4 号子图：写
+    # 4. 画写（上半行）
     for i, nt in enumerate(sorted_tasks):
         ax = axes[i]
-        vals = data[nt]['write']
+        vals = [v for v in data[nt]['write'] if v is not None]
+        n_vals = len(vals) 
         counts, edges = np.histogram(vals, bins=50, range=(0, 1.05))
         centers = (edges[:-1] + edges[1:]) / 2
-        width = (edges[1] - edges[0])
-        ax.bar(centers, counts, width=width, color=colors[i], alpha=0.7)
+        ax.bar(centers, counts,
+               width=edges[1]-edges[0],
+               color=colors[i], alpha=0.7)
         pct = (np.array(vals) > 1).mean() * 100
-        ax.set_title(f'Write\nnum_tasks={nt} (>{1:.0f}: {pct:.1f}%)')
-        ax.set_xlim(0, 1.05)
+        ax.set_title(f'Write,num_tasks={nt}\ncount={n_vals},R>{1:.0f}: {pct:.1f}%')
         ax.set_ylabel('Frequency')
         ax.grid(True)
 
-    # 5~8 号子图：读
+    # 5. 画读（下半行）
     for i, nt in enumerate(sorted_tasks):
-        ax = axes[4 + i]
-        vals = data[nt]['read']
+        ax = axes[n_tasks + i]
+        vals = [v for v in data[nt]['read'] if v is not None]
+        n_vals = len(vals)                      # 样本数量
         counts, edges = np.histogram(vals, bins=50, range=(0, 1.05))
         centers = (edges[:-1] + edges[1:]) / 2
-        width = (edges[1] - edges[0])
-        ax.bar(centers, counts, width=width, color=colors[i], alpha=0.7)
+        ax.bar(centers, counts,
+               width=edges[1]-edges[0],
+               color=colors[i], alpha=0.7)
         pct = (np.array(vals) > 1).mean() * 100
-        ax.set_title(f'Read\nnum_tasks={nt} (>{1:.0f}: {pct:.1f}%)')
-        ax.set_xlim(0, 1.05)
+        ax.set_title(f'Read, num_tasks={nt}\ncount={n_vals},R>{1:.0f}: {pct:.1f}%')
+        ax.set_xlabel('R value')
         ax.grid(True)
 
-    # 隐藏多余子图
-    for j in range(len(sorted_tasks) + 4, max_subplots):
-        axes[j].axis('off')
+    # # 隐藏多余子图
+    # for j in range(len(sorted_tasks) + 4, max_subplots):
+    #     axes[j].axis('off')
 
     plt.suptitle(
         f'Distribution of R_write (left) and R_read (right) at per_jitter={int(JITTER_FILTER*100)}%\n'

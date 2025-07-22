@@ -363,10 +363,10 @@ def read_objective_function(x,tasks):
         # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
         read_objective_function.iteration += 1
-        write_results_function.append(max_reaction_time)
+        read_results_function.append(max_reaction_time)
         return -max_reaction_time
     else:
-        write_results_function.append(0)
+        read_results_function.append(0)
         # print("Failed to combine predecessor and successor results.")
         return 0
 
