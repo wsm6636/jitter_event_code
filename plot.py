@@ -7,6 +7,7 @@ import pandas as pd
 import ast
 import os
 from matplotlib.gridspec import GridSpec, GridSpecFromSubplotSpec
+import seaborn as sns
 
 def plot_histogram_from_csv(csv_file,R_plot_name):
     num_tasks_to_r_values = {}
@@ -792,6 +793,48 @@ def plot_histogram_rw_from_csv(csv_file, R_plot_name_RW):
 
 
 
+def plot_baseline_from_csv(csv_file, baseline_plot_name):
+    df = pd.read_csv(csv_file)
+
+    # 将 per_jitter 转成百分比（可选，仅用于展示）
+    df['per_jitter_pct'] = df['per_jitter'] * 100
+
+    # 计算基准：jitter=0 时的 max_reaction_time
+    baseline = (
+        df[df['per_jitter'] == 0.0]
+        .groupby('num_tasks')['max_reaction_time']
+        .mean()
+        .rename('baseline')
+        .reset_index()
+    )
+
+    # 合并基准，计算 ratio
+    df = df.merge(baseline, on='num_tasks')
+    df['ratio'] = df['max_reaction_time'] / df['baseline']
+
+    # 绘图
+    plt.figure(figsize=(6, 4))
+    sns.lineplot(
+        data=df,
+        x='per_jitter_pct',
+        y='ratio',
+        hue='num_tasks',
+        marker='o',
+        palette='tab10'
+    )
+
+    # 画 y=1 参考线
+    plt.axhline(y=1.0, color='black', linestyle='--', linewidth=1, label='baseline (jitter=0)')
+
+    plt.xlabel("Jitter (%)")
+    plt.ylabel("Ratio  e2e(jitter) / e2e(0)")
+    plt.title("End-to-End Reaction Time Ratio vs Jitter")
+    plt.legend(title='num_tasks')
+    plt.tight_layout()
+    plt.grid(True)
+    plt.savefig(f"{baseline_plot_name}", dpi=300)
+    # plt.show()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
@@ -815,8 +858,9 @@ if __name__ == "__main__":
     # parser.add_argument("order_r_plot_name", type=str, help="Name of the output plot file for R histogram order. ")
     # parser.add_argument("box_order_file_name", type=str, help="Name of the output plot file for box order. ")
 
-    parser.add_argument("plot_histogram_rw_name", type=str, help="Name of the output plot file for histogram RW.")
-    parser.add_argument("plot_false_percentage_rw_name", type=str, help="Name of the output plot file for false percentage RW.")
+    # parser.add_argument("plot_histogram_rw_name", type=str, help="Name of the output plot file for histogram RW.")
+    # parser.add_argument("plot_false_percentage_rw_name", type=str, help="Name of the output plot file for false percentage RW.")
+    parser.add_argument("plot_baseline_name", type=str, help="Name of the output plot file for baseline.")
 
     args = parser.parse_args()
 
@@ -838,5 +882,7 @@ if __name__ == "__main__":
     # plot_r_histogram_order(args.order_r_plot_name, args.csv_file)
     # type_percent_order_boxplot(args.box_order_file_name, args.csv_file)
 
-    plot_histogram_rw_from_csv(args.csv_file, args.plot_histogram_rw_name)
-    plot_false_percentage_rw(args.csv_file, args.plot_false_percentage_rw_name)
+    # plot_histogram_rw_from_csv(args.csv_file, args.plot_histogram_rw_name)
+    # plot_false_percentage_rw(args.csv_file, args.plot_false_percentage_rw_name)
+
+    plot_baseline_from_csv(args.csv_file, args.plot_baseline_name)

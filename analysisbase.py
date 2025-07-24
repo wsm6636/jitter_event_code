@@ -57,7 +57,7 @@ class Task:
 
 
 # random events generator
-class RandomEvent:
+class RandomEvent_base:
     def __init__(
         self,
         num_tasks,
@@ -242,11 +242,11 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis_base(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
-    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+    tasks = RandomEvent_base(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
         
     # check if the final result is valid
     reaction_time_a = maximize_reaction_time(tasks)
@@ -264,6 +264,6 @@ if __name__ == "__main__":
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    run_analysis_base(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 
