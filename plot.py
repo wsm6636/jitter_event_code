@@ -829,7 +829,7 @@ def plot_baseline_from_csv(csv_file, baseline_plot_name):
     plt.xlabel("Jitter (%)")
     plt.ylabel("Ratio  e2e(jitter) / e2e(0)")
     plt.title("End-to-End Reaction Time Ratio vs Jitter")
-    plt.legend(title='num_tasks')
+    plt.legend(title='num_tasks', ncol=2, fontsize=8, title_fontsize=8, markerscale=0.7, labelspacing=0.3,  handletextpad=0.3 )
     plt.tight_layout()
     plt.grid(True)
     plt.savefig(f"{baseline_plot_name}", dpi=300)
