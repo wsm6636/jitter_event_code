@@ -1,13 +1,13 @@
 # 文件名：main.py
 import csv
 import datetime
-from analysisLET import run_analysis_LET
+from analysisRW import run_analysis_RW
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import gaussian_kde
 from plot import plot_false_percentage_rw
 from plot import plot_histogram_rw_from_csv
-from analysisLET import RandomEvent_LET
+from analysisRW import RandomEvent_RW
 import random
 import time
 import os
@@ -30,16 +30,16 @@ def generate_periods_and_offsets(num_tasks, periods):
     return selected_periods, selected_read_offsets, selected_write_offsets
 
 
-def output_results_LET(num_repeats, random_seed, timestamp, run_results, false_results_write, false_results_read, num_chains, jitters):
+def output_results_RW(num_repeats, random_seed, timestamp, run_results, false_results_write, false_results_read, num_chains, jitters):
 
     folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
-    folder_path = os.path.join("LET", folder_name)
+    folder_path = os.path.join("RW", folder_name)
     os.makedirs(folder_path, exist_ok=True)
 
     percent_plot_name = os.path.join(folder_path,  f"percent_{num_repeats}_{random_seed}_{timestamp}.png")
     R_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv" )
-    log_txt = os.path.join(f"log/LET_log_{num_repeats}_{random_seed}_{timestamp}.txt")
+    log_txt = os.path.join(f"log/RW_log_{num_repeats}_{random_seed}_{timestamp}.txt")
 
 
     # save results to csv
@@ -80,7 +80,7 @@ def output_results_LET(num_repeats, random_seed, timestamp, run_results, false_r
 
 
 
-def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
+def run_RW(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
     # results_write = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results_write = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
@@ -98,7 +98,7 @@ def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
                 # generate the jitter
                 # only generate the jitter
                 print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} ({jit}) Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max_write, final_e2e_max_read, max_reaction_time, tasks = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max_write, final_e2e_max_read, max_reaction_time, tasks = run_analysis_RW(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max_write != 0:
                     r_write = max_reaction_time / final_e2e_max_write
@@ -161,7 +161,7 @@ if __name__ == "__main__":
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
 
-    false_results_write, false_results_read, run_results = run_LET(jitters, num_chains, num_repeats, random_seed, periods)
+    false_results_write, false_results_read, run_results = run_RW(jitters, num_chains, num_repeats, random_seed, periods)
     
-    output_results_LET(num_repeats, random_seed, timestamp, run_results, false_results_write, false_results_read, num_chains, jitters)
+    output_results_RW(num_repeats, random_seed, timestamp, run_results, false_results_write, false_results_read, num_chains, jitters)
     

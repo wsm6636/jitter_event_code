@@ -1,13 +1,13 @@
 from evaluation import output_results
 from evaluationF16 import output_results_F16
 from evaluationratio import output_results_ratio
-from evaluationLET import output_results_LET
+from evaluationRW import output_results_RW
 from evaluation import generate_periods_and_offsets
 from evaluationratio import run_ratio
 
 from analysis import run_analysis
 from analysisF16 import run_analysis_F16
-from analysisLET import run_analysis_LET
+from analysisRW import run_analysis_RW
 
 from plot import compare_line_chart_from_csv
 from plot import compare_plot_histogram
@@ -84,14 +84,14 @@ def compareF16(jitters, num_chains, num_repeats, random_seed, periods):
 
 
 
-def compareLET(jitters, num_chains, num_repeats, random_seed, periods):
+def compareRW(jitters, num_chains, num_repeats, random_seed, periods):
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
     
     # preparing list for storing result F16
-    results_LET = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
-    false_results_LET = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
+    results_RW = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    false_results_RW = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
 
     for i in range(num_repeats):
         random.seed(random_seed)
@@ -113,21 +113,21 @@ def compareLET(jitters, num_chains, num_repeats, random_seed, periods):
 
                 results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed))
 
-                print(f"=========For evaluation LET========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max_LET, max_reaction_time_LET,  tasks_LET = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                print(f"=========For evaluation RW========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
+                final_e2e_max_RW, max_reaction_time_RW,  tasks_RW = run_analysis_RW(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
-                if final_e2e_max_LET != 0:
-                    r_LET = max_reaction_time_LET / final_e2e_max_LET
-                    if r_LET > 1:
-                        exceed_LET = "exceed"
+                if final_e2e_max_RW != 0:
+                    r_RW = max_reaction_time_RW / final_e2e_max_RW
+                    if r_RW > 1:
+                        exceed_RW = "exceed"
                     else:
-                        exceed_LET = "safe"
+                        exceed_RW = "safe"
                 else:
-                    r_LET = None
-                    exceed_LET = None
-                    false_results_LET[num_tasks][per_jitter] += 1  # algorithm failed
+                    r_RW = None
+                    exceed_RW = None
+                    false_results_RW[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results_LET[num_tasks][per_jitter].append((final_e2e_max_LET, max_reaction_time_LET, r_LET, tasks_LET, random_seed, exceed_LET))
+                results_RW[num_tasks][per_jitter].append((final_e2e_max_RW, max_reaction_time_RW, r_RW, tasks_RW, random_seed, exceed_RW))
 
         random_seed += 1
 
@@ -136,17 +136,17 @@ def compareLET(jitters, num_chains, num_repeats, random_seed, periods):
             false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
             false_results[num_tasks][per_jitter] = false_percentage
 
-            false_percentage_LET = (false_results_LET[num_tasks][per_jitter] / num_repeats)
-            false_results_LET[num_tasks][per_jitter] = false_percentage_LET
+            false_percentage_RW = (false_results_RW[num_tasks][per_jitter] / num_repeats)
+            false_results_RW[num_tasks][per_jitter] = false_percentage_RW
 
-    return results, false_results, results_LET, false_results_LET
+    return results, false_results, results_RW, false_results_RW
 
 
 
 def compare_plots(csv_files, num_repeats, random_seed, timestamp):
     folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
     # folder_path = os.path.join("compare/F16", folder_name)
-    folder_path = os.path.join("compare/LET", folder_name)
+    folder_path = os.path.join("compare/RW", folder_name)
 
     os.makedirs(folder_path, exist_ok=True)
     
@@ -178,14 +178,14 @@ if __name__ == "__main__":
     timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
     # results, false_results, final, results_F16, false_results_F16, final_F16 = compareF16(jitters, num_chains, num_repeats, random_seed, periods)
-    results, false_results, results_LET, false_results_LET = compareLET(jitters, num_chains, num_repeats, random_seed, periods)
+    results, false_results, results_RW, false_results_RW = compareRW(jitters, num_chains, num_repeats, random_seed, periods)
 
     csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
     # csv_file_F16, _, _, _ = output_results_F16(num_repeats, random_seed, timestamp, results_F16, false_results_F16, num_chains, jitters)
-    csv_file_LET, _, _, _ = output_results_LET(num_repeats, random_seed, timestamp, results_LET, false_results_LET, num_chains, jitters)
+    csv_file_RW, _, _, _ = output_results_RW(num_repeats, random_seed, timestamp, results_RW, false_results_RW, num_chains, jitters)
 
     # csv_files = [csv_file, csv_file_F16]
-    csv_files = [csv_file, csv_file_LET]
+    csv_files = [csv_file, csv_file_RW]
 
     compare_plots(csv_files, num_repeats, random_seed, timestamp)
 

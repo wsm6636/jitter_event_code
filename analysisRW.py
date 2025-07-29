@@ -59,7 +59,7 @@ class Task:
 
 
 # random events generator
-class RandomEvent_LET:
+class RandomEvent_RW:
     def __init__(
         self,
         num_tasks,
@@ -546,7 +546,7 @@ write_results_function = []
 read_results_function = []
 
 # outport function
-def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis_RW(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     global write_results_function
     global read_results_function
@@ -554,7 +554,7 @@ def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     write_results_function = []
     read_results_function = []
 
-    tasks = RandomEvent_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+    tasks = RandomEvent_RW(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
     
     final_e2e_max_write_a = write_max_reaction_time(tasks)
     
@@ -588,6 +588,6 @@ if __name__ == "__main__":
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    run_analysis_RW(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 

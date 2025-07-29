@@ -104,9 +104,9 @@ if __name__ == "__main__":
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
-    # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
+    jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,0.6,0.7,0.8,0.9,1]  # maxjitter = percent jitter * period
     # jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
-    jitters = [round(x * 0.01, 2) for x in range(51)]  # 0–50 % 步长 1 %
+    # jitters = [round(x * 0.01, 2) for x in range(51)]  # 0–50 % 步长 1 %
     num_chains = [3,5,8,10] 
     # num_chains  = [3,5]  # for test
     
