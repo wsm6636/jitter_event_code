@@ -326,6 +326,7 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
     # plt.show()
 
 
+
 def ratio_histogram_from_csv(csv_file, ratio_R_plot_name):
     num_tasks_to_r_values = {}
     with open(csv_file, mode='r') as file:
@@ -845,7 +846,7 @@ if __name__ == "__main__":
 
     # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
     
-    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
     # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
 
@@ -860,7 +861,7 @@ if __name__ == "__main__":
 
     # parser.add_argument("plot_histogram_rw_name", type=str, help="Name of the output plot file for histogram RW.")
     # parser.add_argument("plot_false_percentage_rw_name", type=str, help="Name of the output plot file for false percentage RW.")
-    parser.add_argument("plot_baseline_name", type=str, help="Name of the output plot file for baseline.")
+    # parser.add_argument("plot_baseline_name", type=str, help="Name of the output plot file for baseline.")
 
     args = parser.parse_args()
 
@@ -872,7 +873,7 @@ if __name__ == "__main__":
 
     # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
     # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
-    
+
     # ratio_histogram_from_csv(args.csv_file, args.ratio_R_plot_name)
     # ratio_line_chart_from_csv(args.csv_file, args.ratio_percent_plot_name)
     # ratio_for_num_chains(args.csv_file, args.ratio_plot_name)
@@ -885,4 +886,4 @@ if __name__ == "__main__":
     # plot_histogram_rw_from_csv(args.csv_file, args.plot_histogram_rw_name)
     # plot_false_percentage_rw(args.csv_file, args.plot_false_percentage_rw_name)
 
-    plot_baseline_from_csv(args.csv_file, args.plot_baseline_name)
+    # plot_baseline_from_csv(args.csv_file, args.plot_baseline_name)
