@@ -177,7 +177,7 @@ def compareLET(jitters, num_chains, num_repeats, random_seed, periods):
                 final[num_tasks][per_jitter].append((final_r, final_w))
 
                 print(f"=========For evaluation LET========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max_LET, max_reaction_time_LET,  final_r_LET, final_w_LET, tasks_LET = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max_LET, max_reaction_time_LET,  final_r_LET, final_w_LET, tasks_LET, inserted_LET = run_analysis_LET(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max_LET != 0:
                     r_LET = max_reaction_time_LET / final_e2e_max_LET
@@ -190,7 +190,7 @@ def compareLET(jitters, num_chains, num_repeats, random_seed, periods):
                     exceed_LET = None
                     false_results_LET[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results_LET[num_tasks][per_jitter].append((final_e2e_max_LET, max_reaction_time_LET, r_LET, tasks_LET, random_seed, exceed_LET))
+                results_LET[num_tasks][per_jitter].append((final_e2e_max_LET, max_reaction_time_LET, r_LET, tasks_LET, random_seed, exceed_LET, inserted_LET))
                 final_LET[num_tasks][per_jitter].append((final_r_LET, final_w_LET))
 
 
@@ -227,7 +227,7 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 100
+    num_repeats = 5 
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
     jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
     num_chains = [3,5,8,10] 
@@ -237,11 +237,11 @@ if __name__ == "__main__":
     ratios = np.arange(1.0, 6.0, 0.5)
     print(f"Ratios: {ratios}")
 
-    # random_seed = 1747829699
-    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    random_seed = 1754657730
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
-    random_seed = int(time.time())
-    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
     # results, false_results, final, results_F16, false_results_F16, final_F16 = compareF16(jitters, num_chains, num_repeats, random_seed, periods)
     # results, false_results, results_RW, false_results_RW = compareRW(jitters, num_chains, num_repeats, random_seed, periods)

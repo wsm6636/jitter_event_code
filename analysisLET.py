@@ -141,7 +141,7 @@ def effective_event(w, r, allow_insert=False):
     w_star = None
     r_star = None
     delta = r.offset - w.offset
-    result = 1
+    result = True
 
     (G, pw, pr) = euclide_extend(w.period, r.period)
     T_star = max(w.period, r.period)
@@ -157,7 +157,7 @@ def effective_event(w, r, allow_insert=False):
                 w_offser_star = r.offset - (delta % T_star)
                 r_offset_star = r.offset
         else:
-            result = None
+            result = False
     elif w.period > r.period:
         if (r.period + r.maxjitter) <= (w.period - w.maxjitter):
             kw = max(0, (((delta + r.maxjitter - r.period) // w.period) + 1))
@@ -166,7 +166,7 @@ def effective_event(w, r, allow_insert=False):
             r_offset_star = w_offser_star
             r_jitter_star = r.period + w.maxjitter
         else:
-            result = None
+            result = False
     elif w.period < r.period:
         if (w.period + w.maxjitter) <= (r.period - r.maxjitter):
             kr = max(0, math.ceil((w.maxjitter - delta) / r.period))
@@ -175,41 +175,66 @@ def effective_event(w, r, allow_insert=False):
             w_offser_star = r_offset_star - w.period
             w_jitter_star = w.period + r.maxjitter
         else:
-            result = None
+            result = False
     else:
-        result = None
+        result = False
 
-    if result is None:
+    if result is False:
         if allow_insert:
-            w_bridge = Event(
-                id=f"{w.id}_bridge",
-                event_type="write_bridge",
-                period=w.period,
-                offset=w.offset + w.maxjitter,
-                maxjitter=0
-            )
-            r_bridge = Event(
-                id=f"{r.id}_bridge",
-                event_type="read_bridge",
-                period=r.period,
-                offset=r.offset,
-                maxjitter=0
+            w_bridge_task = Task(
+                read_event=Event(
+                    id=f"{w.id}_bridge_r",
+                    event_type="bridge_read",
+                    period=w.period,
+                    offset=w.offset + w.maxjitter,
+                    maxjitter=0
+                ),
+                write_event=Event(
+                    id=f"{w.id}_bridge_w",
+                    event_type="bridge_write",
+                    period=w.period,
+                    offset=w.offset + w.maxjitter,
+                    maxjitter=0
+                ),
+                id=f"{w.id}_bridge"
             )
 
-            res1 = effective_event(w, w_bridge, allow_insert=False)
-            res2 = effective_event(r_bridge, r, allow_insert=False)
-
-            if res1 and res2:
-                (wb, _) = res1
-                (_, rb) = res2
-                res = effective_event(wb, rb, allow_insert=False)
-                if res:
-                    print(f"Inserted bridge events for {w.id} and {r.id}.")
-                    w_star, r_star = res
-                    return (w_star, r_star)
-                else:
-                    return False
+            r_bridge_task = Task(
+                read_event=Event(
+                    id=f"{r.id}_bridge_r",
+                    event_type="bridge_read",
+                    period=r.period,
+                    offset=r.offset,
+                    maxjitter=0
+                ),
+                write_event=Event(
+                    id=f"{r.id}_bridge_w",
+                    event_type="bridge_write",
+                    period=r.period,
+                    offset=r.offset,
+                    maxjitter=0
+                ),
+                id=f"{r.id}_bridge"
+            )
+            # res1 = effective_event(w, w_bridge_task.write_event, allow_insert=False)
+            # res2 = effective_event(r_bridge_task.read_event, r, allow_insert=False)
+            # if res1 and res2:
+            #     # 桥接事件本身也要组合
+            #     final = effective_event(res1[0], res2[1], allow_insert=False)
+            #     if final:
+            #         w_star, r_star, _ = final
+            #         print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
+            #         return w_star, r_star, [w_bridge_task, r_bridge_task]
+            #     else:
+            #         print(f"*******Failed to insert.*******")
+            #         return False
+            res = effective_event(w_bridge_task.write_event, r_bridge_task.read_event, allow_insert=False)
+            if res:
+                w_star, r_star, _ = res
+                print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
+                return w_star, r_star, [w_bridge_task, r_bridge_task]
             else:
+                print(f"*******Failed to insert.*******")
                 return False
         else:
             return False
@@ -228,7 +253,7 @@ def effective_event(w, r, allow_insert=False):
             offset=r_offset_star,
             maxjitter=r_jitter_star,
         )
-        return (w_star, r_star)
+        return w_star, r_star, []
 
 # Algorithm 2
 def combine_no_free_jitter(task1, task2):
@@ -237,14 +262,13 @@ def combine_no_free_jitter(task1, task2):
     r2 = task2.read_event
     w2 = task2.write_event
     # line 1
-    result = effective_event(w1, r2)
+    result = effective_event(w1, r2, allow_insert=True)
 
-    if result:
-        (w1_star, r2_star) = result
-    else:
-        # print("==========FAILED TO EFFECTIVE EVENT==========")
+    if result is False:
         return False
-    
+    else:
+        w1_star, r2_star, bridges = result
+
     T_star = w1_star.period  # line 2
     if task1.period > task2.period:  # line 4
         r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5
@@ -282,12 +306,13 @@ def combine_no_free_jitter(task1, task2):
         maxjitter=w_1_2_jitter,
     )  # line 20
 
-    return (r_1_2, w_1_2)
+    return (r_1_2, w_1_2, bridges)
 
 # asc index order chain 
 def chain_asc_no_free_jitter(tasks):
     n = len(tasks)
     current_task = tasks[0]
+    insert = []
 
     for i in range(1, n):
         result = combine_no_free_jitter(current_task, tasks[i])
@@ -295,27 +320,35 @@ def chain_asc_no_free_jitter(tasks):
             # print(f"Failed to combine task {current_task.id} and task {tasks[i].id}.")
             return False
         else:
-            (r, w) = result
+            r, w, bridges = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
+            if bridges:
+                insert.append((i, bridges))
+            
     # if r.offset < 0:
     #   print(f"r.offset < 0. r.offset: {r.offset:.2f}, w.offset: {w.offset:.2f}.")
     #   w.offset -= r.offset
     #   r.offset = 0
     #   r.offset += r.period
     #   w.offset += r.period
-    return  r, w
+    return  r, w, insert
 
 # max reaction time of our paper
 def our_chain(tasks):
     final_combine_result = chain_asc_no_free_jitter(tasks)
-    if final_combine_result:
-        final_r, final_w = final_combine_result
+    if final_combine_result is False:
+        return False
+    else:
+        final_r, final_w, bridges = final_combine_result
         # max reaction time need to add the period of the first read event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        return max_reaction_time, final_r, final_w
-    else:
-        # print("Failed to combine predecessor and successor results.")
-        return False
+        return max_reaction_time, final_r, final_w, bridges
+
+def inject_bridges(tasks, bridges):
+    for idx, bridge_list in reversed(bridges):
+        for b in reversed(bridge_list):
+            tasks.insert(idx, b)
+    return tasks
 
 # general task chain
 # Satisfy the order of read and write times
@@ -445,11 +478,14 @@ results_function = []
 def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
+    inserted = False
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
+    # print(f"old tasks: {tasks}")
     final = our_chain(tasks)
     
+    new_tasks = tasks
     if final is False:
         final_e2e_max = 0
         final_r = None
@@ -458,13 +494,19 @@ def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
         final_e2e_max = final[0]
         final_r = final[1]
         final_w = final[2]
-        
+        bridges = final[3]
+        if bridges:
+            new_tasks = inject_bridges(tasks[:], bridges)
+            inserted = True
+            
+    # print(f"new tasks: {new_tasks}")
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(tasks)
+    # reaction_time_a = maximize_reaction_time(tasks)
+    reaction_time_a = maximize_reaction_time(new_tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
+    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, inserted
 
 
 # test the code
