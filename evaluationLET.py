@@ -131,8 +131,8 @@ if __name__ == "__main__":
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
 
 
-    num_chains = [3,5,8,10] 
-    # num_chains  = [3,5]  # for test
+    # num_chains = [3,5,8,10] 
+    num_chains  = [3,5]  # for test
 
     random_seed = 1754657734
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
