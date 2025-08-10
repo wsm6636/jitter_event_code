@@ -216,26 +216,31 @@ def effective_event(w, r, allow_insert=False):
                 ),
                 id=f"{r.id}_bridge"
             )
-            # res1 = effective_event(w, w_bridge_task.write_event, allow_insert=False)
-            # res2 = effective_event(r_bridge_task.read_event, r, allow_insert=False)
-            # if res1 and res2:
-            #     # 桥接事件本身也要组合
-            #     final = effective_event(res1[0], res2[1], allow_insert=False)
-            #     if final:
-            #         w_star, r_star, _ = final
-            #         print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
-            #         return w_star, r_star, [w_bridge_task, r_bridge_task]
-            #     else:
-            #         print(f"*******Failed to insert.*******")
-            #         return False
-            res = effective_event(w_bridge_task.write_event, r_bridge_task.read_event, allow_insert=False)
-            if res:
-                w_star, r_star, _ = res
-                print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
-                return w_star, r_star, [w_bridge_task, r_bridge_task]
+            res1 = effective_event(w, w_bridge_task.write_event, allow_insert=False)
+            if res1 :
+                res2 = effective_event(res1[0], r_bridge_task.read_event, allow_insert=False)
+                if res2:
+                    final = effective_event(res2[0], r, allow_insert=False)
+                    if final:
+                        w_star, r_star, _ = final
+                        print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
+                        return w_star, r_star, [w_bridge_task, r_bridge_task]
+                    else:
+                        print(f"*******Failed to insert.*******")
+                        return False
+                else:
+                    return False
             else:
-                print(f"*******Failed to insert.*******")
                 return False
+
+            # res = effective_event(w_bridge_task.write_event, r_bridge_task.read_event, allow_insert=False)
+            # if res:
+            #     w_star, r_star, _ = res
+            #     print(f"*******Insert bridge events: {w_bridge_task.id}, {r_bridge_task.id}*******")
+            #     return w_star, r_star, [w_bridge_task, r_bridge_task]
+            # else:
+            #     print(f"*******Failed to insert.*******")
+                # return False
         else:
             return False
     else:

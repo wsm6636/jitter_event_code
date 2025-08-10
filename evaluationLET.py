@@ -122,23 +122,23 @@ def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 5  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
+    num_repeats = 1  # number of repetitions: if 10 takes about 20 minutes on Shumo's laptop
     # Enrico's laptop: num_repeats=10 ==> 32 seconds
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
     # jitters = [0,0.01,0.02,0.05,0.1,0.2,0.5,1]  # maxjitter = percent jitter * period
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
-    
-    # num_chains = [3,5,8,10] 
-    num_chains  = [3,5]  # for test
-    
 
-    # random_seed = 100  # fixed seed
-    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
-    random_seed = int(time.time())
-    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+    num_chains = [3,5,8,10] 
+    # num_chains  = [3,5]  # for test
+
+    random_seed = 1754657734
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    # random_seed = int(time.time())
+    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
 
     run_results, false_results, final_task = run_LET(jitters, num_chains, num_repeats, random_seed, periods)
