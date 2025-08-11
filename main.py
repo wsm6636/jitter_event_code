@@ -227,11 +227,11 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats =  1
+    num_repeats =  10
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
     jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
-    # num_chains = [3,5,8,10] 
-    num_chains = [3, 5]  # for test
+    num_chains = [3,5,8,10] 
+    # num_chains = [3, 5]  # for test
 
     min_period = 1  # minimum period
     ratios = np.arange(1.0, 6.0, 0.5)
