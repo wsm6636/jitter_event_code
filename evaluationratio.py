@@ -87,7 +87,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period)
     results = {num_tasks: {per_jitter: {ratio: [] for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
     final = {num_tasks: {per_jitter: {ratio: [] for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
     false_results = {num_tasks: {per_jitter: {ratio: 0 for ratio in ratios} for per_jitter in jitters} for num_tasks in num_chains}
-
+    TOLERANCE = 1e-9
     # TODO: add random_seed to the filename
     # run analysis
     for ratio in ratios:
@@ -116,7 +116,7 @@ def run_ratio(jitters, num_chains, num_repeats, random_seed, ratios, min_period)
                         # value of rate "= max_reaction_time / final_e2e_max"
                         if final_e2e_max != 0:
                             r = max_reaction_time / final_e2e_max
-                            if r > 1:
+                            if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                                 exceed = "exceed"
                             else:
                                 exceed = "safe"

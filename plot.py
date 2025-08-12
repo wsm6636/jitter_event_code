@@ -840,13 +840,13 @@ def plot_baseline_from_csv(csv_file, baseline_plot_name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
     parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-    # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
+    parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
     # parser.add_argument("e2e_plot_name", type=str, help="Name of the output plot file for final e2e max values.")
 
     # parser.add_argument("adjust_plot_name", type=str, help="Name of the output plot file for adjusted R values.")
     
-    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
     # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
 
@@ -865,7 +865,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
+    plot_histogram_from_csv(args.csv_file, args.R_plot_name)
     # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
     # plot_final_e2e_max(args.e2e_plot_name, args.csv_file)
 

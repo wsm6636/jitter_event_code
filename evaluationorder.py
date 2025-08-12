@@ -91,7 +91,7 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
 def run(jitters, num_chains, num_repeats, random_seed, periods, chain_types):
     # Preparing lists for storing results
     results = []
-
+    TOLERANCE = 1e-9
     # Initialize false_results array with zeros
     false_results = np.zeros((len(num_chains), len(jitters), 4))  
 
@@ -109,7 +109,7 @@ def run(jitters, num_chains, num_repeats, random_seed, periods, chain_types):
                     final_e2e_max, _, _ = chain_results[chain_type]
                     if final_e2e_max != 0:
                         r = max_reaction_time / final_e2e_max
-                        exceed = "exceed" if r > 1 else "safe"
+                        exceed = "exceed" if r > (1 + TOLERANCE) else "safe"
                     else:
                         r = None
                         exceed = None

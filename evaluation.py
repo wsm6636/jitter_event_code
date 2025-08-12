@@ -77,6 +77,7 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
     return results_csv, log_txt, percent_plot_name, R_plot_name
 
 def run(jitters, num_chains, num_repeats, random_seed, periods):
+    TOLERANCE = 1e-9
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     final = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
@@ -96,7 +97,7 @@ def run(jitters, num_chains, num_repeats, random_seed, periods):
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
-                    if r > 1:
+                    if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
                         exceed = "safe"

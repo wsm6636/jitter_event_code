@@ -72,6 +72,7 @@ def output_results(num_repeats, random_seed, timestamp, results, num_chains, jit
 
 
 def run(jitters, num_chains, num_repeats, random_seed, periods):
+    
     # preparing list for storing result
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     config = {}

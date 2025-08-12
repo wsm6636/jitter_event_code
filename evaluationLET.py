@@ -80,7 +80,7 @@ def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
     results = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     final = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
-
+    TOLERANCE = 1e-9
     # TODO: add random_seed to the filename
     # run analysis
     for i in range(num_repeats):            # loop on number of repetitions
@@ -95,7 +95,7 @@ def run_LET(jitters, num_chains, num_repeats, random_seed, periods):
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
-                    if r > 1:
+                    if r > 1 + TOLERANCE:
                         exceed = "exceed"
                     else:
                         exceed = "safe"

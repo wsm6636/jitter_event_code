@@ -81,6 +81,7 @@ def output_results_RW(num_repeats, random_seed, timestamp, run_results, false_re
 
 
 def run_RW(jitters, num_chains, num_repeats, random_seed, periods):
+    TOLERANCE = 1e-9
     # preparing list for storing result
     # results_write = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results_write = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
@@ -102,7 +103,7 @@ def run_RW(jitters, num_chains, num_repeats, random_seed, periods):
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max_write != 0:
                     r_write = max_reaction_time / final_e2e_max_write
-                    if r_write > 1:
+                    if r_write > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed_write = "exceed"
                     else:
                         exceed_write = "safe"
@@ -112,7 +113,7 @@ def run_RW(jitters, num_chains, num_repeats, random_seed, periods):
                     false_results_write[num_tasks][per_jitter] += 1  # algorithm failed
                 if final_e2e_max_read != 0:
                     r_read = max_reaction_time / final_e2e_max_read
-                    if r_read > 1:
+                    if r_read > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed_read = "exceed"
                     else:
                         exceed_read = "safe"
