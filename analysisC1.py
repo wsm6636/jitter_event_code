@@ -10,14 +10,10 @@ It implements the methods described in the paper
 @author: Shumo Wang
 """
 
-import datetime
 import math
 import random
 import numpy as np
 from scipy.optimize import basinhopping
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 
 
 class Event:
@@ -137,7 +133,7 @@ def euclide_extend(a, b):
         t1 = new_t
     return (r0, s0, t0)
 
-
+# Corollary 1
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
     ad_scuss = None
     delta_mod_period = (read_offset - write_offset) % period
@@ -189,6 +185,7 @@ def effective_event(task1, task2):
         r_of_new, adjust = adjust_offsets(r.offset, w.offset, T_star, w.maxjitter, r.maxjitter)
         delta = r_of_new - w.offset  # Update delta after adjustment
         if adjust:
+            # Corollary 1
             w2.offset = r_of_new - r_of_old + w2_of_old
             r.offset = r_of_new
             task2.read_event = r
@@ -541,7 +538,6 @@ def run_analysis_C1(num_tasks, periods,read_offsets,write_offsets, per_jitter):
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
-    # print(f"old tasks: {tasks}")
     final = our_chain(tasks)
     
     new_tasks = tasks
@@ -560,15 +556,12 @@ def run_analysis_C1(num_tasks, periods,read_offsets,write_offsets, per_jitter):
             new_tasks = inject_bridges(tasks[:], bridges)
             inserted = True
             
-    # print(f"new tasks: {new_tasks}")
     # check if the final result is valid
-    # print(f"our_chain end")    
     reaction_time_a = maximize_reaction_time(new_tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
     
-    # print(f"maximize_reaction_time end")  
     return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted
 
 

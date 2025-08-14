@@ -1,82 +1,113 @@
-# Evaluation
+# Task Chain Latency Analysis Tool
 
-The evaluation of "Understanding Jitter Propagation in Task Chains"
+## Overview
 
-### Requirements
-
-version: python3.12
-
-scipy: import BasinHoping, used to calculate the global maximum reaction time
-
-numpy, matplotlib: read the csv file storing the data and draw the graph
+This tool implements the methods described in the paper "Investigating Jitter Propagation in Task Chains" 
 
 
-```
-pip install scipy numpy matplotlib
+## Dependencies
+
+```bash
+pip install numpy scipy matplotlib pandas
 ```
 
-### filetree
+## Main Files
 
-1. **analysis.py:** Implementation of Algorithm 2 and the general task chain, and calculation of the maximum reaction time.
-2. **evaluation.py:** Set parameters and output ".csv" result file and two plots.
+- `analysis.py` - Basic analysis algorithm implementation
+- `analysisC1.py` - Analysis algorithm with Corollary 1 optimizations
+- `main.py` - Main execution file for comparing both algorithms
+- `evaluation.py` - Basic algorithm evaluation
+- `evaluationC1.py` - Optimized algorithm evaluation
+- `plot.py` - Plotting utilities
 
-   parameters:
+## Quick Start
 
-   - num_repeats: number of repeats
-   - periods: periods set
-   - jitter: percent jitter set, used by max_jitter = percent_jitter * period
-   - num_chains: set of number tasks of per chain
-   - min_period: minimum period for "ratio"
-   - ratios: set of ratio
-   - random_seed: Random seed, default is current time. Used to trace back a certain experiment
-3. **analysisF16.py, evaluationF16.py:** During the algorithm operation, adjust the offsets so that the chain conforms to the Formula (16) in the RTSS`25 paper.
-4. **analysisratio.py, evaluationratio.py:** Randomly generate period and offset sets that matches the $r$ value. $r =  \frac{T_{i+1}}{T_{i}}$
-5. **plot.py:** Read ".csv" file and draw the plots.
-6. **main.py:** Run all experiments and generate comparison results between RTSS and F16
+### 1. Comparing Both Algorithms
 
-#### output files:
-
-1. path: rtssresult and F16 and ratio: csv and png result files of the corresponding experiments. compare: Comparative experiment results. log: All generated tasks information for each experiment.
-2. **{path}/{num_repeats}\_{randomseed}/data_{num_repeats}\_{randomseed}_{timestamp}.csv**
-
-   results_csv: data file with
-
-   - R value = max_reaction_time_of_general_task_chain / max_reaction_time_of_Algorithm2
-   - fales percent: is the percentage of failures of Algorithm 2, which because of FINDEFFECTIVESERIES no return value (Alg2 line1)
-
-   **{path}/{num_repeats}\_{randomseed}/percent_{num_repeats}\_{randomseed}_{timestamp}.png:** Relationship between jitter percentage and failure percentage.
-
-   **{path}/{num_repeats}\_{randomseed}/R_{num_repeats}\_{randomseed}_{timestamp}.png:** R_value distribution of different jitter percentage.
-
-   **{path}/{num_repeats}\_{randomseed}/ratios_{num_repeats}\_{randomseed}_{timestamp}.png:**  The impact of ratio on failure rate.
-
-   **{path}/{num_repeats}\_{randomseed}/compare_R_{num_repeats}\_{randomseed}_{timestamp}.png, compare_percent_{num_repeats}\_{randomseed}_{timestamp}.png:** Comparative experiment results.
-
-   **{path}/{num_repeats}\_{randomseed}/xxx_log_{num_repeats}\_{randomseed}_{timestamp}.txt:** tasks information.
-
-### use
-
-**run**
-
-```
-python3 main.py
+```python
+# Experiment parameter configuration
+jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5]  # Jitter levels: 0% to 50%
+num_chains = [3, 5, 8, 10]                           # Task chain lengths: 3 to 10 tasks
+num_repeats = 100                                    # Repeat each parameter combination 100 times
+random_seed = 1754657734                                  # Fixed random seed for reproducible results
+periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]    # Available task period pool
 ```
 
-**Modify parameters**
+**Parameter Explanation:**
+
+- `jitters`: Test the impact of different jitter levels on algorithm performance
+- `num_chains`: Test algorithm performance under different task chain lengths
+- `num_repeats`: Increase repetitions to improve statistical reliability
+- `random_seed`: Ensure reproducible experimental results
+- `periods`: Task periods will be randomly selected from this pool
+
+### 2. Batch Experiments, Visualization, and Data Export
+
+Run complete comparison experiments:
+
+```bash
+python main.py
+```
+
+This will automatically:
+
+- Perform batch testing on both algorithms
+- Generate result CSV files
+- Automatically create comparison charts
+- Filter and export data by task count
+- Output results to `rtssresult/` and `C1/` folders
+
+## Output Results Explanation
+
+### Key Metrics
+
+- **final_e2e_max**: Algorithm-predicted maximum end-to-end latency
+- **max_reaction_time**: Actual maximum reaction time obtained through simulation
+- **R**: Ratio = max_reaction_time / final_e2e_max
+  - R ≤ 1: Algorithm prediction is accurate (safe)
+  - R > 1: Algorithm prediction is insufficient (exceeds)
+- **false_percentage**: Algorithm failure percentage
+
+### Result Files
 
 ```
-# main.py line 101~114
-    num_repeats = 100  
-    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
-    jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
-    num_chains = [3,5,8,10] 
-    min_period = 1 
-    ratios = np.arange(1.0, 6.0, 0.5)
-    random_seed = int(time.time())
+rtssresult/                    # Basic algorithm results
+├── 100_12345_20250814_123456/
+│   ├── data_100_12345_20250814_123456.csv     # Original complete data
+│   ├── percent_100_12345_20250814_123456.png  # Failure rate charts
+│   ├── R_100_12345_20250814_123456.png        # R-value distribution charts
+│   └── data/                                  # Filtered data
+│       ├── data3.csv                          # All data for 3 tasks
+│       ├── data3_20per.csv                    # 3 tasks with 20% jitter data
+│       ├── data5.csv                          # All data for 5 tasks
+│       ├── data5_20per.csv                    # 5 tasks with 20% jitter data
+│       ├── data8.csv                          # All data for 8 tasks
+│       ├── data8_20per.csv                    # 8 tasks with 20% jitter data
+│       ├── data10.csv                         # All data for 10 tasks
+│       └── data10_20per.csv                   # 10 tasks with 20% jitter data
+
+C1/                           # Optimized algorithm results
+├── 100_12345_20250814_123456/
+│   ├── data_100_12345_20250814_123456.csv     # Original complete data
+│   ├── percent_100_12345_20250814_123456.png  # Failure rate charts
+│   ├── R_100_12345_20250814_123456.png        # R-value distribution charts
+│   └── data/                                  # Filtered data
+│       ├── data3.csv                          # (same structure as above)
+│       ├── data3_20per.csv
+│       └── ...
+
+compare/                      # Comparison results
+├── 100_12345_20250814_123456/
+│   ├── compare_percent_100_12345_20250814_123456.png  # Failure rate comparison
+│   └── compare_R_100_12345_20250814_123456.png        # R-value distribution comparison
+
+log/                          # Detailed logs
+├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
+└── C1_log_100_12345_20250814_123456.txt              # Optimized algorithm log
 ```
 
-**If you only need to adjust the plot color, size, etc.**
+**File Naming Convention:** `{num_repeats}_{random_seed}_{timestamp}`
 
-```
-python3 plot.py path/xx_xxxx/data_xx_xxxx.csv path/xx_xxxx/xxx_xx_xxxx.png
-```
+- `num_repeats`: Number of experiment repetitions
+- `random_seed`: Random seed
+- `timestamp`: Experiment execution timestamp

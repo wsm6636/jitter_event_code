@@ -10,14 +10,10 @@ It implements the methods described in the paper
 @author: Shumo Wang
 """
 
-import datetime
 import math
 import random
 import numpy as np
 from scipy.optimize import basinhopping
-import matplotlib.pyplot as plt
-import seaborn as sns
-
 
 
 class Event:
