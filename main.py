@@ -15,7 +15,9 @@ import datetime
 import time
 import numpy as np
 import os
-
+import sys
+import argparse
+import pandas as pd
 
 def compareC1(jitters, num_chains, num_repeats, random_seed, periods):
     TOLERANCE = 1e-9
@@ -79,6 +81,22 @@ def compareC1(jitters, num_chains, num_repeats, random_seed, periods):
 
     return results, false_results, final, results_C1, false_results_C1, final_C1
 
+def append_to_common_csv(csv_file, common_csv_file):
+    try:
+        df_current = pd.read_csv(csv_file)
+        
+        if os.path.exists(common_csv_file):
+            df_common = pd.read_csv(common_csv_file)
+            df_combined = pd.concat([df_common, df_current], ignore_index=True)
+        else:
+            df_combined = df_current
+        
+        df_combined.to_csv(common_csv_file, index=False)
+        print(f"Results appended to common CSV: {common_csv_file}")
+        
+    except Exception as e:
+        print(f"Error appending to common CSV: {e}")
+
 
 def compare_plots(csv_files, num_repeats, random_seed, timestamp):
     folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
@@ -96,7 +114,7 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
     print(f"Compare percent plots generated and saved to {compare_percent_plot_name} and {compare_histogram_plot_name}")
 
 
-if __name__ == "__main__":
+def old_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
     # INCREASE here to have more experiments per same settings
     num_repeats =  1
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
@@ -122,4 +140,39 @@ if __name__ == "__main__":
 
     compare_plots(csv_files, num_repeats, random_seed, timestamp)
 
+
+def main():
+    parser = argparse.ArgumentParser(description='compare C1 and rtsscode')
+    parser.add_argument('random_seed', type=int, help='random seed for the experiment')
+    parser.add_argument('num_repeats', type=int, help='number of repeats for the experiment')
+    parser.add_argument('--common_csv', type=str, default='common_results.csv', 
+                        help='rtss result csv file (common_results.csv)')
+    parser.add_argument('--common_csv_c1', type=str, default='common_results_c1.csv', 
+                        help='C1 result csv file (common_results_c1.csv)')
     
+    args = parser.parse_args()
+    
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
+    jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
+    num_chains = [3, 5, 8, 10] 
+    
+    random_seed = args.random_seed
+    num_repeats = args.num_repeats
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    
+    print(f"random_seed={random_seed}, num_repeats={num_repeats}")
+    
+    results, false_results, final, results_C1, false_results_C1, final_C1 = compareC1(
+        jitters, num_chains, num_repeats, random_seed, periods)
+
+    csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
+    csv_file_C1, _, _, _ = output_results_C1(num_repeats, random_seed, timestamp, results_C1, false_results_C1, num_chains, jitters)
+
+    
+    append_to_common_csv(csv_file, args.common_csv)
+    append_to_common_csv(csv_file_C1, args.common_csv_c1)
+
+    
+
+if __name__ == "__main__":
+    main()

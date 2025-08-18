@@ -120,6 +120,8 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
+    LABELS = ['rtssresult', 'C1']
+
     colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
     TOLERANCE = 1e-9
     for idx, num_tasks in enumerate(num_tasks_list):
@@ -139,7 +141,7 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
             bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
             ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks} - Data Count: {len(r_values)}')
 
-            label = os.path.dirname(csv_files[file_idx])
+            label = LABELS[file_idx] 
             ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - {label}")
             ax.set_xlabel("R values - R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
             ax.set_ylabel("Frequency")
@@ -158,7 +160,7 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
-
+    LABELS = ['rtssresult', 'C1']
     for idx, csv_file in enumerate(csv_files):
         ax = axes[idx]
         try:
@@ -170,7 +172,7 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
             print(f"No data in CSV file: {csv_file}")
             continue
 
-        label = os.path.dirname(csv_file)
+        label = LABELS[idx] 
         
         grouped_by_num_tasks = df.groupby('num_tasks')
 
