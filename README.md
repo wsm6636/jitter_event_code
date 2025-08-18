@@ -2,8 +2,7 @@
 
 ## Overview
 
-This tool implements the methods described in the paper "Investigating Jitter Propagation in Task Chains" 
-
+This tool implements the methods described in the paper "Investigating Jitter Propagation in Task Chains"
 
 ## Dependencies
 
@@ -19,6 +18,8 @@ pip install numpy scipy matplotlib pandas
 - `evaluation.py` - Basic algorithm evaluation
 - `evaluationC1.py` - Optimized algorithm evaluation
 - `plot.py` - Plotting utilities
+- `generate_comparison.py` - Comparison result graph and filtered data file
+- `run_experiments.sh` - Experiment script
 
 ## Quick Start
 
@@ -46,16 +47,12 @@ periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]    # Available task period pool
 Run complete comparison experiments:
 
 ```bash
-python main.py
+chmod +x run.sh
+./run.sh 100 2             # 2(NUM_EXPERIMENTS) experiments were performed in parallel, with 100(NUM_REPEATS) replicates per experiment.
 ```
 
-This will automatically:
-
-- Perform batch testing on both algorithms
-- Generate result CSV files
-- Automatically create comparison charts
-- Filter and export data by task count
-- Output results to `rtssresult/` and `C1/` folders
+NUM_REPEATS: Number of repetitions per experiment (default 100)
+NUM_EXPERIMENTS: Number of concurrent experiments (default 5)
 
 ## Output Results Explanation
 
@@ -68,46 +65,26 @@ This will automatically:
   - R > 1: Algorithm prediction is insufficient (exceeds)
 - **false_percentage**: Algorithm failure percentage
 
-### Result Files
+### Result Filecompare/
 
-```
-rtssresult/                    # Basic algorithm results
-├── 100_12345_20250814_123456/
-│   ├── data_100_12345_20250814_123456.csv     # Original complete data
-│   ├── percent_100_12345_20250814_123456.png  # Failure rate charts
-│   ├── R_100_12345_20250814_123456.png        # R-value distribution charts
-│   └── data/                                  # Filtered data
-│       ├── data3.csv                          # All data for 3 tasks
-│       ├── data3_20per.csv                    # 3 tasks with 20% jitter data
-│       ├── data5.csv                          # All data for 5 tasks
-│       ├── data5_20per.csv                    # 5 tasks with 20% jitter data
-│       ├── data8.csv                          # All data for 8 tasks
-│       ├── data8_20per.csv                    # 8 tasks with 20% jitter data
-│       ├── data10.csv                         # All data for 10 tasks
-│       └── data10_20per.csv                   # 10 tasks with 20% jitter data
+rtssresult/
+└── data_100_12345_20250814_123456.csv     # Original data
 
-C1/                           # Optimized algorithm results
-├── 100_12345_20250814_123456/
-│   ├── data_100_12345_20250814_123456.csv     # Original complete data
-│   ├── percent_100_12345_20250814_123456.png  # Failure rate charts
-│   ├── R_100_12345_20250814_123456.png        # R-value distribution charts
-│   └── data/                                  # Filtered data
-│       ├── data3.csv                          # (same structure as above)
-│       ├── data3_20per.csv
-│       └── ...
+C1/                                                                           # Optimized algorithm results
+└── data_100_12345_20250814_123456.csv
 
-compare/                      # Comparison results
-├── 100_12345_20250814_123456/
-│   ├── compare_percent_100_12345_20250814_123456.png  # Failure rate comparison
-│   └── compare_R_100_12345_20250814_123456.png        # R-value distribution comparison
+
+compare/
+└── 20250901_143012_123/
+     ├── common_results_20250901_143012_123.csv          # RTSS
+     ├── common_results_c1_20250901_143012_123.csv       # C1
+     ├── final_compare_percent.png
+     ├── final_compare_histogram.png
+     └── data/
+         ├──data3.csv …
+          └── c1_data3.csv …
+
 
 log/                          # Detailed logs
 ├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
 └── C1_log_100_12345_20250814_123456.txt              # Optimized algorithm log
-```
-
-**File Naming Convention:** `{num_repeats}_{random_seed}_{timestamp}`
-
-- `num_repeats`: Number of experiment repetitions
-- `random_seed`: Random seed
-- `timestamp`: Experiment execution timestamp
