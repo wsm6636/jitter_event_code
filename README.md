@@ -65,26 +65,26 @@ NUM_EXPERIMENTS: Number of concurrent experiments (default 5)
   - R > 1: Algorithm prediction is insufficient (exceeds)
 - **false_percentage**: Algorithm failure percentage
 
-### Result Filecompare/
+### Result Filecompare
 
+```
 rtssresult/
 └── data_100_12345_20250814_123456.csv     # Original data
 
 C1/                                                                           # Optimized algorithm results
 └── data_100_12345_20250814_123456.csv
 
-
 compare/
 └── 20250901_143012_123/
-     ├── common_results_20250901_143012_123.csv          # RTSS
-     ├── common_results_c1_20250901_143012_123.csv       # C1
-     ├── final_compare_percent.png
-     ├── final_compare_histogram.png
-     └── data/
-         ├──data3.csv …
-          └── c1_data3.csv …
-
+├── common_results_20250901_143012_123.csv          # RTSS
+├── common_results_c1_20250901_143012_123.csv       # C1
+├── final_compare_percent.png
+├── final_compare_histogram.png
+└── data/
+├──data3.csv …
+└── c1_data3.csv …
 
 log/                          # Detailed logs
 ├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
 └── C1_log_100_12345_20250814_123456.txt              # Optimized algorithm log
+```
