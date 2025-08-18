@@ -76,13 +76,13 @@ C1/                                                                           # 
 
 compare/
 └── 20250901_143012_123/
-├── common_results_20250901_143012_123.csv          # RTSS
-├── common_results_c1_20250901_143012_123.csv       # C1
-├── final_compare_percent.png
-├── final_compare_histogram.png
-└── data/
-├──data3.csv …
-└── c1_data3.csv …
+  ├── common_results_20250901_143012_123.csv          # RTSS
+  ├── common_results_c1_20250901_143012_123.csv       # C1
+  ├── final_compare_percent.png
+  ├── final_compare_histogram.png
+  └── data/
+    ├──data3.csv …
+    └── c1_data3.csv …
 
 log/                          # Detailed logs
 ├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
