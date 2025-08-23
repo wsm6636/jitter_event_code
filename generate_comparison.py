@@ -9,6 +9,21 @@ from plot import compare_plot_histogram
 from evaluation import filter_and_export_csv
 from evaluationC1 import filter_and_export_csv_C1
 
+import pandas as pd
+
+def add_final_percent_column_safe(csv_file, out_file):
+    df = pd.read_csv(csv_file)
+    # 重新计算，确保是数值
+    ratio = (df.groupby(['num_tasks', 'per_jitter'])['final_e2e_max']
+               .apply(lambda x: (x == 0).mean())
+               .reset_index(name='finalpercent'))
+    df = df.merge(ratio, on=['num_tasks', 'per_jitter'], how='left')
+
+    # 强制转成 float，防止残留方法对象
+    df['finalpercent'] = df['finalpercent'].astype(float)
+    df.to_csv(out_file, index=False)
+    return out_file
+
 
 def generate_final_comparison(common_csv, common_csv_c1):
 
@@ -29,6 +44,9 @@ def generate_final_comparison(common_csv, common_csv_c1):
     
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_output_dir, exist_ok=True)
+
+    common_csv = add_final_percent_column_safe(common_csv, common_csv)
+    common_csv_c1 = add_final_percent_column_safe(common_csv_c1, common_csv_c1)
     
     csv_files = [common_csv, common_csv_c1]
     

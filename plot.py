@@ -180,7 +180,7 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
             group_sorted = group.sort_values(by='per_jitter')
 
             per_jitters = group_sorted['per_jitter'] * 100
-            false_percentages = group_sorted['false_percentage']
+            false_percentages = group_sorted['finalpercent']
 
             ax.plot(per_jitters, false_percentages, label=f'num_tasks={num_tasks}', marker='o')
 
