@@ -193,7 +193,6 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
     for idx in range(num_csv_files, num_rows * num_columns):
         axes[idx].axis('off')
     
-    # 获取所有子图中最小/最大的 y 值
     y_min = min(ax.get_ylim()[0] for ax in axes if ax.has_data())
     y_max = max(ax.get_ylim()[1] for ax in axes if ax.has_data())
     for ax in axes:
