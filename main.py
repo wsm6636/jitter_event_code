@@ -19,6 +19,29 @@ import sys
 import argparse
 import pandas as pd
 
+
+def convert_to_sorted_tasks(raw_list):
+    converted = []
+    for  t in raw_list:
+        read_evt = ourEvent(
+            event_type="read",
+            period=t["task_period"],
+            offset=t["task_phase"],
+            maxjitter=0,
+            id=t['task_id']
+        )
+        write_evt = ourEvent(
+            event_type="write",
+            period=t["task_period"],
+            offset=t["task_phase"] + t["task_bcet"],  # 按 WCET 计算最晚写偏移
+            maxjitter=t["task_wcet"] - t["task_bcet"],
+            id=t['task_id']
+        )
+        converted.append(ourTask(read_event=read_evt, write_event=write_evt, id=t["task_id"]))
+    return converted
+
+
+
 def compareC1(jitters, num_chains, num_repeats, random_seed, periods):
     TOLERANCE = 1e-9
     # preparing list for storing result
@@ -39,6 +62,8 @@ def compareC1(jitters, num_chains, num_repeats, random_seed, periods):
                 final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
+                    # r_davare = davare_e2e / final_e2e_max
+                    # r_duerr = duerr_e2e / final_e2e_max
                     if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
@@ -172,7 +197,6 @@ def main():
     append_to_common_csv(csv_file, args.common_csv)
     append_to_common_csv(csv_file_C1, args.common_csv_c1)
 
-    
 
 if __name__ == "__main__":
     main()

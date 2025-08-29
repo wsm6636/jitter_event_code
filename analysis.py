@@ -331,8 +331,8 @@ def calculate_reaction_time(task_chain):
     first_read_time = task_chain[0][1]
     last_write_time = task_chain[-1][1]
     reaction_time = last_write_time - first_read_time +  task_chain[0][0].period
-    
-    return reaction_time
+
+    return reaction_time  
 
 
 # Objective function for optimization
@@ -407,6 +407,24 @@ def maximize_reaction_time(tasks):
     
     return max_reaction_time
 
+def davare_reaction_time(tasks):
+    davare_e2e = 0
+    for task in tasks:
+        task_rt = task.write_event.offset + task.write_event.maxjitter - task.read_event.offset
+        davare_e2e += task.period + task_rt
+    return davare_e2e
+
+def duerr_reaction_time(tasks):
+    last_task = tasks[-1]
+    first_task = tasks[0]
+    last_task_rt = last_task.write_event.offset + last_task.write_event.maxjitter - last_task.read_event.offset
+
+    duerr_e2e = last_task_rt + first_task.period
+    for (task, next_task) in zip(tasks[:-1], tasks[1:]):
+        task_rt = task.write_event.offset + task.write_event.maxjitter - task.read_event.offset
+        duerr_e2e += max(task_rt, next_task.period + task_rt)
+
+    return duerr_e2e
 
 results_function = []
 
@@ -433,6 +451,10 @@ def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
+
+    # davare_e2e = davare_reaction_time(tasks)
+    # duerr_e2e = duerr_reaction_time(tasks)
+
     return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 

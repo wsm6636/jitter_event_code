@@ -7,6 +7,7 @@ import pandas as pd
 from analysis import run_analysis
 from plot import plot_histogram_from_csv 
 from plot import plot_line_chart_from_csv
+from plot import plot_davare_duerr_single
 import random
 import time
 import os
@@ -40,7 +41,7 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
     R_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv" )
     log_txt = os.path.join(f"log/rtssresult_log_{num_repeats}_{random_seed}_{timestamp}.txt")
-
+    # devare_duerr_plot_name = os.path.join(folder_path, f"davare_duerr_{num_repeats}_{random_seed}_{timestamp}.png")
 
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
@@ -69,10 +70,12 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
     print(f"All results saved to {log_txt}")
 
     # plotting: uncomment to have plots made automatically
-    # plot_histogram_from_csv(results_csv, R_plot_name)
-    # print(f"Plots generated and saved to {R_plot_name}")
+    plot_histogram_from_csv(results_csv, R_plot_name)
+    print(f"Plots generated and saved to {R_plot_name}")
     # plot_line_chart_from_csv(results_csv, percent_plot_name)
     # print(f"Plots generated and saved to {percent_plot_name}")
+    # plot_davare_duerr_single(results_csv, devare_duerr_plot_name)
+    # print(f"Plots generated and saved to {devare_duerr_plot_name}")
 
     return results_csv, log_txt, percent_plot_name, R_plot_name
 
@@ -148,6 +151,8 @@ def run(jitters, num_chains, num_repeats, random_seed, periods):
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
+                    # r_davare = davare_e2e / final_e2e_max
+                    # r_duerr = duerr_e2e / final_e2e_max
                     if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
@@ -175,28 +180,27 @@ def run(jitters, num_chains, num_repeats, random_seed, periods):
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    # num_repeats =2  
+    num_repeats = 10  
     
-    # periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
-    # jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
+    jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
     
-    # num_chains = [3,5,8,10] 
+    num_chains = [3,5,8,10] 
     # num_chains  = [3,5]  # for test
     
-
-    # random_seed = 100  # fixed seed
-    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    random_seed = 1755016037  # fixed seed
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     # random_seed = int(time.time())
     # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
 
-    # run_results, false_results, final_task = run(jitters, num_chains, num_repeats, random_seed, periods)
+    run_results, false_results, final_task = run(jitters, num_chains, num_repeats, random_seed, periods)
     
-    # output_results(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)
+    output_results(num_repeats, random_seed, timestamp, run_results, false_results, num_chains, jitters)
 
-    num_chains = [3,5,8,10] 
-    csv_file_path = sys.argv[1]
+    # num_chains = [3,5,8,10] 
+    # csv_file_path = sys.argv[1]
     
-    filter_and_export_csv(csv_file_path, num_chains)
+    # filter_and_export_csv(csv_file_path, num_chains)
