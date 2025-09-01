@@ -151,7 +151,49 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     plt.savefig(compare_plot_histogram_name)
     # plt.show()
 
-    
+
+def compare_plot_histogram_G2023(csv_files, compare_plot_histogram_name):
+    dfs = [pd.read_csv(file) for file in csv_files]
+
+    dfs = [df[df['per_jitter'] == 0.2] for df in dfs]
+
+    num_tasks_list = sorted(set.union(*[set(df['num_tasks'].unique()) for df in dfs]))
+
+    fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
+    outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
+
+    LABELS = ['rtssresult', 'C1']
+
+    colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
+    TOLERANCE = 1e-9
+    for idx, num_tasks in enumerate(num_tasks_list):
+        for file_idx, df in enumerate(dfs):
+            ax = fig.add_subplot(outer_grid[idx, file_idx])
+            df_task = df[df['num_tasks'] == num_tasks]
+
+            r_values = df_task['rm'].dropna().values
+            r_exceed_count = (r_values > (1 + TOLERANCE)).sum()
+            R_exceed_percentage = (r_exceed_count / len(r_values)) * 100 if len(r_values) > 0 else 0
+
+            num_bins = 50
+            bin_range = (0, 1.05)
+            bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
+            counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
+            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+            ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks} - Data Count: {len(r_values)}')
+
+            label = LABELS[file_idx] 
+            ax.set_title(f"num_tasks = {num_tasks} (per_jitter=20%) - {label}")
+            ax.set_xlabel("RM values - R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
+            ax.set_ylabel("Frequency")
+            ax.legend()
+            ax.grid(True)
+
+    plt.savefig(compare_plot_histogram_name)
+    # plt.show()
+
+
 def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
     num_csv_files = len(csv_files)
@@ -180,7 +222,8 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
             group_sorted = group.sort_values(by='per_jitter')
 
             per_jitters = group_sorted['per_jitter'] * 100
-            false_percentages = group_sorted['finalpercent']
+            # false_percentages = group_sorted['finalpercent'].
+            false_percentages = group_sorted['false_percentage']
 
             ax.plot(per_jitters, false_percentages, label=f'num_tasks={num_tasks}', marker='o')
 
@@ -203,89 +246,21 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
     # plt.show()
 
 
-def plot_davare_duerr_single(csv_file, save_name):
-    """
-    对单个 CSV 文件，按 num_tasks 分组，
-    每个 num_tasks 画一行，一行里左右分别画 r_davare 和 r_duerr 的直方图。
-    """
-    df = pd.read_csv(csv_file)
-
-    # 只保留 per_jitter == 0.2
-    df = df[df['per_jitter'] == 0.2]
-
-    num_tasks_list = sorted(df['num_tasks'].unique())
-
-    colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
-    TOLERANCE = 1e-9
-
-    fig = plt.figure(figsize=(18, 6 * len(num_tasks_list)))
-    outer = GridSpec(len(num_tasks_list), 1, hspace=0.4)
-
-    for idx, num_tasks in enumerate(num_tasks_list):
-        df_task = df[df['num_tasks'] == num_tasks]
-
-        dav_vals = df_task['r_davare'].dropna().values
-        due_vals = df_task['r_duerr'].dropna().values
-
-        dav_over = (dav_vals > (1 + TOLERANCE)).sum()
-        due_over = (due_vals > (1 + TOLERANCE)).sum()
-        dav_pct  = (dav_over / len(dav_vals)) * 100 if len(dav_vals) else 0
-        due_pct  = (due_over / len(due_vals)) * 100 if len(due_vals) else 0
-
-        num_bins = 50
-        bin_range = (0, 1.05)
-        bin_width = (bin_range[1] - bin_range[0]) / num_bins
-        color = colors[idx]
-
-        # 一行两列
-        inner = GridSpecFromSubplotSpec(1, 2, subplot_spec=outer[idx], wspace=0.3)
-
-        # 左：r_davare
-        ax1 = fig.add_subplot(inner[0])
-        counts1, edges1 = np.histogram(dav_vals, bins=num_bins, range=bin_range)
-        centers1 = (edges1[:-1] + edges1[1:]) / 2
-        ax1.bar(centers1, counts1, width=bin_width,
-                alpha=0.7, color=color,
-                label=f'Count: {len(dav_vals)}')
-        ax1.set_title(f'num_tasks = {num_tasks}  -  r_davare')
-        ax1.set_xlabel(f'r_davare values   (exceed 1 = {dav_pct:.2f}%)')
-        ax1.set_ylabel('Frequency')
-        ax1.legend()
-        ax1.grid(True)
-
-        # 右：r_duerr
-        ax2 = fig.add_subplot(inner[1])
-        counts2, edges2 = np.histogram(due_vals, bins=num_bins, range=bin_range)
-        centers2 = (edges2[:-1] + edges2[1:]) / 2
-        ax2.bar(centers2, counts2, width=bin_width,
-                alpha=0.7, color=color,
-                label=f'Count: {len(due_vals)}')
-        ax2.set_title(f'num_tasks = {num_tasks}  -  r_duerr')
-        ax2.set_xlabel(f'r_duerr values   (exceed 1 = {due_pct:.2f}%)')
-        ax2.set_ylabel('Frequency')
-        ax2.legend()
-        ax2.grid(True)
-
-    plt.savefig(save_name, bbox_inches='tight')
-    # plt.show()
-
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-    parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
+    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    # parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
     # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
-    parser.add_argument("davare_duerr_plot_name", type=str, help="Name of the output plot file for davare and duerr histograms.")
-    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
-    # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
-    # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
+    # parser.add_argument("davare_duerr_plot_name", type=str, help="Name of the output plot file for davare and duerr histograms.")
+    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
+    parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
 
     args = parser.parse_args()
 
-    plot_histogram_from_csv(args.csv_file, args.R_plot_name)
+    # plot_histogram_from_csv(args.csv_file, args.R_plot_name)
     # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
 
-    # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
-    # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
-    plot_davare_duerr_single(args.csv_file, args.davare_duerr_plot_name)
+    compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
+    compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
+    # plot_davare_duerr_single(args.csv_file, args.davare_duerr_plot_name)

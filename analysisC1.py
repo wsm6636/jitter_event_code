@@ -14,7 +14,7 @@ import math
 import random
 import numpy as np
 from scipy.optimize import basinhopping
-
+from mrtanalysis import G2023_analysis
 
 class Event:
     def __init__(self, event_type, period, offset, maxjitter, id=None):
@@ -562,7 +562,32 @@ def run_analysis_C1(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
     
-    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted
+    mrt, let = G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+
+    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted, mrt, let
+
+
+def G2023_in_agl2C1(tasks):
+    global results_function
+    results_function = []  
+    final = our_chain(tasks)
+    if final is False:
+        final_e2e_max = 0
+        final_r = None
+        final_w = None
+    else:
+        final_e2e_max = final[0]
+        final_r = final[1]
+        final_w = final[2]
+        
+    # check if the final result is valid
+    reaction_time_a = maximize_reaction_time(tasks)
+    reaction_time_b = max(results_function)
+    max_reaction_time = max(reaction_time_a, reaction_time_b)
+    # max_reaction_time = 0
+
+    return final_e2e_max, max_reaction_time, tasks
+
 
 
 # test the code

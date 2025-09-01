@@ -19,26 +19,44 @@ import sys
 import argparse
 import pandas as pd
 
+from analysis import Event as ourEvent
+from analysis import Task as ourTask
+from rtss import G2023
+from analysis import G2023_in_alg2
+from analysisC1 import G2023_in_agl2C1
+from utilities.task import Task
+from mrtanalysis import G2023_analysis
+from plot import compare_plot_histogram_G2023
 
-def convert_to_sorted_tasks(raw_list):
+def convert_to_tasks(raw_list):
     converted = []
+    periods = []
+    read_offsets = []
+    write_offsets = []
     for  t in raw_list:
         read_evt = ourEvent(
             event_type="read",
-            period=t["task_period"],
-            offset=t["task_phase"],
+            period=t.period,
+            offset=t.phase,
             maxjitter=0,
-            id=t['task_id']
+            id=t.id
         )
         write_evt = ourEvent(
             event_type="write",
-            period=t["task_period"],
-            offset=t["task_phase"] + t["task_bcet"],  # 按 WCET 计算最晚写偏移
-            maxjitter=t["task_wcet"] - t["task_bcet"],
-            id=t['task_id']
+            period=t.period,
+            offset=t.phase + t.bcet,  # 按 WCET 计算最晚写偏移
+            maxjitter=t.wcet - t.bcet,
+            id=t.id
         )
-        converted.append(ourTask(read_event=read_evt, write_event=write_evt, id=t["task_id"]))
-    return converted
+        
+        task = ourTask(read_event=read_evt, write_event=write_evt, id=read_evt.id)
+        print(task)
+        converted.append(task)
+        periods.append(read_evt.period)
+        read_offsets.append(read_evt.offset)
+        write_offsets.append(write_evt.offset)
+
+    return converted, periods, read_offsets, write_offsets
 
 
 
@@ -59,38 +77,49 @@ def compareC1(jitters, num_chains, num_repeats, random_seed, periods):
             selected_periods, selected_read_offsets, selected_write_offsets = generate_periods_and_offsets(num_tasks, periods)
             for per_jitter in jitters:
                 print(f"=========For evaluation========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max, max_reaction_time,  final_r, final_w, tasks, mrt, let = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                
                 if final_e2e_max != 0:
+                    print(f"final_e2e_max={final_e2e_max}, max_reaction_time={max_reaction_time}, mrt={mrt}, let={let}")
                     r = max_reaction_time / final_e2e_max
-                    # r_davare = davare_e2e / final_e2e_max
-                    # r_duerr = duerr_e2e / final_e2e_max
                     if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
                         exceed = "safe"
+                    if mrt is not None and mrt != 0:
+                        rm = mrt / final_e2e_max
+                    else:
+                        rm = None
                 else:
                     r = None
+                    rm = None
                     exceed = None
                     false_results[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed))
+                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed,mrt,let,rm))
                 final[num_tasks][per_jitter].append((final_r, final_w))
 
                 print(f"=========For evaluation C1========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max_C1, max_reaction_time_C1,  final_r_C1, final_w_C1, tasks_C1, adjust_C1, inserted_C1 = run_analysis_C1(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max_C1, max_reaction_time_C1,  final_r_C1, final_w_C1, tasks_C1, adjust_C1, inserted_C1, mrt_C1, let_C1 = run_analysis_C1(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max_C1 != 0:
+                    print(f"final_e2e_max_C1={final_e2e_max_C1}, max_reaction_time_C1={max_reaction_time_C1}, mrt_C1={mrt_C1}, let_C1={let_C1}")
                     r_C1 = max_reaction_time_C1 / final_e2e_max_C1
                     if r_C1 > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed_C1 = "exceed"
                     else:
                         exceed_C1 = "safe"
+                    if mrt_C1 is not None and mrt_C1 != 0:
+                        rm_C1 = mrt_C1 / final_e2e_max_C1
+                    else:
+                        rm_C1 = None
                 else:
                     r_C1 = None
+                    rm_C1 = None
                     exceed_C1 = None
                     false_results_C1[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results_C1[num_tasks][per_jitter].append((final_e2e_max_C1, max_reaction_time_C1, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1))
+                results_C1[num_tasks][per_jitter].append((final_e2e_max_C1, max_reaction_time_C1, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1, mrt_C1, let_C1, rm_C1))
                 final_C1[num_tasks][per_jitter].append((final_r_C1, final_w_C1))
 
 
@@ -139,64 +168,122 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
     print(f"Compare percent plots generated and saved to {compare_percent_plot_name} and {compare_histogram_plot_name}")
 
 
-def old_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+def G2023_results():
     # INCREASE here to have more experiments per same settings
-    num_repeats =  1
-    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
-    jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
-    num_chains = [3,5,8,10] 
-    # num_chains = [3, 5]  # for test
+    # num_repeats =  1
 
-    random_seed = 1754657734
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    # random_seed = 1754657734
+    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    t1 = Task(task_id="1",
+            task_phase=2,
+            task_bcet=1,
+            task_wcet=3,
+            task_period=5,
+            task_deadline=5,
+            priority=2)
+    t2 = Task(task_id="2",
+            task_phase=4,
+            task_bcet=1,
+            task_wcet=1,
+            task_period=5,
+            task_deadline=5,
+            priority=1)
 
-    # random_seed = int(time.time())
-    # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
-    results, false_results, final, results_C1, false_results_C1, final_C1 = compareC1(jitters, num_chains, num_repeats, random_seed, periods)
+    # ===
+    task_set = [t2,t1]  # ordered by priority 
+    ce = [t1,t2]  # ordered in sequence
+    # ===
+    mrt, let = G2023(task_set, ce)
+    converted_tasks, _, _, _ = convert_to_tasks(task_set)
+    
+    final_e2e_max, max_reaction_time, _ = G2023_in_alg2(converted_tasks)
+    final_e2e_max_C1, max_reaction_time_C1, _ = G2023_in_agl2C1(converted_tasks)
 
-    csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
-    csv_file_C1, _, _, _ = output_results_C1(num_repeats, random_seed, timestamp, results_C1, false_results_C1, num_chains, jitters)
+    print("==================G2023 results====================")
+    print(f"G2023 results: max_reaction_time: {mrt}, let: {let}")
+    print(f"G2023 in agl2 results: final_e2e_max={final_e2e_max}, max_reaction_time={max_reaction_time}")
+    
+    print(f"G2023 in agl2_C1 results: final_e2e_max_C1={final_e2e_max_C1}, max_reaction_time_C1={max_reaction_time_C1}")
 
-    filter_and_export_csv(csv_file, num_chains)
-    filter_and_export_csv_C1(csv_file_C1, num_chains)
+def compare_2023(csv_files, num_repeats, random_seed, timestamp):
+    folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
+    # folder_path = os.path.join("compare/F16", folder_name)
+    folder_path = os.path.join("compare/", folder_name)
 
-    csv_files = [csv_file, csv_file_C1]
+    os.makedirs(folder_path, exist_ok=True)
+    
+    # compare_percent_plot_name = os.path.join(folder_path,  f"compare_percent_{num_repeats}_{random_seed}_{timestamp}.png")
+    compare_histogram_plot_name = os.path.join(folder_path, f"compare_RM_{num_repeats}_{random_seed}_{timestamp}.png")
 
-    compare_plots(csv_files, num_repeats, random_seed, timestamp)
+    # compare_line_chart_from_csv(csv_files, compare_percent_plot_name)
+    compare_plot_histogram_G2023(csv_files, compare_histogram_plot_name)
+    
+    # print(f"Compare percent plots generated and saved to {compare_percent_plot_name} and {compare_histogram_plot_name}")
+    print(f"Compare RM histogram plot generated and saved to {compare_histogram_plot_name}")
+
 
 
 def main():
-    parser = argparse.ArgumentParser(description='compare C1 and rtsscode')
-    parser.add_argument('random_seed', type=int, help='random seed for the experiment')
-    parser.add_argument('num_repeats', type=int, help='number of repeats for the experiment')
-    parser.add_argument('--common_csv', type=str, default='common_results.csv', 
-                        help='rtss result csv file (common_results.csv)')
-    parser.add_argument('--common_csv_c1', type=str, default='common_results_c1.csv', 
-                        help='C1 result csv file (common_results_c1.csv)')
+    # parser = argparse.ArgumentParser(description='compare C1 and rtsscode')
+    # parser.add_argument('random_seed', type=int, help='random seed for the experiment')
+    # parser.add_argument('num_repeats', type=int, help='number of repeats for the experiment')
+    # parser.add_argument('--common_csv', type=str, default='common_results.csv', 
+    #                     help='rtss result csv file (common_results.csv)')
+    # parser.add_argument('--common_csv_c1', type=str, default='common_results_c1.csv', 
+    #                     help='C1 result csv file (common_results_c1.csv)')
     
-    args = parser.parse_args()
+    # args = parser.parse_args()
     
-    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
-    jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
-    num_chains = [3, 5, 8, 10] 
+    # periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
+    # jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
+    # num_chains = [3, 5, 8, 10] 
     
-    random_seed = args.random_seed
-    num_repeats = args.num_repeats
-    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+    # random_seed = args.random_seed
+    # num_repeats = args.num_repeats
+    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
     
-    print(f"random_seed={random_seed}, num_repeats={num_repeats}")
+    # print(f"random_seed={random_seed}, num_repeats={num_repeats}")
     
+    # results, false_results, final, results_C1, false_results_C1, final_C1 = compareC1(
+    #     jitters, num_chains, num_repeats, random_seed, periods)
+
+    # csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
+    # csv_file_C1, _, _, _ = output_results_C1(num_repeats, random_seed, timestamp, results_C1, false_results_C1, num_chains, jitters)
+
+    
+    # append_to_common_csv(csv_file, args.common_csv)
+    # append_to_common_csv(csv_file_C1, args.common_csv_c1)
+
+    # mrt, let, taskset = G2023()
+    # convert_to_tasks(taskset)
+
+    # G2023_results()
+    
+    num_repeats = 1 
+    
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
+    # periods = [5,5]
+
+    jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
+    
+    num_chains = [3,5,8,10] 
+    
+    # random_seed = 1755016037 # fixed seed
+    # timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+
+    random_seed = int(time.time())
+    timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
+
     results, false_results, final, results_C1, false_results_C1, final_C1 = compareC1(
-        jitters, num_chains, num_repeats, random_seed, periods)
+    jitters, num_chains, num_repeats, random_seed, periods)
 
     csv_file, _, _, _ = output_results(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
     csv_file_C1, _, _, _ = output_results_C1(num_repeats, random_seed, timestamp, results_C1, false_results_C1, num_chains, jitters)
 
-    
-    append_to_common_csv(csv_file, args.common_csv)
-    append_to_common_csv(csv_file_C1, args.common_csv_c1)
-
+    csv_files = [csv_file, csv_file_C1]
+    compare_2023(csv_files, num_repeats, random_seed, timestamp)
+    compare_plots(csv_files, num_repeats, random_seed, timestamp)
 
 if __name__ == "__main__":
     main()

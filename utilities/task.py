@@ -21,8 +21,8 @@ class Task:
         self.priority = priority  # a lower value means higher priority
         self.message = message  # flag for communication tasks
 
-        self.rt = 0  # Worst-case response time, specified during analysis
-
+        # self.rt = 0  # Worst-case response time, specified during analysis
+        self.rt = task_phase + task_wcet  # Initial response time
     def __str__(self):
         """Print a task."""
         return (" Type: {type:^}\n ID: {id:^}\n Priority: {priority:^}\n"

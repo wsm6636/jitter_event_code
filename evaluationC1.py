@@ -45,12 +45,12 @@ def output_results_C1(num_repeats, random_seed, timestamp, results, false_result
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage", "adjust", "inserted"])
+        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage", "adjust", "inserted","mrt","let","rm"])
         for num_tasks in num_chains:
             for per_jitter in jitters:
                 false_percentage = false_results[num_tasks][per_jitter]
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed,adjust,inserted) in results[num_tasks][per_jitter]:
-                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage,adjust,inserted])
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed,adjust,inserted,mrt,let,rm) in results[num_tasks][per_jitter]:
+                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage,adjust,inserted,mrt,let,rm])
 
     print(f"All results saved to {results_csv}")
 
@@ -61,8 +61,8 @@ def output_results_C1(num_repeats, random_seed, timestamp, results, false_result
             for per_jitter in jitters:
                 false_percentage = false_results[num_tasks][per_jitter]
                 writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage: {false_percentage}=====================\n")
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed, adjust, inserted) in results[num_tasks][per_jitter]:
-                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}, adjust: {adjust}, inserted: {inserted}\n")
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed, adjust, inserted, mrt,let,rm) in results[num_tasks][per_jitter]:
+                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}, adjust: {adjust}, inserted: {inserted}, mrt:{mrt}, let:{let}, rm: {rm}\n")
                     for task in tasks:
                         writer(f"   {task}\n")
     
@@ -143,7 +143,7 @@ def run_C1(jitters, num_chains, num_repeats, random_seed, periods):
                 # generate the jitter
                 # only generate the jitter
                 print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max, max_reaction_time,  final_r, final_w, tasks, adjust, inserted = run_analysis_C1(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max, max_reaction_time,  final_r, final_w, tasks, adjust, inserted, mrt, let = run_analysis_C1(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
@@ -151,12 +151,16 @@ def run_C1(jitters, num_chains, num_repeats, random_seed, periods):
                         exceed = "exceed"
                     else:
                         exceed = "safe"
+                    if mrt is not None and mrt != 0:
+                        rm = mrt / final_e2e_max
+                    else:
+                        rm = None
                 else:
                     r = None
                     exceed = None
                     false_results[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed,adjust,inserted))
+                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed,adjust,inserted,mrt,let,rm))
                 final[num_tasks][per_jitter].append((final_r, final_w))
 
         random_seed = random_seed+1

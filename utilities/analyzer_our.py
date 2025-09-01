@@ -15,13 +15,19 @@ class re_we_analyzer():
         self.bc = bcet_schedule
         self.wc = wcet_schedule
         self.hyperperiod = hyperperiod
+        # print(f"hyperperiod: {self.hyperperiod}")
+        # print(f"bcet_schedule: {self.bc}")
+        # print(f"wcet_schedule: {self.wc}")
 
     def _get_entry(self, nmb, lst, tsk):
         '''get nmb-th entry of the list lst with task tsk.'''
+        # if len(lst) == 0:
+        #     return [-1,-1]
         if nmb < 0:  # Case: out of range
-            raise IndexError('nbm<0')
+            # raise IndexError('nbm<0')
+            return [-1,-1]
         # Case: index too high, has to be made smaller # TODO not sure if this is a good idea since the last entries could be wrong depending on the implementation of the scheduler ...
-        elif nmb >= len(lst):
+        elif nmb >= len(lst) and len(lst) > 0:
             # check one hyperperiod earlier
             # make new_nmb an integer value
             div, rem = divmod(self.hyperperiod, tsk.period)
@@ -29,8 +35,15 @@ class re_we_analyzer():
             new_nmb = nmb - div
             # add one hyperperiod
             # TODO this is not very efficient since we need the values several times.
+            # res = []
+            # for entry in self._get_entry(new_nmb, lst, tsk):
+            #     if entry is 0:
+            #         entry = 0
+            #     res.append(self.hyperperiod + entry)
+            # return res
             return [self.hyperperiod + entry for entry in self._get_entry(new_nmb, lst, tsk)]
         else:  # Case: entry can be used
+            # return  lst[nmb]
             try:
                 return lst[nmb]
             except:
@@ -40,7 +53,10 @@ class re_we_analyzer():
         '''returns the upper bound on read-event of the nbm-th job of a task.'''
         lst = self.bc[task]  # list that has the read-even minimum
         # choose read-event from list
-        return self._get_entry(nmb, lst, task)[0]
+        res = self._get_entry(nmb, lst, task)[0]
+        # print(f"  len(lst)={len(lst)}")
+        # print(f"remin({nmb})={res}")
+        return res
 
     def remax(self, task, nmb):
         '''returns the upper bound on read-event of the nbm-th job of a task.'''
@@ -58,18 +74,25 @@ class re_we_analyzer():
         '''returns the upper bound on read-event of the nbm-th job of a task.'''
         lst = self.wc[task]  # list that has the write-even maximum
         # choose write-event from list
-        return self._get_entry(nmb, lst, task)[1]
+        res =self._get_entry(nmb, lst, task)[1]
+        # print(f"  len(lst)={len(lst)}")
+        # print(f"wemax({nmb})={res}")
+        return res
 
     def find_next_fw(self, curr_task_wc, nxt_task_bc, curr_index):
         '''Find next index for the abstract representation in forward manner.'''
         # wemax of current task
         curr_wemax = self.wemax(curr_task_wc, curr_index)
+        if curr_wemax == -1:
+            return False
         curr_rel = curr_task_wc.phase + curr_index * \
             curr_task_wc.period  # release of current task
 
         for idx in itertools.count():
             idx_remin = self.remin(nxt_task_bc, idx)
-
+            # print(f"{curr_wemax}, {curr_wemax}")
+            if idx_remin == -1:
+                return False
             if (
                 idx_remin >= curr_wemax  # first property
                 # second property (lower priority value means higher priority!)
@@ -152,8 +175,12 @@ def max_reac_local(chain, task_set_wcet, schedule_wcet, task_set_bcet, schedule_
         abstr.append(idx+1)  # second entry
 
         for idtsk, nxt_idtsk in zip(index_chain[:-1], index_chain[1:]):
-            abstr.append(ana.find_next_fw(
-                task_set_wcet[idtsk], task_set_bcet[nxt_idtsk], abstr[-1]))  # intermediate entries
+            res = ana.find_next_fw(
+                task_set_wcet[idtsk], task_set_bcet[nxt_idtsk], abstr[-1])
+            # if res is False:  # if no such index can be found, break
+            #     break
+            # else:
+            abstr.append(res)  # intermediate entries
 
         abstr.append(abstr[-1])  # last entry
 
@@ -434,5 +461,3 @@ def mda_let(chain, task_set):
     chain.mrda_let = max_length_red
 
     return (max_length, max_length_red)
-
-

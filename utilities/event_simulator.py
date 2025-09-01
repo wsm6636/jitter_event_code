@@ -36,8 +36,8 @@ class eventSimulator:
 
         self.eventList = []  # List of events the simulator has to process
 
-        # Sorting:
-        # self.tasks = sorted(tasks, key=operator.attrgetter('priority'))
+        # # Sorting:
+        # tasks = sorted(tasks, key=operator.attrgetter('priority'))
 
         # Analysis result.
         self.raw_result = dict()
@@ -130,7 +130,7 @@ class eventSimulator:
         """Behavior at job deadline of task with index idx."""
         # Check for deadline misses.
         if self.workload(idx) != 0:
-            print("task" + str(idx) + " misses deadline")
+            # print("task" + str(idx) + " misses deadline")
             self.statusTable[idx][2] += 1
         self.statusTable[idx][3] += 1
 
@@ -235,8 +235,7 @@ class eventSimulator:
         # Initialize result dictionary.
         result = dict()
         for task in self.tasks:
-            result[task] = []
-
+            result[task] = []        
         # Fill entries of the dictionary.
         for task in self.tasks:
             # Traverse the raw_result.
@@ -249,10 +248,13 @@ class eventSimulator:
                     job_end = x
                 if job_start > -1 and job_end > -1:  # put job to result
                     result[task].append((job_start, job_end))
-                    # print("job_start: " + str(job_start) + " job_end: " + str(job_end))
                     job_start = -1
                     job_end = -1
-            
+        
+        for re in result:
+            if len(result[re]) == 0:
+                print(f"Warning: Task {re.id} has no scheduled jobs.")
+                return None
         return result
 
     def missRate(self, idx):

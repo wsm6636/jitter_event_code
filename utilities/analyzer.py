@@ -37,7 +37,8 @@ class Analyzer:
 
         Help function for tda().
         """
-        return wcet * math.ceil(float(time) / period)
+        return wcet * math.ceil(time / period)
+        # return wcet * math.ceil(float(time) / period)
 
     def tda(self, task, hp_tasks):
         """Implementation of TDA to calculate worst-case response time.

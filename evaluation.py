@@ -7,7 +7,6 @@ import pandas as pd
 from analysis import run_analysis
 from plot import plot_histogram_from_csv 
 from plot import plot_line_chart_from_csv
-from plot import plot_davare_duerr_single
 import random
 import time
 import os
@@ -22,9 +21,10 @@ def generate_periods_and_offsets(num_tasks, periods):
     :return: periods, read_offsets, write_offsets
     """  
     selected_periods = random.choices(periods,  k=num_tasks)
-    # selected_read_offsets = [random.randint(0, (period - 1)) for period in selected_periods]
-    selected_read_offsets = [random.uniform(0, period) for period in selected_periods]  
+    selected_read_offsets = [random.randint(0, period) for period in selected_periods]
+    # selected_read_offsets = [random.uniform(0, 0.5*period) for period in selected_periods]  
     selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
+    # selected_write_offsets = [random.uniform(read_offset, 0.5*period) for read_offset, period in zip(selected_read_offsets, selected_periods)]
 
     print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
     return selected_periods, selected_read_offsets, selected_write_offsets
@@ -41,17 +41,16 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
     R_plot_name = os.path.join(folder_path, f"R_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_{num_repeats}_{random_seed}_{timestamp}.csv" )
     log_txt = os.path.join(f"log/rtssresult_log_{num_repeats}_{random_seed}_{timestamp}.txt")
-    # devare_duerr_plot_name = os.path.join(folder_path, f"davare_duerr_{num_repeats}_{random_seed}_{timestamp}.png")
 
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage"])
+        writer.writerow(["seeds","num_tasks", "per_jitter", "final_e2e_max", "max_reaction_time", "R", "exceed", "false_percentage","mrt","let","rm"])
         for num_tasks in num_chains:
             for per_jitter in jitters:
                 false_percentage = false_results[num_tasks][per_jitter]
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage])
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed,mrt,let,rm) in results[num_tasks][per_jitter]:
+                    writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage,mrt,let,rm])
 
     print(f"All results saved to {results_csv}")
 
@@ -62,16 +61,16 @@ def output_results(num_repeats, random_seed, timestamp, results, false_results, 
             for per_jitter in jitters:
                 false_percentage = false_results[num_tasks][per_jitter]
                 writer(f"=====================num_tasks: {num_tasks}, per_jitter: {per_jitter}, false_percentage: {false_percentage}=====================\n")
-                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed) in results[num_tasks][per_jitter]:
-                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}\n")
+                for (final_e2e_max, max_reaction_time, r, tasks, seed, exceed,mrt,let,rm) in results[num_tasks][per_jitter]:
+                    writer(f"seed: {seed}, final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}, {exceed}, mrt: {mrt},let: {let}, rm:{rm}\n")
                     for task in tasks:
                         writer(f"   {task}\n")
     
     print(f"All results saved to {log_txt}")
 
     # plotting: uncomment to have plots made automatically
-    plot_histogram_from_csv(results_csv, R_plot_name)
-    print(f"Plots generated and saved to {R_plot_name}")
+    # plot_histogram_from_csv(results_csv, R_plot_name)
+    # print(f"Plots generated and saved to {R_plot_name}")
     # plot_line_chart_from_csv(results_csv, percent_plot_name)
     # print(f"Plots generated and saved to {percent_plot_name}")
     # plot_davare_duerr_single(results_csv, devare_duerr_plot_name)
@@ -147,22 +146,24 @@ def run(jitters, num_chains, num_repeats, random_seed, periods):
                 # generate the jitter
                 # only generate the jitter
                 print(f"================== num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max, max_reaction_time,  final_r, final_w, tasks, mrt, let = run_analysis(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
-                    # r_davare = davare_e2e / final_e2e_max
-                    # r_duerr = duerr_e2e / final_e2e_max
                     if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
                         exceed = "safe"
+                    if mrt is not None and mrt != 0:
+                        rm = mrt / final_e2e_max
+                    else:
+                        rm = None
                 else:
                     r = None
                     exceed = None
                     false_results[num_tasks][per_jitter] += 1  # algorithm failed
 
-                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed))
+                results[num_tasks][per_jitter].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed,mrt,let,rm))
                 final[num_tasks][per_jitter].append((final_r, final_w))
 
         random_seed = random_seed+1
