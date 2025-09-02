@@ -14,124 +14,10 @@ import math
 import random
 import numpy as np
 from scipy.optimize import basinhopping
-from mrtanalysis import G2023_analysis
 
-class Event:
-    def __init__(self, event_type, period, offset, maxjitter, id=None):
-        self.id = id
-        self.event_type = event_type  # "read" or "write"
-        self.period = period
-        self.offset = offset
-        self.maxjitter = maxjitter
-        self.random_jitter = 0   # jitter of instance
+from analysis import Event, Task, RandomEvent, RandomEventForG2023
+from analysis import euclide_extend
 
-    def __repr__(self):
-        return (
-            f"Event(type={self.event_type},id={self.id}, period={self.period}, "
-            f"offset={self.offset}, maxjitter={self.maxjitter}"
-        )
-
-    def get_trigger_time(self, j):
-        self.random_jitter = random.uniform(0, self.maxjitter)
-        tj = j * self.period + self.offset + self.random_jitter
-        return tj
-
-
-class Task:
-    def __init__(self, read_event, write_event, id=None):
-        self.id = id
-        self.read_event = read_event
-        self.write_event = write_event
-        self.period = read_event.period
-        self.offset = read_event.offset
-
-    def __repr__(self):
-        return (
-            f"Task(period={self.period}, offset={self.offset}, "
-            f"read_event={self.read_event}, write_event={self.write_event})"
-        )
-
-
-# random events generator
-class RandomEvent:
-    def __init__(
-        self,
-        num_tasks,
-        periods,
-        read_offsets,
-        write_offsets,
-        per_jitter
-    ):
-        self.num_tasks = num_tasks
-        self.periods = periods
-        self.read_offsets = read_offsets
-        self.write_offsets = write_offsets
-        self.per_jitter = per_jitter
-        self.tasks = self.generate_events_tasks()
-        
-    def generate_events_tasks(self):
-        read_events = []
-        write_events = []
-        events = []
-        tasks = []
-        for i in range(self.num_tasks):
-            # randomly select a period from the list
-            period = self.periods[i]
-            read_offset = self.read_offsets[i]
-            write_offset = self.write_offsets[i]
-            # x% * period
-            maxjitter = self.per_jitter*period
-
-            # create read and write events
-            read_event = Event(
-                event_type="read",
-                period=period,
-                offset=read_offset,
-                maxjitter=maxjitter,
-                id=i,
-            )
-            write_event = Event(
-                event_type="write",
-                period=period,
-                offset=write_offset,
-                maxjitter=maxjitter,
-                id=i,
-            )
-            read_events.append(read_event)
-            write_events.append(write_event)
-            events.append((read_event, write_event))
-
-            # Create a task with the read and write events
-            task = Task(read_event=read_event, write_event=write_event, id=i)
-            tasks.append(task)
-
-            # print(f"task {i}: read_event: period: {read_event.period}, offset: {read_event.offset}, maxjitter: {read_event.maxjitter}")
-            # print(f"task {i}: write_event: period: {write_event.period}, offset: {write_event.offset}, maxjitter: {write_event.maxjitter}")
-        return tasks
-
-    def get_tasks(self):
-        return self.tasks
-
-# Euclide's algorithm for coefficients of Bezout's identity
-def euclide_extend(a, b):
-    r0 = int(a)
-    r1 = int(b)
-    s0 = 1
-    s1 = 0
-    t0 = 0
-    t1 = 1
-    while r1 != 0:
-        q = r0 // r1
-        new_r = r0 % r1
-        new_s = s0 - q * s1
-        new_t = t0 - q * t1
-        r0 = r1
-        s0 = s1
-        t0 = t1
-        r1 = new_r
-        s1 = new_s
-        t1 = new_t
-    return (r0, s0, t0)
 
 # Corollary 1
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
@@ -514,7 +400,7 @@ def maximize_reaction_time(tasks):
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=1,
+        niter=10,
         T=1.0,
         stepsize=1.0,  # Step size for the random walk
         interval=50,  # Interval for the random walk
@@ -562,32 +448,73 @@ def run_analysis_C1(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
     
-    mrt, let = G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
-
-    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted, mrt, let
+    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted
 
 
-def G2023_in_agl2C1(tasks):
+
+# outport function
+def run_analysis_C1_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
+    inserted = False
+
+    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+
     final = our_chain(tasks)
+    
+    new_tasks = tasks
     if final is False:
         final_e2e_max = 0
         final_r = None
         final_w = None
+        adjust = False
     else:
         final_e2e_max = final[0]
         final_r = final[1]
         final_w = final[2]
-        
+        adjust = final[3]
+        bridges = final[4]
+        if bridges:
+            new_tasks = inject_bridges(tasks[:], bridges)
+            inserted = True
+            
+    
+    return final_e2e_max, final_r, final_w, new_tasks, adjust, inserted
+
+
+
+def run_analysis_C1_for_G2023(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ):
+    global results_function
+    results_function = []  
+    inserted = False
+
+    tasks = RandomEventForG2023(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ).tasks
+
+    final = our_chain(tasks)
+    
+    new_tasks = tasks
+    if final is False:
+        final_e2e_max = 0
+        final_r = None
+        final_w = None
+        adjust = False
+    else:
+        final_e2e_max = final[0]
+        final_r = final[1]
+        final_w = final[2]
+        adjust = final[3]
+        bridges = final[4]
+        if bridges:
+            new_tasks = inject_bridges(tasks[:], bridges)
+            inserted = True
+            
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(tasks)
+    reaction_time_a = maximize_reaction_time(new_tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-
-    return final_e2e_max, max_reaction_time, tasks
-
+    
+    return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted
 
 
 # test the code

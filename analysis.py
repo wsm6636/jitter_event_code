@@ -14,7 +14,6 @@ import math
 import random
 import numpy as np
 from scipy.optimize import basinhopping
-from mrtanalysis import G2023_analysis
 
 class Event:
     def __init__(self, event_type, period, offset, maxjitter, id=None):
@@ -95,6 +94,69 @@ class RandomEvent:
                 period=period,
                 offset=write_offset,
                 maxjitter=maxjitter,
+                id=i,
+            )
+            read_events.append(read_event)
+            write_events.append(write_event)
+            events.append((read_event, write_event))
+
+            # Create a task with the read and write events
+            task = Task(read_event=read_event, write_event=write_event, id=i)
+            tasks.append(task)
+
+            # print(f"task {i}: read_event: period: {read_event.period}, offset: {read_event.offset}, maxjitter: {read_event.maxjitter}")
+            # print(f"task {i}: write_event: period: {write_event.period}, offset: {write_event.offset}, maxjitter: {write_event.maxjitter}")
+        return tasks
+
+    def get_tasks(self):
+        return self.tasks
+    
+
+
+class RandomEventForG2023:
+    def __init__(
+        self,
+        num_tasks,
+        periods,
+        read_offsets,
+        write_offsets,
+        read_jitters, 
+        write_jitters
+    ):
+        self.num_tasks = num_tasks
+        self.periods = periods
+        self.read_offsets = read_offsets
+        self.write_offsets = write_offsets
+        self.read_jitters = read_jitters
+        self.write_jitters = write_jitters
+        self.tasks = self.generate_events_tasks()
+        
+    def generate_events_tasks(self):
+        read_events = []
+        write_events = []
+        events = []
+        tasks = []
+        for i in range(self.num_tasks):
+            # randomly select a period from the list
+            period = self.periods[i]
+            read_offset = self.read_offsets[i]
+            write_offset = self.write_offsets[i]
+            read_maxjitter = self.read_jitters[i]
+            write_maxjitter = self.write_jitters[i]
+
+            # create read and write events
+            read_event = Event(
+                event_type="read",
+                period=period,
+                offset=read_offset,
+                maxjitter=read_maxjitter,
+                id=i,
+            )
+            write_event = Event(
+                event_type="write",
+                period=period,
+                offset=write_offset,
+                maxjitter=write_maxjitter,
                 id=i,
             )
             read_events.append(read_event)
@@ -394,7 +456,7 @@ def maximize_reaction_time(tasks):
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=1,
+        niter=10,
         T=1.0,
         stepsize=1.0,  # Step size for the random walk
         interval=50,  # Interval for the random walk
@@ -434,16 +496,40 @@ def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
 
-    mrt , let = G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
-
-    return final_e2e_max, max_reaction_time, final_r, final_w, tasks, mrt, let
+    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 
-
-def G2023_in_alg2(tasks):
+# outport function
+def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
+
+    tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
+
     final = our_chain(tasks)
+    
+    if final is False:
+        final_e2e_max = 0
+        final_r = None
+        final_w = None
+    else:
+        final_e2e_max = final[0]
+        final_r = final[1]
+        final_w = final[2]
+        
+    return final_e2e_max, final_r, final_w, tasks
+
+
+
+# outport function
+def run_analysis_for_G2023(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ):
+    global results_function
+    results_function = []  
+
+    tasks = RandomEventForG2023(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters).tasks
+
+    final = our_chain(tasks)
+    
     if final is False:
         final_e2e_max = 0
         final_r = None
@@ -458,8 +544,8 @@ def G2023_in_alg2(tasks):
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
     # max_reaction_time = 0
-    
-    return final_e2e_max, max_reaction_time, tasks
+
+    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 # test the code
 if __name__ == "__main__":

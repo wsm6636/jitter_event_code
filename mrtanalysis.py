@@ -1,4 +1,5 @@
 import math
+from operator import attrgetter
 import utilities
 import utilities.analyzer
 import utilities.analysis_becker
@@ -6,10 +7,15 @@ import utilities.analyzer_our
 from utilities.task import Task
 from utilities.chain import CauseEffectChain
 import utilities.event_simulator as es
-
+import random
 # from main import our_mrt_mRda_lst
+import os
+import csv
+import sys
+import datetime
+import time
 
-
+"""Copied from Paper [C]: main.py"""
 def TDA(task_set):
     """TDA analysis for a task set.
     Return True if succesful and False if not succesful."""
@@ -24,12 +30,13 @@ def TDA(task_set):
         if task.wcet == 0:
             raise ValueError("WCET == 0")
         task.rt = ana.tda(task, task_set[: (i - 1)])
-        # if task.rt > task.deadline:
-            # task.rt = task.deadline
+        if task.rt > task.deadline:
+            task.rt = task.deadline
         i += 1
 
     return True
 
+"""Copied from Paper [C]: main.py"""
 def schedule_task_set(ce_chains, task_set, print_status=False):
 
     try:
@@ -73,8 +80,79 @@ def schedule_task_set(ce_chains, task_set, print_status=False):
 
     return schedule
 
+"""NEWFUNC by shumo."""
+def output_to_csv_G2023(num_repeats, random_seed, timestamp, results, num_chains):
+    folder_path = "G2023"
+    os.makedirs(folder_path, exist_ok=True)
 
-def G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+    results_csv = os.path.join(folder_path, f"data_MRT_{num_repeats}_{random_seed}_{timestamp}.csv" )
+
+    # save results to csv
+    with open(results_csv, mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(["seeds","num_tasks", "mrt", "let"])
+        for num_tasks in num_chains:
+            for (mrt, let, _, _, seed) in results[num_tasks]:
+                writer.writerow([seed,num_tasks, mrt, let])
+
+    print(f"All results saved to {results_csv}")
+    return results_csv
+
+
+""" Random utilization generation by UUniFast, Bini et al 2005"""
+def uunifast(n, u):
+    utilizations = []
+    sumU = u
+    for i in range(1, n):
+        nextSumU = sumU * random.random() ** (1.0 / (n - i))
+        utilizations.append(sumU - nextSumU)
+        sumU = nextSumU
+    utilizations.append(sumU)
+    return utilizations
+
+def convert_to_tasks(num_tasks, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set):
+    results = []
+    selected_read_offsets = []
+    selected_write_offsets = []
+    read_jitters = []
+    write_jitters = []
+
+    for i, (t_bcet, t_wcet) in enumerate(zip(new_task_set, task_set)):
+        seq_bcet = schedule_bcet[t_bcet]
+        seq_wcet = schedule_wcet[t_wcet]
+        Tb = t_bcet.period
+        Tw = t_wcet.period
+        tr_bcet = [tr - j*Tb for j, (tr, _) in enumerate(seq_bcet)]
+        tw_bcet = [tw - j*Tb for j, (_, tw) in enumerate(seq_bcet)]
+
+        tr_wcet = [tr - j*Tw for j, (tr, _) in enumerate(seq_wcet)]
+        tw_wcet = [tw - j*Tw for j, (_, tw) in enumerate(seq_wcet)]
+
+        max_tr = max(tr_wcet)
+        min_tr = min(tr_bcet)
+        max_tw = max(tw_wcet)
+        min_tw = min(tw_bcet)
+
+        results=(max_tr, min_tr, max_tw, min_tw)
+        read_offset = min_tr
+        read_jitter = max_tr - min_tr
+        write_offset= min_tw
+        write_jitter= max_tw - min_tw
+
+        print(results)
+        selected_read_offsets.append(read_offset)
+        read_jitters.append(read_jitter)
+        selected_write_offsets.append(write_offset)
+        write_jitters.append(write_jitter)
+
+    print(f"read_jitters{read_jitters}")
+    print(f"write_jitters{write_jitters}")
+
+    return read_jitters, write_jitters, selected_read_offsets, selected_write_offsets
+
+
+"""NEWFUNC by shumo. LET of paper [C]"""
+def G2023_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     task_set = []
     ce = []
     for i, period, read_offset, write_offset in zip(
@@ -85,7 +163,6 @@ def G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
         wcet      = maxjitter + bcet
         # deadline  = write_offset  + maxjitter 
         deadline  = period  
-        # rt        = write_offset + maxjitter
 
         t = Task(task_id=i,
                 task_phase=read_offset,
@@ -98,8 +175,61 @@ def G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
         task_set.append(t)
         ce.append(t)
 
+    # RM
+    task_set = sorted(task_set, key=attrgetter('period'))
+
+    for i, t in enumerate(task_set):
+        t.priority = i  
+        
+    chain = CauseEffectChain(1, task_set)
+
+    ana = utilities.analyzer.Analyzer()
+    hyper = ana.determine_hyper_period(chain.chain)
+
+    ana.davare_single(chain)
+    ana.kloda(chain, hyper)
+    ana.reaction_duerr_single(chain)
+    ana.age_duerr_single(chain)
+
+    let = utilities.analyzer_our.mrt_let(chain, task_set)
+    
+    print(f"LET: {let}")
+
+    return  let
+
+
+"""NEWFUNC by shumo. Generate the task set, schedule, and maximum response time results of paper [C]"""
+def G2023_analysis(num_tasks, periods):
+    task_set = []
+    ce = []
+    totU = 0.5
+    vecU = uunifast(num_tasks, totU)
+    selected_periods = random.choices(periods,  k=num_tasks)
+    for i, period in zip(
+        range(num_tasks), selected_periods):
+
+        wcet      = vecU[i]*period    
+        bcet      = 1*wcet   
+        deadline  = period  
+
+        t = Task(task_id=i,
+                task_phase= random.randint(0, period//2),  # random phase
+                task_bcet=bcet,
+                task_wcet=wcet,
+                task_period=period,
+                task_deadline=deadline)
+        task_set.append(t)
+        ce.append(t)
+
+    task_set = sorted(task_set, key=attrgetter('period'))
+
+    for i, t in enumerate(task_set):
+        t.priority = i  
+        
     # for task in task_set:
-    #     print(task)
+    #     print(f"pri: {task}")
+    # for task in ce:
+    #     print(f"ce: {task}")
 
     chain = CauseEffectChain(1, task_set)
 
@@ -112,12 +242,11 @@ def G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     ana.age_duerr_single(chain)
     mrda_becker = utilities.analysis_becker.mrda(chain)
 
-    schedule = schedule_task_set([chain], task_set, print_status=False)
-    # print(f"wcet : {schedule}")
-    if schedule is False:
-        return None, None
-    
     TDA(task_set)
+
+    schedule_wcet = schedule_task_set([chain], task_set, print_status=False)
+    print(f"wcet : {schedule_wcet}")
+
     # ===
     # Following change_taskset_bcet:
     new_task_set = [task.copy() for task in task_set]
@@ -125,16 +254,19 @@ def G2023_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
         task.wcet = task.bcet
 
     schedule_bcet = schedule_task_set([chain], new_task_set, print_status=False)
-    # print(f"bcet: {schedule_bcet}")
+    print(f"bcet: {schedule_bcet}")
 
-    mrt = utilities.analyzer_our.max_reac_local(chain, task_set, schedule, new_task_set, schedule_bcet)
+    mrt = utilities.analyzer_our.max_reac_local(chain, task_set, schedule_wcet, new_task_set, schedule_bcet)
     let = utilities.analyzer_our.mrt_let(chain, task_set)
 
-    # print(f"max reactiom time: {mrt}")
-    # print(f"LET: {let}")
+    print(f"max reactiom time: {mrt}")
+    print(f"LET: {let}")
+    print(f"selected_periods: {selected_periods}")
 
-    return mrt, let
+    convert_to_tasks(2, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set)
 
+    return mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set
 
 if __name__ == "__main__":
-    mrt, let = G2023_analysis(2, [5,5],[2,4],[3,5],0.1)
+    # mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set = G2023_analysis(2, [500])
+    G2023_analysis_LET(4,[2,1,5,3],[0,0,0,0],[2,1,5,3],0)
