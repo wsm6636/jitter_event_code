@@ -509,10 +509,10 @@ def run_analysis_C1_for_G2023(num_tasks, periods,read_offsets,write_offsets, rea
             inserted = True
             
     # check if the final result is valid
-    reaction_time_a = maximize_reaction_time(new_tasks)
-    reaction_time_b = max(results_function)
-    max_reaction_time = max(reaction_time_a, reaction_time_b)
-    # max_reaction_time = 0
+    # reaction_time_a = maximize_reaction_time(new_tasks)
+    # reaction_time_b = max(results_function)
+    # max_reaction_time = max(reaction_time_a, reaction_time_b)
+    max_reaction_time = 0
     
     return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjust, inserted
 

@@ -208,7 +208,8 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
             
             if final_e2e_max != 0:
                 print(f"final_e2e_max={final_e2e_max}, max_reaction_time={max_reaction_time}, mrt={mrt}, let={let}")
-                r = max_reaction_time / final_e2e_max
+                # r = max_reaction_time / final_e2e_max
+                r = mrt  / final_e2e_max
                 if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                     exceed = "exceed"
                 else:
@@ -218,7 +219,7 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
                 exceed = None
                 false_results[num_tasks] += 1  # algorithm failed
 
-            results[num_tasks].append((final_e2e_max, max_reaction_time,r,tasks,random_seed,exceed))
+            results[num_tasks].append((final_e2e_max, mrt,r,tasks,random_seed,exceed))
             final[num_tasks].append((final_r, final_w))
             G2023_results[num_tasks].append((mrt, let, schedule_bcet, schedule_wcet, random_seed))
 
@@ -226,8 +227,9 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
             final_e2e_max_C1, max_reaction_time_C1,  final_r_C1, final_w_C1, tasks_C1, adjust_C1, inserted_C1 = run_analysis_C1_for_G2023(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, read_jitters, write_jitters )
             # value of rate "= max_reaction_time / final_e2e_max"
             if final_e2e_max_C1 != 0:
-                print(f"final_e2e_max_C1={final_e2e_max_C1}, max_reaction_time_C1={max_reaction_time_C1}, mrt={mrt}, let={let}")
-                r_C1 = max_reaction_time_C1 / final_e2e_max_C1
+                # print(f"final_e2e_max_C1={final_e2e_max_C1}, max_reaction_time_C1={max_reaction_time_C1}, mrt={mrt}, let={let}")
+                # r_C1 = max_reaction_time_C1 / final_e2e_max_C1
+                r_C1 = mrt / final_e2e_max_C1
                 if r_C1 > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                     exceed_C1 = "exceed"
                 else:
@@ -237,7 +239,7 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
                 exceed_C1 = None
                 false_results_C1[num_tasks] += 1  # algorithm failed
 
-            results_C1[num_tasks].append((final_e2e_max_C1, max_reaction_time_C1, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1))
+            results_C1[num_tasks].append((final_e2e_max_C1, mrt, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1))
             final_C1[num_tasks].append((final_r_C1, final_w_C1))
 
 
@@ -331,7 +333,7 @@ def compare_2023_LET(jitters, num_chains, num_repeats, random_seed, periods):
 
 
 def run_MRT_G2023():
-    num_repeats = 100 
+    num_repeats = 10000 
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
@@ -352,7 +354,7 @@ def run_MRT_G2023():
 
 def run_LET_G2023():
     
-    num_repeats = 10 
+    num_repeats = 10000 
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
