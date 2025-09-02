@@ -67,14 +67,14 @@ def convert_to_tasks(num_tasks, selected_periods, schedule_wcet, task_set, sched
         write_offset= min_tw
         write_jitter= max_tw - min_tw
 
-        print(results)
+        # print(results)
         selected_read_offsets.append(read_offset)
         read_jitters.append(read_jitter)
         selected_write_offsets.append(write_offset)
         write_jitters.append(write_jitter)
 
-    print(f"read_jitters{read_jitters}")
-    print(f"write_jitters{write_jitters}")
+    # print(f"read_jitters{read_jitters}")
+    # print(f"write_jitters{write_jitters}")
 
     return read_jitters, write_jitters, selected_read_offsets, selected_write_offsets
 
@@ -200,14 +200,16 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
     for i in range(num_repeats):
         random.seed(random_seed)
         for num_tasks in num_chains:
-            mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set = G2023_analysis(num_tasks, periods)
+            mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set,run_time_G = G2023_analysis(num_tasks, periods)
             read_jitters, write_jitters,  selected_read_offsets, selected_write_offsets = convert_to_tasks(num_tasks, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set)
 
             print(f"=========For evaluation========= num_tasks {num_tasks} Repeat {i} random_seed {random_seed} ==================")
+            t_our_0 = time.perf_counter()
             final_e2e_max, max_reaction_time,  final_r, final_w, tasks = run_analysis_for_G2023(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, read_jitters, write_jitters )
-            
+            t_our_1 = time.perf_counter()
+            run_time_our = t_our_1 - t_our_0
             if final_e2e_max != 0:
-                print(f"final_e2e_max={final_e2e_max}, max_reaction_time={max_reaction_time}, mrt={mrt}, let={let}")
+                # print(f"final_e2e_max={final_e2e_max}, max_reaction_time={max_reaction_time}, mrt={mrt}, let={let}")
                 # r = max_reaction_time / final_e2e_max
                 r = mrt  / final_e2e_max
                 if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
@@ -219,12 +221,15 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
                 exceed = None
                 false_results[num_tasks] += 1  # algorithm failed
 
-            results[num_tasks].append((final_e2e_max, mrt,r,tasks,random_seed,exceed))
+            results[num_tasks].append((final_e2e_max, mrt,r,tasks,random_seed,exceed,run_time_our,run_time_G))
             final[num_tasks].append((final_r, final_w))
-            G2023_results[num_tasks].append((mrt, let, schedule_bcet, schedule_wcet, random_seed))
+            G2023_results[num_tasks].append((mrt, let, schedule_bcet, schedule_wcet, random_seed,run_time_G))
 
             print(f"=========For evaluation C1========= num_tasks {num_tasks} Repeat {i} random_seed {random_seed} ==================")
+            t_our_C1_0 = time.perf_counter()
             final_e2e_max_C1, max_reaction_time_C1,  final_r_C1, final_w_C1, tasks_C1, adjust_C1, inserted_C1 = run_analysis_C1_for_G2023(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, read_jitters, write_jitters )
+            t_our_C1_1 = time.perf_counter()
+            run_time_our_C1 = t_our_C1_1 - t_our_C1_0
             # value of rate "= max_reaction_time / final_e2e_max"
             if final_e2e_max_C1 != 0:
                 # print(f"final_e2e_max_C1={final_e2e_max_C1}, max_reaction_time_C1={max_reaction_time_C1}, mrt={mrt}, let={let}")
@@ -239,7 +244,7 @@ def compare_2023(num_chains, num_repeats, random_seed, periods):
                 exceed_C1 = None
                 false_results_C1[num_tasks] += 1  # algorithm failed
 
-            results_C1[num_tasks].append((final_e2e_max_C1, mrt, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1))
+            results_C1[num_tasks].append((final_e2e_max_C1, mrt, r_C1, tasks_C1, random_seed, exceed_C1, adjust_C1, inserted_C1,run_time_our_C1,run_time_G))
             final_C1[num_tasks].append((final_r_C1, final_w_C1))
 
 
@@ -333,7 +338,7 @@ def compare_2023_LET(jitters, num_chains, num_repeats, random_seed, periods):
 
 
 def run_MRT_G2023():
-    num_repeats = 10000 
+    num_repeats = 100000 
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
@@ -354,7 +359,7 @@ def run_MRT_G2023():
 
 def run_LET_G2023():
     
-    num_repeats = 10000 
+    num_repeats = 100000 
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     

@@ -37,11 +37,11 @@ def output_to_csv_C1(num_repeats, random_seed, timestamp, results, false_results
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "final_e2e_max", "mrt", "R", "exceed", "false_percentage", "adjust", "inserted"])
+        writer.writerow(["seeds","num_tasks", "final_e2e_max", "mrt", "R", "exceed", "false_percentage", "adjust", "inserted","run_time_our","run_time_G"])
         for num_tasks in num_chains:
             false_percentage = false_results[num_tasks]
-            for (final_e2e_max, mrt, r, tasks, seed, exceed,adjust,inserted) in results[num_tasks]:
-                writer.writerow([seed,num_tasks, final_e2e_max, mrt, r, exceed, false_percentage,adjust,inserted])
+            for (final_e2e_max, mrt, r, tasks, seed, exceed,adjust,inserted,run_time_our,run_time_G) in results[num_tasks]:
+                writer.writerow([seed,num_tasks, final_e2e_max, mrt, r, exceed, false_percentage,adjust,inserted,run_time_our,run_time_G])
 
     print(f"All results saved to {results_csv}")
     return results_csv

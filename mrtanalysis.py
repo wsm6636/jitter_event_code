@@ -90,10 +90,10 @@ def output_to_csv_G2023(num_repeats, random_seed, timestamp, results, num_chains
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
         writer = csv.writer(file)
-        writer.writerow(["seeds","num_tasks", "mrt", "let"])
+        writer.writerow(["seeds","num_tasks", "mrt", "let","run_time_G"])
         for num_tasks in num_chains:
-            for (mrt, let, _, _, seed) in results[num_tasks]:
-                writer.writerow([seed,num_tasks, mrt, let])
+            for (mrt, let, _, _, seed,run_time_G) in results[num_tasks]:
+                writer.writerow([seed,num_tasks, mrt, let,run_time_G])
 
     print(f"All results saved to {results_csv}")
     return results_csv
@@ -110,45 +110,6 @@ def uunifast(n, u):
     utilizations.append(sumU)
     return utilizations
 
-def convert_to_tasks(num_tasks, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set):
-    results = []
-    selected_read_offsets = []
-    selected_write_offsets = []
-    read_jitters = []
-    write_jitters = []
-
-    for i, (t_bcet, t_wcet) in enumerate(zip(new_task_set, task_set)):
-        seq_bcet = schedule_bcet[t_bcet]
-        seq_wcet = schedule_wcet[t_wcet]
-        Tb = t_bcet.period
-        Tw = t_wcet.period
-        tr_bcet = [tr - j*Tb for j, (tr, _) in enumerate(seq_bcet)]
-        tw_bcet = [tw - j*Tb for j, (_, tw) in enumerate(seq_bcet)]
-
-        tr_wcet = [tr - j*Tw for j, (tr, _) in enumerate(seq_wcet)]
-        tw_wcet = [tw - j*Tw for j, (_, tw) in enumerate(seq_wcet)]
-
-        max_tr = max(tr_wcet)
-        min_tr = min(tr_bcet)
-        max_tw = max(tw_wcet)
-        min_tw = min(tw_bcet)
-
-        results=(max_tr, min_tr, max_tw, min_tw)
-        read_offset = min_tr
-        read_jitter = max_tr - min_tr
-        write_offset= min_tw
-        write_jitter= max_tw - min_tw
-
-        print(results)
-        selected_read_offsets.append(read_offset)
-        read_jitters.append(read_jitter)
-        selected_write_offsets.append(write_offset)
-        write_jitters.append(write_jitter)
-
-    print(f"read_jitters{read_jitters}")
-    print(f"write_jitters{write_jitters}")
-
-    return read_jitters, write_jitters, selected_read_offsets, selected_write_offsets
 
 
 """NEWFUNC by shumo. LET of paper [C]"""
@@ -245,7 +206,7 @@ def G2023_analysis(num_tasks, periods):
     TDA(task_set)
 
     schedule_wcet = schedule_task_set([chain], task_set, print_status=False)
-    print(f"wcet : {schedule_wcet}")
+    # print(f"wcet : {schedule_wcet}")
 
     # ===
     # Following change_taskset_bcet:
@@ -254,18 +215,19 @@ def G2023_analysis(num_tasks, periods):
         task.wcet = task.bcet
 
     schedule_bcet = schedule_task_set([chain], new_task_set, print_status=False)
-    print(f"bcet: {schedule_bcet}")
-
+    # print(f"bcet: {schedule_bcet}")
+    t_0 = time.perf_counter()
     mrt = utilities.analyzer_our.max_reac_local(chain, task_set, schedule_wcet, new_task_set, schedule_bcet)
+    t_1 = time.perf_counter()
+    runtime = t_1 - t_0
     let = utilities.analyzer_our.mrt_let(chain, task_set)
 
-    print(f"max reactiom time: {mrt}")
-    print(f"LET: {let}")
-    print(f"selected_periods: {selected_periods}")
+    # print(f"max reactiom time: {mrt}")
+    # print(f"LET: {let}")
+    # print(f"selected_periods: {selected_periods}")
 
-    convert_to_tasks(2, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set)
 
-    return mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set
+    return mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set,runtime
 
 if __name__ == "__main__":
     # mrt, let, selected_periods, schedule_wcet, task_set, schedule_bcet, new_task_set = G2023_analysis(2, [500])
