@@ -201,8 +201,8 @@ def G2023_analysis_MRT(num_tasks, periods):
 
     sorted_periods = [t.period for t in task_set]
 
-    del chain, ana 
-    gc.collect()
+    # del chain, ana 
+    # gc.collect()
 
     return mrt, sorted_periods, schedule_wcet, task_set, schedule_bcet, new_task_set,runtime
 

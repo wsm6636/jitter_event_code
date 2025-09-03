@@ -80,8 +80,7 @@ def G2023(task_set=None,ce=None):
 
     ana = utilities.analyzer.Analyzer()
     # hyper = ana.determine_hyper_period(chain.chain)
-    hyper = ana.determine_hyper_period(task_set)
-    print(hyper)
+    # hyper = ana.determine_hyper_period(task_set)
     ana.davare_single(chain)
     # ana.kloda(chain, hyper)
     # ana.reaction_duerr_single(chain)
@@ -103,6 +102,7 @@ def G2023(task_set=None,ce=None):
     mrt = utilities.analyzer_our.max_reac_local(chain, task_set, schedule, new_task_set, schedule_bcet)
     let = utilities.analyzer_our.mrt_let(chain, task_set)
     print(f"max reactiom time: {mrt}")
+    print(f"let: {let}")
     return mrt, let
 
 
