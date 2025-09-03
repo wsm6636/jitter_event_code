@@ -65,7 +65,7 @@ def filter_and_export_csv(csv_file_path, num_chains, data_output_dir=None,suffix
         # Filter all data for current num_tasks
         all_data = df[df['num_tasks'] == num_tasks]
         # Define file paths
-        all_data_file = suffixed(os.path.join(data_output_dir, f"adjust_data{num_tasks}.csv"), suffix)
+        all_data_file = suffixed(os.path.join(data_output_dir, f"data{num_tasks}.csv"), suffix)
         
         # Save all data for current num_tasks
         if not all_data.empty:
@@ -87,7 +87,9 @@ def filter_and_export_csv(csv_file_path, num_chains, data_output_dir=None,suffix
                 print(f"20% jitter data for {num_tasks} tasks saved to {jitter_20_file} ({len(jitter_20_data)} rows)")
             else:
                 print(f"Warning: No 20% jitter data found for {num_tasks} tasks")
-            return all_data_files, jitter_20_files
+            
+    if has_jitter:
+        return all_data_files, jitter_20_files
     
     return all_data_files
 
@@ -135,8 +137,8 @@ def filter_and_export_csv_adjust(csv_file_path, num_chains, data_output_dir=None
             else:
                 print(f"Warning: No 20% jitter data found for {num_tasks} tasks")
 
-            return all_data_files, jitter_20_files
-    
+    if has_jitter:
+        return all_data_files, jitter_20_files
     return all_data_files
 
 
@@ -188,30 +190,34 @@ def generate_final_comparison(common_csv, common_csv_adjust, suffix=''):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='generate final comparison plots from CSV files')
-    parser.add_argument('--common_csv', type=str, default='common_results.csv',
-                        help='rtss result csv file (common_results.csv)')
-    parser.add_argument('--common_csv_adjust', type=str, default='common_results_adjust.csv',
-                        help='adjust result csv file (common_results_adjust.csv)')
-    parser.add_argument('--suffix', default='', help='filename suffix like _MRT / _LET')
+    # parser = argparse.ArgumentParser(description='generate final comparison plots from CSV files')
+    # parser.add_argument('--common_csv', type=str, default='common_results.csv',
+    #                     help='rtss result csv file (common_results.csv)')
+    # parser.add_argument('--common_csv_adjust', type=str, default='common_results_adjust.csv',
+    #                     help='adjust result csv file (common_results_adjust.csv)')
+    # parser.add_argument('--suffix', default='', help='filename suffix like _MRT / _LET')
+    # 
+    
+    # if os.path.exists(args.common_csv):
+    #     with open(args.common_csv, 'r') as f:
+    #         lines = len(f.readlines()) - 1  
+    #     print(f"rtss result total rows: {lines}")
+    # else:
+    #     print(f"can not find {args.common_csv}")
+    
+    # if os.path.exists(args.common_csv_adjust):
+    #     with open(args.common_csv_adjust, 'r') as f:
+    #         lines = len(f.readlines()) - 1  
+    #     print(f"adjust result total rows: {lines}")
+    # else:
+    #     print(f"can not find {args.common_csv_adjust}")
+    
+    # generate_final_comparison(args.common_csv, args.common_csv_adjust, suffix=args.suffix)
+    parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
+    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("runtime_plt_name", type=str, help="Name of the output plot file for R values.")
     args = parser.parse_args()
-    
-    if os.path.exists(args.common_csv):
-        with open(args.common_csv, 'r') as f:
-            lines = len(f.readlines()) - 1  
-        print(f"rtss result total rows: {lines}")
-    else:
-        print(f"can not find {args.common_csv}")
-    
-    if os.path.exists(args.common_csv_adjust):
-        with open(args.common_csv_adjust, 'r') as f:
-            lines = len(f.readlines()) - 1  
-        print(f"adjust result total rows: {lines}")
-    else:
-        print(f"can not find {args.common_csv_adjust}")
-    
-    generate_final_comparison(args.common_csv, args.common_csv_adjust, suffix=args.suffix)
-
+    filter_and_export_csv_adjust(args.csv_file, [3, 5, 8, 10], args.runtime_plt_name)
 
 if __name__ == "__main__":
     exit(main())

@@ -321,12 +321,13 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
 
 """Implicit communication comparison experiment (our/adjust/MRT)"""
 def run_G2023_MRT(random_seed, num_repeats, common_csv, common_csv_adjust):
-    # num_repeats = 10000 
+# def run_G2023_MRT():
+#     num_repeats = 1
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
     num_chains = [3,5,8,10] 
-
+    # random_seed = 1755024332
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     results, false_results, final, results_adjust, false_results_adjust, final_adjust = compare_G2023_MRT(num_chains, num_repeats, random_seed, periods)  
@@ -402,7 +403,7 @@ def main():
     alg = args.alg
     alg_map[alg](random_seed, num_repeats, common_csv, common_csv_adjust)
 
-    
+    # run_G2023_MRT()    
 
 if __name__ == "__main__":
     main()

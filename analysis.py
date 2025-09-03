@@ -456,7 +456,7 @@ def maximize_reaction_time(tasks):
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=10,
+        niter=1,
         T=1.0,
         stepsize=1.0,  # Step size for the random walk
         interval=50,  # Interval for the random walk

@@ -22,6 +22,7 @@ from analysis import euclide_extend
 # Corollary 1
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
     ad_scuss = None
+    old_read_offset = read_offset
     delta_mod_period = (read_offset - write_offset) % period
     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
         return read_offset, ad_scuss
@@ -38,7 +39,8 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
     if r_offsets:
         # i = random.randint(0, len(r_offsets) - 1)
         # read_offset = r_offsets[i]
-        read_offset = random.choice(r_offsets)  # Randomly select a valid read offset
+        # read_offset = random.choice(r_offsets)  # Randomly select a valid read offset
+        read_offset = min(r_offsets, key=lambda x: abs(x - old_read_offset))
         ad_scuss = True
         return read_offset, ad_scuss
     else:
@@ -400,7 +402,7 @@ def maximize_reaction_time(tasks):
         objective,
         initial_guess,
         minimizer_kwargs=minimizer_kwargs,
-        niter=10,
+        niter=1,
         T=1.0,
         stepsize=1.0,  # Step size for the random walk
         interval=50,  # Interval for the random walk
@@ -493,6 +495,8 @@ def run_analysis_adjust_for_G2023_MRT(num_tasks, periods,read_offsets,write_offs
     final = our_chain(tasks)
     
     new_tasks = tasks
+    test = our_chain(tasks)
+    print(test[0])
     if final is False:
         final_e2e_max = 0
         final_r = None

@@ -2,7 +2,7 @@
 #!/bin/bash
 set -euo pipefail
 
-INITIAL_SEED=1755016010
+INITIAL_SEED=1755016037
 NUM_REPEATS=${1:-100}          # Number of repetitions per experiment
 NUM_EXPERIMENTS=${2:-5}        # Number of concurrent experiments
 TYPE=${3:-our}                 # MET / LET / RTSS(our)

@@ -343,8 +343,8 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
             group_sorted = group.sort_values(by='per_jitter')
 
             per_jitters = group_sorted['per_jitter'] * 100
-            # false_percentages = group_sorted['finalpercent'].
-            false_percentages = group_sorted['false_percentage']
+            false_percentages = group_sorted['finalpercent']
+            # false_percentages = group_sorted['false_percentage']
 
             ax.plot(per_jitters, false_percentages, label=f'num_tasks={num_tasks}', marker='o')
 
@@ -369,12 +369,11 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-
+    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     parser.add_argument("runtime_plt_name", type=str, help="Name of the output plot file for R values.")
 
     args = parser.parse_args()
 
 
-    # plot_runtime(args.csv_file, args.runtime_plt_name)
-    plot_histogram_MRT(args.csv_file, args.runtime_plt_name)
+    compare_line_chart_from_csv(args.csv_files, args.runtime_plt_name)
