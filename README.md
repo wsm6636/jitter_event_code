@@ -13,10 +13,10 @@ pip install numpy scipy matplotlib pandas
 ## Main Files
 
 - `analysis.py` - Basic analysis algorithm implementation
-- `analysisC1.py` - Analysis algorithm with Corollary 1 optimizations
+- `analysisadjust.py` - Analysis algorithm with Corollary 1 optimizations
 - `main.py` - Main execution file for comparing both algorithms
 - `evaluation.py` - Basic algorithm evaluation
-- `evaluationC1.py` - Optimized algorithm evaluation
+- `evaluationadjust.py` - Optimized algorithm evaluation
 - `plot.py` - Plotting utilities
 - `generate_comparison.py` - Comparison result graph and filtered data file
 - `run_experiments.sh` - Experiment script
@@ -71,20 +71,20 @@ NUM_EXPERIMENTS: Number of concurrent experiments (default 5)
 rtssresult/
 └── data_100_12345_20250814_123456.csv     # Original data
 
-C1/                                                                           # Optimized algorithm results
+adjust/                                                                           # Optimized algorithm results
 └── data_100_12345_20250814_123456.csv
 
 compare/
 └── 20250901_143012_123/
   ├── common_results_20250901_143012_123.csv          # RTSS
-  ├── common_results_c1_20250901_143012_123.csv       # C1
+  ├── common_results_adjust_20250901_143012_123.csv       # adjust
   ├── final_compare_percent.png
   ├── final_compare_histogram.png
   └── data/
     ├──data3.csv …
-    └── c1_data3.csv …
+    └── adjust_data3.csv …
 
 log/                          # Detailed logs
 ├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
-└── C1_log_100_12345_20250814_123456.txt              # Optimized algorithm log
+└── adjust_log_100_12345_20250814_123456.txt              # Optimized algorithm log
 ```

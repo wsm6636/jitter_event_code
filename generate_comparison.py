@@ -6,77 +6,194 @@ import datetime
 import time
 from plot import compare_line_chart_from_csv
 from plot import compare_plot_histogram
-from evaluation import filter_and_export_csv
-from evaluationC1 import filter_and_export_csv_C1
+from plot import plot_histogram_LET
+from plot import plot_histogram_MRT
+from plot import plot_runtime
 
 import pandas as pd
 
+
+def suffixed(path, suffix):
+    if not suffix:
+        return path
+    base, ext = os.path.splitext(path)
+    return f"{base}{suffix}{ext}"
+
 def add_final_percent_column_safe(csv_file, out_file):
     df = pd.read_csv(csv_file)
-    # 重新计算，确保是数值
-    ratio = (df.groupby(['num_tasks', 'per_jitter'])['final_e2e_max']
-               .apply(lambda x: (x == 0).mean())
-               .reset_index(name='finalpercent'))
-    df = df.merge(ratio, on=['num_tasks', 'per_jitter'], how='left')
+   
+    # Check if the required columns exist and handle different experiment types
+    if 'per_jitter' in df.columns:
+        # Original jitter-based experiments
+        ratio = (df.groupby(['num_tasks', 'per_jitter'])['final_e2e_max']
+                   .apply(lambda x: (x == 0).mean())
+                   .reset_index(name='finalpercent'))
+        df = df.merge(ratio, on=['num_tasks', 'per_jitter'], how='left')
+    else:
+        # LET/MRT experiments without per_jitter column
+        ratio = (df.groupby(['num_tasks'])['final_e2e_max']
+                   .apply(lambda x: (x == 0).mean())
+                   .reset_index(name='finalpercent'))
+        df = df.merge(ratio, on=['num_tasks'], how='left')
 
-    # 强制转成 float，防止残留方法对象
     df['finalpercent'] = df['finalpercent'].astype(float)
     df.to_csv(out_file, index=False)
     return out_file
+    
 
 
-def generate_final_comparison(common_csv, common_csv_c1):
+def filter_and_export_csv(csv_file_path, num_chains, data_output_dir=None,suffix=''):
+    if data_output_dir is None:
+            # Get parent directory of the CSV file and create data subdirectory
+        parent_dir = os.path.dirname(csv_file_path)
+        data_dir = os.path.join(parent_dir, "data")
+        os.makedirs(data_dir, exist_ok=True)
+
+    # Read the original CSV file
+    try:
+        df = pd.read_csv(csv_file_path)
+    except FileNotFoundError:
+        print(f"Error: File {csv_file_path} not found.")
+        return [], []
+    
+    all_data_files = []
+    jitter_20_files = []
+    
+    has_jitter = 'per_jitter' in df.columns 
+
+    for num_tasks in num_chains:
+        # Filter all data for current num_tasks
+        all_data = df[df['num_tasks'] == num_tasks]
+        # Define file paths
+        all_data_file = suffixed(os.path.join(data_output_dir, f"adjust_data{num_tasks}.csv"), suffix)
+        
+        # Save all data for current num_tasks
+        if not all_data.empty:
+            all_data.to_csv(all_data_file, index=False)
+            all_data_files.append(all_data_file)
+            print(f"All data for {num_tasks} tasks saved to {all_data_file} ({len(all_data)} rows)")
+        else:
+            print(f"Warning: No data found for {num_tasks} tasks")
+
+        if has_jitter:
+            # Filter data for current num_tasks with per_jitter = 20%
+            jitter_20_data = df[(df['num_tasks'] == num_tasks) & (df['per_jitter'] == 0.2)]
+            jitter_20_file = suffixed(os.path.join(data_output_dir, f"data{num_tasks}_20per.csv"), suffix)
+    
+            # Save 20% jitter data for current num_tasks
+            if not jitter_20_data.empty:
+                jitter_20_data.to_csv(jitter_20_file, index=False)
+                jitter_20_files.append(jitter_20_file)
+                print(f"20% jitter data for {num_tasks} tasks saved to {jitter_20_file} ({len(jitter_20_data)} rows)")
+            else:
+                print(f"Warning: No 20% jitter data found for {num_tasks} tasks")
+            return all_data_files, jitter_20_files
+    
+    return all_data_files
+
+
+def filter_and_export_csv_adjust(csv_file_path, num_chains, data_output_dir=None,suffix=''):
+    if data_output_dir is None:
+    # Get parent directory of the CSV file and create data subdirectory
+        parent_dir = os.path.dirname(csv_file_path)
+        data_dir = os.path.join(parent_dir, "data")
+        os.makedirs(data_dir, exist_ok=True)
+    
+    # Read the original CSV file
+    try:
+        df = pd.read_csv(csv_file_path)
+    except FileNotFoundError:
+        print(f"Error: File {csv_file_path} not found.")
+        return [], []
+    
+    all_data_files = []
+    jitter_20_files = []
+    has_jitter = 'per_jitter' in df.columns
+    # Process each num_tasks value
+    for num_tasks in num_chains:
+        # Filter all data for current num_tasks
+        all_data = df[df['num_tasks'] == num_tasks]
+        # Define file paths
+        all_data_file = suffixed(os.path.join(data_output_dir, f"adjust_data{num_tasks}.csv"), suffix)
+        # Save all data for current num_tasks
+        if not all_data.empty:
+            all_data.to_csv(all_data_file, index=False)
+            all_data_files.append(all_data_file)
+            print(f"All data for {num_tasks} tasks saved to {all_data_file}")
+        else:
+            print(f"Warning: No data found for {num_tasks} tasks")
+        
+        if has_jitter:
+        # Filter data for current num_tasks with per_jitter = 20%
+            jitter_20_data = df[(df['num_tasks'] == num_tasks) & (df['per_jitter'] == 0.2)]
+            jitter_20_file = suffixed(os.path.join(data_output_dir, f"adjust_data{num_tasks}_20per.csv"), suffix)
+            # Save 20% jitter data for current num_tasks
+            if not jitter_20_data.empty:
+                jitter_20_data.to_csv(jitter_20_file, index=False)
+                jitter_20_files.append(jitter_20_file)
+                print(f"20% jitter data for {num_tasks} tasks saved to {jitter_20_file}")
+            else:
+                print(f"Warning: No 20% jitter data found for {num_tasks} tasks")
+
+            return all_data_files, jitter_20_files
+    
+    return all_data_files
+
+
+
+def generate_final_comparison(common_csv, common_csv_adjust, suffix=''):
 
     if not os.path.exists(common_csv):
         print(f"error: can not found {common_csv}")
         return False
         
-    if not os.path.exists(common_csv_c1):
-        print(f"error: can not found {common_csv_c1}")
+    if not os.path.exists(common_csv_adjust):
+        print(f"error: can not found {common_csv_adjust}")
         return False
     
 
     output_dir = os.path.dirname(os.path.abspath(common_csv))
-
-
     data_output_dir = f"{output_dir}/data"
-
-    
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(data_output_dir, exist_ok=True)
 
     common_csv = add_final_percent_column_safe(common_csv, common_csv)
-    common_csv_c1 = add_final_percent_column_safe(common_csv_c1, common_csv_c1)
+    common_csv_adjust = add_final_percent_column_safe(common_csv_adjust, common_csv_adjust)
     
-    csv_files = [common_csv, common_csv_c1]
-    
-    compare_percent_plot_name = os.path.join(output_dir, "final_compare_percent.png")
-    compare_histogram_plot_name = os.path.join(output_dir, "final_compare_histogram.png")
-    
-    try:
-        compare_line_chart_from_csv(csv_files, compare_percent_plot_name)
-        compare_plot_histogram(csv_files, compare_histogram_plot_name)
-        
-        print(f"{compare_percent_plot_name} and {compare_histogram_plot_name} generated successfully")
-        
-        filter_and_export_csv(common_csv, [3, 5, 8, 10], data_output_dir)
-        filter_and_export_csv_C1(common_csv_c1, [3, 5, 8, 10], data_output_dir)
-        print(f"Filtered CSV files saved in {data_output_dir}")
+    csv_files = [common_csv, common_csv_adjust]
+    compare_percent_plot  = suffixed(os.path.join(output_dir, "final_compare_percent.png"), suffix)
+    compare_histogram_plot = suffixed(os.path.join(output_dir, "final_compare_histogram.png"), suffix)
+    runtime_plot  = suffixed(os.path.join(output_dir, "final_runtime.png"), suffix)
+    histogram_plot = suffixed(os.path.join(output_dir, "final_R_histogram.png"), suffix)
+    runtime_plot_adjust  = suffixed(os.path.join(output_dir, "final_runtime_adjust.png"), suffix)
+    histogram_plot_adjust = suffixed(os.path.join(output_dir, "final_R_histogram_adjust.png"), suffix)
 
-        return True
-        
-    except Exception as e:
-        print(f"error: {e}")
-        return False
+    if suffix == '_MRT':
+        plot_runtime(common_csv, runtime_plot)
+        plot_histogram_MRT(common_csv, histogram_plot)
+        plot_runtime(common_csv_adjust, runtime_plot_adjust)
+        plot_histogram_MRT(common_csv_adjust, histogram_plot_adjust)
+    elif suffix == '_LET':
+        plot_runtime(common_csv, runtime_plot)
+        plot_histogram_LET(common_csv, histogram_plot)
+        plot_runtime(common_csv_adjust, runtime_plot_adjust)
+        plot_histogram_LET(common_csv_adjust, histogram_plot_adjust)
+    else:
+        compare_line_chart_from_csv(csv_files, compare_percent_plot)
+        compare_plot_histogram(csv_files, compare_histogram_plot)
+
+    filter_and_export_csv(common_csv, [3, 5, 8, 10], data_output_dir)
+    filter_and_export_csv_adjust(common_csv_adjust, [3, 5, 8, 10], data_output_dir)
+    print(f"Filtered CSV files saved in {data_output_dir}")
 
 
 def main():
     parser = argparse.ArgumentParser(description='generate final comparison plots from CSV files')
     parser.add_argument('--common_csv', type=str, default='common_results.csv',
                         help='rtss result csv file (common_results.csv)')
-    parser.add_argument('--common_csv_c1', type=str, default='common_results_c1.csv',
-                        help='C1 result csv file (common_results_c1.csv)')
-    
+    parser.add_argument('--common_csv_adjust', type=str, default='common_results_adjust.csv',
+                        help='adjust result csv file (common_results_adjust.csv)')
+    parser.add_argument('--suffix', default='', help='filename suffix like _MRT / _LET')
     args = parser.parse_args()
     
     if os.path.exists(args.common_csv):
@@ -86,22 +203,14 @@ def main():
     else:
         print(f"can not find {args.common_csv}")
     
-    if os.path.exists(args.common_csv_c1):
-        with open(args.common_csv_c1, 'r') as f:
+    if os.path.exists(args.common_csv_adjust):
+        with open(args.common_csv_adjust, 'r') as f:
             lines = len(f.readlines()) - 1  
-        print(f"C1 result total rows: {lines}")
+        print(f"adjust result total rows: {lines}")
     else:
-        print(f"can not find {args.common_csv_c1}")
+        print(f"can not find {args.common_csv_adjust}")
     
-    success = generate_final_comparison(args.common_csv, args.common_csv_c1)
-    
-    if success:
-        print("Final comparison plot generated successfully!")
-    else:
-        print("ccurred while generating comparison plot!")
-        return 1
-
-    return 0
+    generate_final_comparison(args.common_csv, args.common_csv_adjust, suffix=args.suffix)
 
 
 if __name__ == "__main__":

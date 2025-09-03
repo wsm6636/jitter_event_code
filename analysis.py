@@ -473,7 +473,7 @@ def maximize_reaction_time(tasks):
 results_function = []
 
 # outport function
-def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis_our(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
@@ -500,7 +500,7 @@ def run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter):
 
 
 # outport function
-def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+def run_analysis_our_for_G2023_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     global results_function
     results_function = []  
 
@@ -522,7 +522,7 @@ def run_analysis_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
 
 
 # outport function
-def run_analysis_for_G2023(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ):
+def run_analysis_our_for_G2023_MRT(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ):
     global results_function
     results_function = []  
 
@@ -539,13 +539,7 @@ def run_analysis_for_G2023(num_tasks, periods,read_offsets,write_offsets, read_j
         final_r = final[1]
         final_w = final[2]
         
-    # check if the final result is valid
-    # reaction_time_a = maximize_reaction_time(tasks)
-    # reaction_time_b = max(results_function)
-    # max_reaction_time = max(reaction_time_a, reaction_time_b)
-    max_reaction_time = 0
-
-    return final_e2e_max, max_reaction_time, final_r, final_w, tasks
+    return final_e2e_max, final_r, final_w, tasks
 
 # test the code
 if __name__ == "__main__":
@@ -555,6 +549,6 @@ if __name__ == "__main__":
     read_offsets = [0, 0, 0, 0, 0]
     write_offsets = [1, 1, 1, 1, 1]
 
-    run_analysis(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    run_analysis_our(num_tasks, periods,read_offsets,write_offsets, per_jitter)
 
 

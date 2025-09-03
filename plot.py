@@ -19,7 +19,7 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
             r_value = float(row['R']) if row['R'] else None
             num_tasks = int(row['num_tasks'])
 
-            if per_jitter == 0 and r_value is not None:  # Only consider per_jitter = 20%
+            if per_jitter == 0.2 and r_value is not None:  # Only consider per_jitter = 20%
                 if num_tasks not in num_tasks_to_r_values:
                     num_tasks_to_r_values[num_tasks] = []
                 num_tasks_to_r_values[num_tasks].append(r_value)
@@ -76,26 +76,162 @@ def plot_histogram_from_csv(csv_file,R_plot_name):
     # plt.show()
 
 
+def plot_histogram_LET(csv_file,R_plot_name):
+    num_tasks_to_r_values = {}
+    r_exceed_count = 0  # Counter for R values exceeding 1.0
+    total_rows = 0 
+    TOLERANCE = 1e-9
+    with open(csv_file, mode='r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            total_rows += 1 
+            # per_jitter = float(row['per_jitter'])
+            r_value = float(row['R']) if row['R'] else None
+            num_tasks = int(row['num_tasks'])
+
+            if r_value is not None:  # Only consider per_jitter = 20%
+                if num_tasks not in num_tasks_to_r_values:
+                    num_tasks_to_r_values[num_tasks] = []
+                num_tasks_to_r_values[num_tasks].append(r_value)
+                if r_value > 1 + TOLERANCE:
+                    print(f"Warning: R value {r_value} exceeds 1.0 for per_jitter={per_jitter}. This may indicate an error in the data.")
+                    r_exceed_count += 1  
+
+    if total_rows == 0:
+        print("No data found.")
+        return
+                
+    R_exceed_percentage = r_exceed_count / total_rows * 100 if total_rows > 0 else 0
+
+    num_num_tasks = len(num_tasks_to_r_values)
+    if num_num_tasks == 0:
+        print("No valid data found for the specified conditions.")
+        return
+
+    num_columns = 2  
+    num_rows = (num_num_tasks + num_columns - 1) // num_columns
+
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()
+
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  
+
+    for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
+        ax = axes[idx]
+        num_bins = 50
+        bin_range = (0, 1.05)
+        bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
+        counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
+
+        r_values_greater_than_1 = len([r for r in r_values if r > 1])
+        percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
+
+        ax.set_title(f"num_tasks = {num_tasks} -LET- Data Count: {len(r_values)}")
+        ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        ax.grid(True)
+
+    for idx in range(num_num_tasks, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    plt.tight_layout()
+    plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%),R_exceed_percentage={R_exceed_percentage}", fontsize=16, y=1.05)
+
+
+    plt.savefig(R_plot_name)
+    # plt.show()
+
+def plot_histogram_MRT(csv_file,R_plot_name):
+    num_tasks_to_r_values = {}
+    r_exceed_count = 0  # Counter for R values exceeding 1.0
+    total_rows = 0 
+    TOLERANCE = 1e-9
+    with open(csv_file, mode='r') as file:
+        reader = csv.DictReader(file)
+        for row in reader:
+            total_rows += 1 
+            r_value = float(row['R']) if row['R'] else None
+            num_tasks = int(row['num_tasks'])
+
+            if r_value is not None:
+                if num_tasks not in num_tasks_to_r_values:
+                    num_tasks_to_r_values[num_tasks] = []
+                num_tasks_to_r_values[num_tasks].append(r_value)
+                if r_value > 1 + TOLERANCE:
+                    print(f"Warning: R value {r_value} exceeds 1.0 . This may indicate an error in the data.")
+                    r_exceed_count += 1  
+
+    if total_rows == 0:
+        print("No data found.")
+        return
+                
+    R_exceed_percentage = r_exceed_count / total_rows * 100 if total_rows > 0 else 0
+
+    num_num_tasks = len(num_tasks_to_r_values)
+    if num_num_tasks == 0:
+        print("No valid data found for the specified conditions.")
+        return
+
+    num_columns = 2  
+    num_rows = (num_num_tasks + num_columns - 1) // num_columns
+
+    fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
+    axes = axes.flatten()
+
+    colors = plt.cm.tab10(np.linspace(0, 1, num_num_tasks))  
+
+    for idx, (num_tasks, r_values) in enumerate(num_tasks_to_r_values.items()):
+        ax = axes[idx]
+        num_bins = 50
+        bin_range = (0, 1.05)
+        bin_width = (bin_range[1] - bin_range[0]) / num_bins
+
+        counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
+        bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
+        ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
+
+        r_values_greater_than_1 = len([r for r in r_values if r > 1])
+        percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
+
+        ax.set_title(f"num_tasks = {num_tasks} -MRT- Data Count: {len(r_values)}")
+        ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
+        ax.set_ylabel("Frequency")
+        ax.legend()
+        ax.grid(True)
+
+    for idx in range(num_num_tasks, num_rows * num_columns):
+        axes[idx].axis('off')
+
+    plt.tight_layout()
+    plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%),R_exceed_percentage={R_exceed_percentage}", fontsize=16, y=1.05)
+
+
+    plt.savefig(R_plot_name)
+    # plt.show()
+
+
 def plot_runtime(csv_path, fig_time_name):
     df = pd.read_csv(csv_path)
 
-    # 2. 计算每个 num_tasks 的中位数时间
-    med = (df
+    avg = (df
            .groupby('num_tasks')[['run_time_G', 'run_time_our']]
-           .median()          # 关键：改为 median
+           .mean()
            .reset_index()
            .sort_values('num_tasks'))
-
-    # 3. 画图
     plt.figure(figsize=(6, 4))
-    plt.plot(med['num_tasks'], med['run_time_G'],
-             marker='o', label='run_time_G (median)')
-    plt.plot(med['num_tasks'], med['run_time_our'],
-             marker='^', label='run_time_our (median)')
-
+    plt.plot(avg['num_tasks'], avg['run_time_G'],
+             marker='o', label='run_time_G (Average)')
+    plt.plot(avg['num_tasks'], avg['run_time_our'],
+             marker='^', label='run_time_our (Average)')
+    plt.yscale('log')
     plt.xlabel('num_tasks')
-    plt.ylabel('Median Runtime (s)')
-    plt.title(' Median Runtime vs. num_tasks')
+    plt.ylabel('Average Runtime (s)')
+    plt.title(' Average Runtime vs. num_tasks')
+
     plt.legend()
     plt.grid(alpha=0.3)
     plt.tight_layout()
@@ -103,8 +239,7 @@ def plot_runtime(csv_path, fig_time_name):
     plt.savefig(fig_time_name, dpi=300)
     # print(f'Saved: {fig_time_name}')
     # plt.close()
-
-
+    
 
 def plot_line_chart_from_csv(csv_file, percent_plot_name):
     jitter_to_false_percentage = {}
@@ -149,7 +284,7 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
-    LABELS = ['rtssresult', 'C1']
+    LABELS = ['rtssresult', 'adjust']
 
     colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
     TOLERANCE = 1e-9
@@ -180,49 +315,6 @@ def compare_plot_histogram(csv_files, compare_plot_histogram_name):
     plt.savefig(compare_plot_histogram_name)
     # plt.show()
 
-
-def compare_plot_histogram_G2023(csv_files, compare_plot_histogram_name):
-    dfs = [pd.read_csv(file) for file in csv_files]
-
-    dfs = [df[df['per_jitter'] == 0] for df in dfs]
-
-    num_tasks_list = sorted(set.union(*[set(df['num_tasks'].unique()) for df in dfs]))
-
-    fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
-    outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
-
-    LABELS = ['rtssresult', 'C1']
-
-    colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
-    TOLERANCE = 1e-9
-    for idx, num_tasks in enumerate(num_tasks_list):
-        for file_idx, df in enumerate(dfs):
-            ax = fig.add_subplot(outer_grid[idx, file_idx])
-            df_task = df[df['num_tasks'] == num_tasks]
-
-            r_values = df_task['R'].dropna().values
-            r_exceed_count = (r_values > (1 + TOLERANCE)).sum()
-            R_exceed_percentage = (r_exceed_count / len(r_values)) * 100 if len(r_values) > 0 else 0
-
-            num_bins = 50
-            bin_range = (0, 1.05)
-            bin_width = (bin_range[1] - bin_range[0]) / num_bins
-
-            counts, bin_edges = np.histogram(r_values, bins=num_bins, range=bin_range)
-            bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-            ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks} - Data Count: {len(r_values)}')
-
-            label = LABELS[file_idx] 
-            ax.set_title(f"num_tasks = {num_tasks}- LET - {label}")
-            ax.set_xlabel("R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
-            ax.set_ylabel("Frequency")
-            ax.legend()
-            ax.grid(True)
-
-    plt.savefig(compare_plot_histogram_name)
-    # plt.show()
-
-
 def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
     num_csv_files = len(csv_files)
@@ -231,7 +323,7 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
-    LABELS = ['rtssresult', 'C1']
+    LABELS = ['rtssresult', 'adjust']
     for idx, csv_file in enumerate(csv_files):
         ax = axes[idx]
         try:
@@ -278,19 +370,11 @@ def compare_line_chart_from_csv(csv_files, compare_plot_name):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
     parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-    parser.add_argument("R_plot_name", type=str, help="Name of the output plot file for R values.")
-    # parser.add_argument("percent_plot_name", type=str, help="Name of the output plot file for false percentages.")
-    # parser.add_argument("davare_duerr_plot_name", type=str, help="Name of the output plot file for davare and duerr histograms.")
-    # parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
-    # parser.add_argument("compare_plot_histogram_name", type=str, help="Name of the output plot file for compare plot.")
-    # parser.add_argument("compare_plot_name", type=str, help="Name of the output plot file for compare plot.")
+
+    parser.add_argument("runtime_plt_name", type=str, help="Name of the output plot file for R values.")
 
     args = parser.parse_args()
 
-    plot_histogram_from_csv(args.csv_file, args.R_plot_name)
-    # plot_line_chart_from_csv(args.csv_file, args.percent_plot_name)
 
-    # compare_plot_histogram(args.csv_files, args.compare_plot_histogram_name)
-    # compare_line_chart_from_csv(args.csv_files, args.compare_plot_name)
-    # plot_davare_duerr_single(args.csv_file, args.davare_duerr_plot_name)
-    # compare_plot_histogram_G2023(args.csv_files, args.compare_plot_histogram_name)
+    # plot_runtime(args.csv_file, args.runtime_plt_name)
+    plot_histogram_MRT(args.csv_file, args.runtime_plt_name)

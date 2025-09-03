@@ -79,13 +79,14 @@ def G2023(task_set=None,ce=None):
     chain = CauseEffectChain(1, task_set)
 
     ana = utilities.analyzer.Analyzer()
-    hyper = ana.determine_hyper_period(chain.chain)
-
+    # hyper = ana.determine_hyper_period(chain.chain)
+    hyper = ana.determine_hyper_period(task_set)
+    print(hyper)
     ana.davare_single(chain)
-    ana.kloda(chain, hyper)
-    ana.reaction_duerr_single(chain)
-    ana.age_duerr_single(chain)
-    mrda_becker = utilities.analysis_becker.mrda(chain)
+    # ana.kloda(chain, hyper)
+    # ana.reaction_duerr_single(chain)
+    # ana.age_duerr_single(chain)
+    # mrda_becker = utilities.analysis_becker.mrda(chain)
 
     schedule = schedule_task_set([chain], task_set, print_status=True)
     print(f"wcet:{schedule}")
@@ -97,7 +98,7 @@ def G2023(task_set=None,ce=None):
         task.wcet = task.bcet
 
     schedule_bcet = schedule_task_set([chain], new_task_set, print_status=True)
-    # print(f"bcet:{schedule_bcet}")
+    print(f"bcet:{schedule_bcet}")
 
     mrt = utilities.analyzer_our.max_reac_local(chain, task_set, schedule, new_task_set, schedule_bcet)
     let = utilities.analyzer_our.mrt_let(chain, task_set)
