@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 05 10:25:52 2025
+
+It implements the methods described in the paper
+    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
+    "Jitter in Task Chains"
+
+@author: Shumo Wang
+"""
 import csv
 import datetime
 from analysis_passive import run_analysis_passive_our

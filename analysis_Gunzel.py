@@ -1,3 +1,8 @@
+"""
+Borrowed some code from the following repository https://github.com/tu-dortmund-ls12-rt/end-to-end_inter
+
+[20] M. Günzel, K.-H. Chen, N. Ueter, G. von der Brüggen, M. Dürr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause- effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
+"""
 import math
 from operator import attrgetter
 import utilities
@@ -9,7 +14,10 @@ import utilities.event_simulator as es
 import random
 import time
 
-"""Copied from Paper [C]: main.py"""
+
+"""
+Copied from Paper [20]: main.py
+"""
 def TDA(task_set):
     """TDA analysis for a task set.
     Return True if succesful and False if not succesful."""
@@ -30,7 +38,11 @@ def TDA(task_set):
 
     return True
 
-"""Copied from Paper [C]: main.py"""
+
+
+"""
+Copied from Paper [20]: main.py
+"""
 def schedule_task_set(ce_chains, task_set, print_status=False):
 
     try:
@@ -75,7 +87,9 @@ def schedule_task_set(ce_chains, task_set, print_status=False):
     return schedule
 
 
-""" Random utilization generation by UUniFast, Bini et al 2005"""
+"""
+Random utilization generation by UUniFast, Bini et al 2005
+"""
 def uunifast(n, u):
     utilizations = []
     sumU = u
@@ -87,14 +101,15 @@ def uunifast(n, u):
     return utilizations
 
 
-
-"""NEWFUNC by shumo. LET of paper [C]"""
+"""
+NEWFUNC by shumo. 
+"""
 def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+    """
+    Convert the task set of our paper to the LET model of paper [20] and calculate its LET value.
+    """
     task_set = []
-    ce = []
-    for i, period, read_offset, write_offset in zip(
-        range(num_tasks), periods, read_offsets, write_offsets):
-
+    for i, period, read_offset, write_offset in zip(range(num_tasks), periods, read_offsets, write_offsets):
         maxjitter = per_jitter * period          
         bcet      = write_offset - read_offset
         wcet      = maxjitter + bcet
@@ -109,18 +124,14 @@ def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_j
                 priority=i)
 
         task_set.append(t)
-        ce.append(t)
 
     # RM
     task_set = sorted(task_set, key=attrgetter('period'))
-
     for i, t in enumerate(task_set):
         t.priority = i  
         
     chain = CauseEffectChain(1, task_set)
-
     ana = utilities.analyzer.Analyzer()
-
     ana.davare_single(chain)
 
     let = utilities.analyzer_our.mrt_let(chain, task_set)
@@ -128,16 +139,20 @@ def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_j
     return  let
 
 
-"""NEWFUNC by shumo. Generate the task set, schedule, and maximum response time results of paper [C]"""
+"""
+NEWFUNC by shumo. 
+"""
 def run_analysis_Gunzel_IC(num_tasks, periods):
+    """
+    Schedule results of paper [20]
+    For each generated task set (Kramer's periods [40], utilizations with UUniFast with total utilization of 50%, single CPU)
+    """
     task_set = []
-    ce = []
     totU = 0.5
     vecU = uunifast(num_tasks, totU)
     selected_periods = random.choices(periods,  k=num_tasks)
     for i, period in zip(
         range(num_tasks), selected_periods):
-
         wcet      = vecU[i]*period    
         bcet      = 1*wcet   
         deadline  = period  
@@ -149,29 +164,26 @@ def run_analysis_Gunzel_IC(num_tasks, periods):
                 task_period=period,
                 task_deadline=deadline)
         task_set.append(t)
-        ce.append(t)
 
+    # Since the "eventSimulator" in "utilities/event_simulator.py" requires the priority order to be the same as the task order
+    # we use RM
     task_set = sorted(task_set, key=attrgetter('period'))
-
     for i, t in enumerate(task_set):
         t.priority = i  
-        
+    
+    # Copied from Paper [20],
+    # Prerequisites for calculating response times and bounds
     chain = CauseEffectChain(1, task_set)
-
     ana = utilities.analyzer.Analyzer()
-
     ana.davare_single(chain)
-
     TDA(task_set)
 
+    # Get the schedule_wcet
+    # then change to taskset_bcet for the schedule_bcet
     schedule_wcet = schedule_task_set([chain], task_set, print_status=False)
-
-    # ===
-    # Following change_taskset_bcet:
     new_task_set = [task.copy() for task in task_set]
     for task in new_task_set:
         task.wcet = task.bcet
-
     schedule_bcet = schedule_task_set([chain], new_task_set, print_status=False)
     
     t_0 = time.perf_counter()

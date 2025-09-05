@@ -1,3 +1,14 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon May 05 10:25:52 2025
+
+It implements the methods described in the paper
+    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
+    "Jitter in Task Chains"
+
+@author: Shumo Wang
+"""
 import matplotlib.pyplot as plt
 import csv
 import numpy as np
@@ -5,8 +16,14 @@ import argparse
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-""""""
+
 def plot_R_histogram_our(csv_file,R_plot_name):
+    """
+    Read csv_file, retain only the data with per_jitter = 20%,
+    group by num_tasks, plot an R value histogram (50 bins evenly spaced from 0 to 1.05),
+    and calculate the proportion of R values greater than 1.
+    R = DFFbase/DFFbound
+    """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     total_rows = 0 
@@ -72,11 +89,14 @@ def plot_R_histogram_our(csv_file,R_plot_name):
     plt.suptitle(f"Distribution of R values for different num_tasks (per_jitter=20%),R_exceed_percentage={R_exceed_percentage}", fontsize=16, y=1.05)
 
     plt.savefig(R_plot_name)
-    # plt.show()
 
 
-""""""
+
 def plot_R_histogram_LET(csv_file,R_plot_name_LET):
+    """
+    No filtering per_jitter required
+    R = DFF_Gunzel_LET/DFFbound
+    """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     total_rows = 0 
@@ -142,11 +162,14 @@ def plot_R_histogram_LET(csv_file,R_plot_name_LET):
 
 
     plt.savefig(R_plot_name_LET)
-    # plt.show()
 
 
-""""""
+
 def plot_R_histogram_IC(csv_file,R_plot_name_IC):
+    """
+    No filtering per_jitter required
+    R = DFF_Gunzel_IC/DFFbound
+    """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
     total_rows = 0 
@@ -211,11 +234,13 @@ def plot_R_histogram_IC(csv_file,R_plot_name_IC):
     plt.suptitle(f"Distribution of R values for different num_tasks (IC),R_exceed_percentage={R_exceed_percentage}", fontsize=16, y=1.05)
 
     plt.savefig(R_plot_name_IC)
-    # plt.show()
 
 
-""""""
+
 def plot_runtime(csv_path, runtime_name):
+    """
+    Read csv, group by num_tasks, and calculate the average of run_time_G (Gunzel) and run_time_our (our).
+    """
     df = pd.read_csv(csv_path)
 
     avg = (df
@@ -240,8 +265,11 @@ def plot_runtime(csv_path, runtime_name):
     plt.savefig(runtime_name, dpi=300)
 
     
-""""""
+
 def plot_false_percent(csv_file, percent_plot_name):
+    """
+    Group by num_tasks and plot a line with false_percentage varying with jitter.
+    """
     jitter_to_false_percentage = {}
     with open(csv_file, mode='r') as file:
         reader = csv.DictReader(file)
@@ -271,11 +299,15 @@ def plot_false_percent(csv_file, percent_plot_name):
     plt.grid(True)
     plt.xticks(jitter_percent)  
     plt.savefig(f"{percent_plot_name}")
-    # plt.show()
 
 
-""""""
+
 def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
+    """
+    Comparing two experiments in our paper,
+    csv_files (passive and active),
+    each with per_jitter = 20% data, plotting histograms side by side by num_tasks.
+    """
     dfs = [pd.read_csv(file) for file in csv_files]
 
     dfs = [df[df['per_jitter'] == 0.2] for df in dfs]
@@ -314,12 +346,15 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
             ax.grid(True)
 
     plt.savefig(compare_histogram_our_name)
-    # plt.show()
 
 
-""""""
+
 def compare_false_percent_our(csv_files, compare_plot_name):
-
+    """
+    Comparing the two experiments in our paper,
+    csv_files (passive and active),
+    draw a line graph showing the False Percentage as Jitter changes.
+    """
     num_csv_files = len(csv_files)
     num_columns = 2
     num_rows = (num_csv_files + num_columns - 1) // num_columns
@@ -366,7 +401,6 @@ def compare_false_percent_our(csv_files, compare_plot_name):
 
     plt.tight_layout()
     plt.savefig(compare_plot_name)
-    # plt.show()
 
 
 
