@@ -68,7 +68,7 @@ NUM_EXPERIMENTS: Number of concurrent experiments (default 5)
 ### Result Filecompare
 
 ```
-rtssresult/
+passive/
 └── data_100_12345_20250814_123456.csv     # Original data
 
 adjust/                                                                           # Optimized algorithm results
@@ -85,6 +85,6 @@ compare/
     └── adjust_data3.csv …
 
 log/                          # Detailed logs
-├── rtssresult_log_100_12345_20250814_123456.txt      # Basic algorithm log
+├── passive_log_100_12345_20250814_123456.txt      # Basic algorithm log
 └── adjust_log_100_12345_20250814_123456.txt              # Optimized algorithm log
 ```
