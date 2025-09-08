@@ -44,7 +44,12 @@ def TDA(task_set):
 Copied from Paper [20]: main.py
 """
 def schedule_task_set(ce_chains, task_set, print_status=False):
-
+    """Return the schedule of some task_set.
+    ce_chains is a list of ce_chains that will be computed later on.
+    We need this to compute latency_upper_bound to determine the additional simulation time at the end.
+    Note:
+    - In case of error, None is returned.
+    - E2E Davare has to be computed beforehand!"""
     try:
         # Preliminary: compute latency_upper_bound
         latency_upper_bound = max([ce.davare for ce in ce_chains])
@@ -134,6 +139,7 @@ def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_j
     ana = utilities.analyzer.Analyzer()
     ana.davare_single(chain)
 
+    # Use the "mrt_let" code from paper [20]
     let = utilities.analyzer_our.mrt_let(chain, task_set)
     
     return  let
@@ -187,10 +193,12 @@ def run_analysis_Gunzel_IC(num_tasks, periods):
     schedule_bcet = schedule_task_set([chain], new_task_set, print_status=False)
     
     t_0 = time.perf_counter()
+    # Use the "max_reac_local" code from paper [20]
     ic = utilities.analyzer_our.max_reac_local(chain, task_set, schedule_wcet, new_task_set, schedule_bcet)
     t_1 = time.perf_counter()
     runtime = t_1 - t_0
 
+    # Ensure that all parameters are in the same order
     sorted_periods = [t.period for t in task_set]
 
     return ic, sorted_periods, schedule_wcet, task_set, schedule_bcet, new_task_set,runtime

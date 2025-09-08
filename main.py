@@ -442,7 +442,7 @@ def run_Gunzel_LET(random_seed, num_repeats, common_csv_passive, common_csv_acti
 
 def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_csv_active):
     """
-    LET(jitter=0)/Implicit communication comparison experiment (passive/active)
+    LET(jitter=0)/Implicit communication(IC) comparison experiment (passive/active)
     RTSS'2025 fig.10, 12
     """
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
@@ -454,8 +454,8 @@ def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_
     results, false_results, final, results_active, false_results_active, final_active = compare_our_passive_active(
         jitters, num_chains, num_repeats, random_seed, periods)
 
-    csv_file, _, _ = output_passive_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
-    csv_file_active, _, _ = output_active_our(num_repeats, random_seed, timestamp, results_active, false_results_active, num_chains, jitters)
+    csv_file = output_passive_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
+    csv_file_active = output_active_our(num_repeats, random_seed, timestamp, results_active, false_results_active, num_chains, jitters)
     append_to_common_csv(csv_file, common_csv_passive)
     append_to_common_csv(csv_file_active, common_csv_active)
 

@@ -9,6 +9,7 @@ It implements the methods described in the paper
 
 @author: Shumo Wang
 """
+import os
 import matplotlib.pyplot as plt
 import csv
 import numpy as np
@@ -403,13 +404,49 @@ def compare_false_percent_our(csv_files, compare_plot_name):
     plt.savefig(compare_plot_name)
 
 
+def process_csv_file(input_file, output_file=None):
+    """
+    To draw a graph in a latex file, 
+    keep the necessary columns ('num_tasks', 'run_time_our', 'run_time_G') 
+    and calculate the average runtime value.
+    """
+    try:
+        df = pd.read_csv(input_file)
+
+        required = {'num_tasks', 'run_time_our', 'run_time_G'}
+        if not required.issubset(df.columns):
+            missing = required - set(df.columns)
+            print(f"error: missing columns {list(missing)}")
+            return False
+
+        avg_df = (df.groupby('num_tasks')[['run_time_our', 'run_time_G']]
+                    .mean()
+                    .reset_index())        
+
+        if output_file is None:
+            base, ext = os.path.splitext(input_file)
+            output_file = f"{base}_avg_runtime{ext}"
+
+        avg_df.to_csv(output_file, index=False)
+        print(f"save avg file: {output_file}")
+        return True
+
+    except FileNotFoundError:
+        print(f"error: no file {input_file}")
+        return False
+    except pd.errors.EmptyDataError:
+        print(f"error: {input_file} empty")
+        return False
+    except Exception as e:
+        print(f"error: {str(e)}")
+        return False
+    
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
-    parser.add_argument("name", type=str, help="Name of the output plot file for R values.")
+    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
 
     args = parser.parse_args()
 
-    compare_false_percent_our(args.csv_files, args.name)
+    process_csv_file(args.csv_file)

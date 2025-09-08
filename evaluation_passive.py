@@ -18,6 +18,14 @@ import os
 
 
 def generate_LET(num_tasks, periods):
+    """
+    Generates LET task parameters:
+    The read time for each task is fixed at the beginning of the period, and the write time is fixed at the end of the period.
+    Return value:
+        selected_periods: A list of periods of length = num_tasks
+        selected_read_offsets: A list of all zeros
+        selected_write_offsets: Each element = read_offset + period
+    """
     selected_periods = random.choices(periods,  k=num_tasks)
     selected_read_offsets = [0 for period in selected_periods]
     selected_write_offsets = [read_offset + period for read_offset, period in zip(selected_read_offsets, selected_periods)]
@@ -25,14 +33,15 @@ def generate_LET(num_tasks, periods):
     print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
     return selected_periods, selected_read_offsets, selected_write_offsets
 
+
+
 def generate_periods_and_offsets(num_tasks, periods):
     """
-    generate periods and offsets for tasks
-    :param num_tasks: number of tasks
-    :param periods: list of periods
-    :param jitter_factor: jitter percentage
-    :param seed: random seed
-    :return: periods, read_offsets, write_offsets
+    Generate periods and offsets for tasks
+    Return value:
+        selected_periods: A list of periods of length = num_tasks
+        selected_read_offsets: A list of random read offsets
+        selected_write_offsets: Each element = read_offset + period
     """  
     selected_periods = random.choices(periods,  k=num_tasks)
     selected_read_offsets = [random.randint(0, period) for period in selected_periods]
@@ -41,7 +50,12 @@ def generate_periods_and_offsets(num_tasks, periods):
     print(f"selected_periods: {selected_periods}, selected_read_offsets: {selected_read_offsets}, selected_write_offsets: {selected_write_offsets}")
     return selected_periods, selected_read_offsets, selected_write_offsets
 
+
+
 def output_passive_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
+    """
+    Write the results of "Gunzel vs our" passive experiments on IC to CSV.
+    """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)
 
@@ -59,7 +73,11 @@ def output_passive_Gunzel_IC(num_repeats, random_seed, timestamp, results, false
     return results_csv
 
 
+
 def output_passive_Gunzel_LET(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+    """
+    Write the results of "Gunzel vs our" passive experiments on LET to CSV.
+    """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)
 
@@ -78,13 +96,15 @@ def output_passive_Gunzel_LET(num_repeats, random_seed, timestamp, results, fals
     print(f"All results saved to {results_csv}")
     return results_csv
 
-def output_passive_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
 
+
+def output_passive_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+    """
+    Write the results of our passive experiments (IC/LET=jitter=0) to CSV.
+    """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)
 
-    percent_plot_name = os.path.join(folder_path,  f"percent_passive_{num_repeats}_{random_seed}_{timestamp}.png")
-    R_plot_name = os.path.join(folder_path, f"R_passive_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_passive_{num_repeats}_{random_seed}_{timestamp}.csv" )
 
     # save results to csv
@@ -99,9 +119,10 @@ def output_passive_our(num_repeats, random_seed, timestamp, results, false_resul
 
     print(f"All results saved to {results_csv}")
 
-    return results_csv, percent_plot_name, R_plot_name
+    return results_csv
 
 
+"""For testing"""
 def run_evaluation_passive_our(jitters, num_chains, num_repeats, random_seed, periods):
     TOLERANCE = 1e-9
     # preparing list for storing result
@@ -109,8 +130,6 @@ def run_evaluation_passive_our(jitters, num_chains, num_repeats, random_seed, pe
     final = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
 
-    # TODO: add random_seed to the filename
-    # run analysis
     for i in range(num_repeats):            # loop on number of repetitions
         random.seed(random_seed)
         for num_tasks in num_chains:        # on number of tasks in a chain

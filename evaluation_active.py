@@ -19,6 +19,9 @@ from evaluation_passive import generate_periods_and_offsets
 
 
 def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
+    """
+    Write the results of "Gunzel vs our" active experiments on IC to CSV.
+    """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
 
@@ -38,7 +41,11 @@ def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_
     return results_csv
 
 
+
 def output_active_Gunzel_LET(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+    """
+    Write the results of "Gunzel vs our" active experiments on LET to CSV.
+    """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
 
@@ -58,13 +65,14 @@ def output_active_Gunzel_LET(num_repeats, random_seed, timestamp, results, false
     return results_csv
 
 
-def output_active_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
 
+def output_active_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
+    """
+    Write the results of our active experiments (IC/LET=jitter=0) to CSV.
+    """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
 
-    percent_plot_name = os.path.join(folder_path,  f"percent_active_{num_repeats}_{random_seed}_{timestamp}.png")
-    R_plot_name = os.path.join(folder_path, f"R_active_{num_repeats}_{random_seed}_{timestamp}.png")
     results_csv = os.path.join(folder_path, f"data_active_{num_repeats}_{random_seed}_{timestamp}.csv" )
 
     # save results to csv
@@ -79,10 +87,10 @@ def output_active_our(num_repeats, random_seed, timestamp, results, false_result
 
     print(f"All results saved to {results_csv}")
 
-    return results_csv, percent_plot_name, R_plot_name
+    return results_csv
 
 
-
+"""For testing"""
 def run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, periods):
     TOLERANCE = 1e-9
     # preparing list for storing result
@@ -90,8 +98,6 @@ def run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, per
     final = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
     false_results = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
 
-    # TODO: add random_seed to the filename
-    # run analysis
     for i in range(num_repeats):            # loop on number of repetitions
         random.seed(random_seed)
         for num_tasks in num_chains:        # on number of tasks in a chain

@@ -17,7 +17,7 @@ from plot import plot_R_histogram_LET
 from plot import plot_R_histogram_IC
 from plot import plot_runtime
 import pandas as pd
-
+from plot import process_csv_file
 
 def suffixed(path, suffix):
     """
@@ -208,13 +208,17 @@ def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
     if suffix == '_IC':
         plot_runtime(common_csv_passive, runtime_plot_passive)
         plot_R_histogram_IC(common_csv_passive, histogram_plot_passive)
+        process_csv_file(common_csv_passive)
         plot_runtime(common_csv_active, runtime_plot_active)
         plot_R_histogram_IC(common_csv_active, histogram_plot_active)
+        process_csv_file(common_csv_active)
     elif suffix == '_LET':
         plot_runtime(common_csv_passive, runtime_plot_passive)
         plot_R_histogram_LET(common_csv_passive, histogram_plot_passive)
+        process_csv_file(common_csv_passive)
         plot_runtime(common_csv_active, runtime_plot_active)
         plot_R_histogram_LET(common_csv_active, histogram_plot_active)
+        process_csv_file(common_csv_active)
     else:
         compare_false_percent_our(csv_files, compare_percent_plot_our)
         compare_plot_histogram_our(csv_files, compare_histogram_plot_our)

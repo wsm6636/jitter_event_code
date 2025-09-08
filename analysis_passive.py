@@ -14,28 +14,39 @@ import math
 import random
 from scipy.optimize import basinhopping
 
+
+"""an event"""
 class Event:
+    """
+    Creates an event represented by ID, type, period, offset, maxjitter.
+    """
     def __init__(self, event_type, period, offset, maxjitter, id=None):
         self.id = id
         self.event_type = event_type  # "read" or "write"
         self.period = period
         self.offset = offset
-        self.maxjitter = maxjitter
+        self.maxjitter = maxjitter  # J_i in our paper
         self.random_jitter = 0   # jitter of instance
 
+    """print an event"""
     def __repr__(self):
         return (
             f"Event(type={self.event_type},id={self.id}, period={self.period}, "
             f"offset={self.offset}, maxjitter={self.maxjitter}"
         )
 
+    """Generate an instance jitter"""
     def get_trigger_time(self, j):
         self.random_jitter = random.uniform(0, self.maxjitter)
         tj = j * self.period + self.offset + self.random_jitter
         return tj
 
 
+"""a task"""
 class Task:
+    """
+    Creates a task represented by ID, events, period, offset.
+    """
     def __init__(self, read_event, write_event, id=None):
         self.id = id
         self.read_event = read_event
@@ -43,6 +54,7 @@ class Task:
         self.period = read_event.period
         self.offset = read_event.offset
 
+    """print a task"""
     def __repr__(self):
         return (
             f"Task(period={self.period}, offset={self.offset}, "
@@ -50,8 +62,14 @@ class Task:
         )
 
 
-# random events generator
+"""
+Generate random events
+"""
 class RandomEvent:
+    """
+    Generates maximum jitter as percentage per_jitter 
+    maxjitter = per_jitter * period
+    """
     def __init__(
         self,
         num_tasks,
@@ -67,6 +85,9 @@ class RandomEvent:
         self.per_jitter = per_jitter
         self.tasks = self.generate_events_tasks()
         
+    """
+    Generating tasks with events
+    """
     def generate_events_tasks(self):
         read_events = []
         write_events = []
@@ -109,8 +130,13 @@ class RandomEvent:
         return self.tasks
     
 
-
+"""
+Generate random events for Gunzel
+"""
 class RandomEventForGunzel:
+    """
+    Based on the set of tasks Gunzel generate, all jitters and offsets are known
+    """
     def __init__(
         self,
         num_tasks,
@@ -169,8 +195,12 @@ class RandomEventForGunzel:
     def get_tasks(self):
         return self.tasks
 
-# Euclide's algorithm for coefficients of Bezout's identity
+
+
 def euclide_extend(a, b):
+    """
+    Euclide's algorithm for coefficients of Bezout's identity
+    """
     r0 = int(a)
     r1 = int(b)
     s0 = 1
@@ -191,48 +221,54 @@ def euclide_extend(a, b):
     return (r0, s0, t0)
 
 
-# find effective event
-# Algorithm 2 line 1
+
 def effective_event(w, r):
+    """
+    Find effective event without adjustment of offset
+    line 4, 8, 12 in Algorithm (2) 
+    """
     w_star = None
     r_star = None
     delta = r.offset - w.offset
 
     (G, pw, pr) = euclide_extend(w.period, r.period)
-    T_star = max(w.period, r.period)
+    T_star = max(w.period, r.period)  # Algorithm(2) line2
 
-    if w.period == r.period:  # Theorem 2
-        if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (16)
+    if w.period == r.period:  # Algorithm(2) line 11, Theorem(2) 
+        if (w.maxjitter <= (delta % T_star) and (delta % T_star) < (T_star - r.maxjitter)):  # Formula (18)
+            # Formula (19)
             w_jitter_star = w.maxjitter
-            r_jitter_star = r.maxjitter  # Formula (17)
+            r_jitter_star = r.maxjitter  
             if delta < 0:
                 w_offser_star = w.offset
-                r_offset_star = w.offset + (delta % T_star)  # Formula (17)
+                r_offset_star = w.offset + (delta % T_star)  
             else:
-                w_offser_star = r.offset - (delta % T_star)  # Formula (17)
+                w_offser_star = r.offset - (delta % T_star)   
                 r_offset_star = r.offset
         else:
-            print(f"Does not conform to Theorem 2, Formula (16).")
+            print(f"Does not conform to Theorem (2), Formula (18).")
             return False
-    elif w.period > r.period:
-        if (r.period + r.maxjitter) <= (w.period - w.maxjitter):  # Formula (19) Theorem (3)
-            kw = max(0, (((delta + r.maxjitter - r.period) // w.period) + 1))  # Formula (19)
+    elif w.period > r.period: # Algorithm(2) line 3, Theorem(3)
+        if (r.period + r.maxjitter) <= (w.period - w.maxjitter):  # Formula (23) 
+            # Formula (24)
+            kw = max(0, (((delta + r.maxjitter - r.period) // w.period) + 1))  
             w_offser_star = w.offset + kw * w.period
             w_jitter_star = w.maxjitter
             r_offset_star = w_offser_star
-            r_jitter_star = r.period + w.maxjitter  # Formula (20)
+            r_jitter_star = r.period + w.maxjitter   
         else:
-            print(f"Does not conform to Theorem (13), Formula (17).")
+            print(f"Does not conform to Theorem (3), Formula (23).")
             return False
-    elif w.period < r.period:
-        if (w.period + w.maxjitter) <= (r.period - r.maxjitter):  # Formula (24) Theorem (4)
-            kr = max(0, math.ceil((w.maxjitter - delta) / r.period))  # Formula (25)
+    elif w.period < r.period: # Algorithm(2) line 7, Theorem(4)
+        if (w.period + w.maxjitter) <= (r.period - r.maxjitter):  # Formula (29) 
+            # Formula (30)
+            kr = max(0, math.ceil((w.maxjitter - delta) / r.period))  
             r_offset_star = r.offset + kr * r.period
-            r_jitter_star = r.maxjitter  # Formula (25)
+            r_jitter_star = r.maxjitter  # 
             w_offser_star = r_offset_star - w.period
-            w_jitter_star = w.period + r.maxjitter  # Formula (26)
+            w_jitter_star = w.period + r.maxjitter   
         else:
-            print(f"Does not conform to Theorem (14), Formula (22).")
+            print(f"Does not conform to Theorem (4), Formula (29).")
             return False
     else:
         return False
@@ -251,17 +287,21 @@ def effective_event(w, r):
         offset=r_offset_star,
         maxjitter=r_jitter_star,
     )
-    # (w_star, r_star) the reslut of effective event (line 1)
+    # (w_star, r_star) the reslut of effective event (line 4, 8 ,12)
     return (w_star, r_star)
 
 
-# Algorithm 2
+
 def combine_no_free_jitter(task1, task2):
+    """
+    Combine tasks in the chain without adjustment of offset
+    Algorithm(2)
+    """
     r1 = task1.read_event
     w1 = task1.write_event
     r2 = task2.read_event
     w2 = task2.write_event
-    # line 1
+    
     result = effective_event(w1, r2)
 
     if result:
@@ -270,24 +310,24 @@ def combine_no_free_jitter(task1, task2):
         return False
     
     T_star = w1_star.period  # line 2
-    if task1.period > task2.period:  # line 4
-        r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5
-        r_1_2_jitter = r1.maxjitter  # line 6
-        m2 = w2.offset - r2.offset - r2.maxjitter
-        M2 = w2.offset - r2.offset + w2.maxjitter  # line 7
-        w_1_2_offset = r2_star.offset + m2
-        w_1_2_jitter = r2_star.maxjitter + M2 - m2  # line 8
-    elif task1.period < task2.period:  # line 9
-        w_1_2_offset = w2.offset + r2_star.offset - r2.offset  # line 10
+    if task1.period > task2.period:  # line 3
+        r_1_2_offset = r1.offset + w1_star.offset - w1.offset  # line 5, Eq.(34)
+        r_1_2_jitter = r1.maxjitter  
+        m2 = w2.offset - r2.offset - r2.maxjitter   # Eq.(35)
+        M2 = w2.offset - r2.offset + w2.maxjitter  
+        w_1_2_offset = r2_star.offset + m2          # line 6, Eq.(36)
+        w_1_2_jitter = r2_star.maxjitter + M2 - m2   
+    elif task1.period < task2.period:  # line 7
+        w_1_2_offset = w2.offset + r2_star.offset - r2.offset  # line 9, Eq.(37)
         w_1_2_jitter = w2.maxjitter  # line 11
-        m1 = w1.offset - r1.offset - r1.maxjitter
-        M1 = w1.offset - r1.offset + w1.maxjitter  # line 12
-        r_1_2_offset = w1_star.offset - M1
-        r_1_2_jitter = w1_star.maxjitter + M1 - m1  # line 13
-    else:  # line 14
-        r_1_2_offset = r1.offset + w1_star.offset - w1.offset
+        m1 = w1.offset - r1.offset - r1.maxjitter  # Eq.(35)
+        M1 = w1.offset - r1.offset + w1.maxjitter   
+        r_1_2_offset = w1_star.offset - M1         # line 10, Eq.(38)
+        r_1_2_jitter = w1_star.maxjitter + M1 - m1   
+    else:  # line 11
+        r_1_2_offset = r1.offset + w1_star.offset - w1.offset # line 13, Eq.(34)
         r_1_2_jitter = r1.maxjitter
-        w_1_2_offset = w2.offset + r2_star.offset - r2.offset
+        w_1_2_offset = w2.offset + r2_star.offset - r2.offset # line 14, Eq.(37)
         w_1_2_jitter = w2.maxjitter
 
     combined_id = f"{task1.id}_{task2.id}"
@@ -297,19 +337,26 @@ def combine_no_free_jitter(task1, task2):
         period=T_star,
         offset=r_1_2_offset,
         maxjitter=r_1_2_jitter,
-    )  # line 19
+    )  # line 15
     w_1_2 = Event(
         id=combined_id,
         event_type="write_combined",
         period=T_star,
         offset=w_1_2_offset,
         maxjitter=w_1_2_jitter,
-    )  # line 20
+    )  # line 16
 
+    # read and write series of the chain
     return (r_1_2, w_1_2)
 
-# asc index order chain 
+
+
+
 def chain_asc_no_free_jitter(tasks):
+    """
+    Processing Chain without adjustment of offset
+    In ascending order of the task's index in the chain
+    """
     n = len(tasks)
     current_task = tasks[0]
 
@@ -320,11 +367,16 @@ def chain_asc_no_free_jitter(tasks):
         else:
             (r, w) = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
-
     return  r, w
 
-# max reaction time of our paper
+
+
+
 def our_chain(tasks):
+    """
+    The maximum reaction time results of our paper
+    Formula (39) : DFF_bound
+    """
     final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
         final_r, final_w = final_combine_result
@@ -334,9 +386,13 @@ def our_chain(tasks):
     else:
         return False
 
-# general task chain
-# Satisfy the order of read and write times
+
+
 def find_valid_task_chains(tasks):
+    """
+    Generate a general task chain
+    Satisfy the read and write time order
+    """
     task_chain = []
     last_write_time = -float("inf")
     for task in tasks:
@@ -372,9 +428,11 @@ def find_valid_task_chains(tasks):
         return False
 
 
-# Calculate the reaction time of the general task chain
-# also need to add the period of the first read event
+
 def calculate_reaction_time(task_chain):
+    """
+    Calculate the reaction time of the general task chain
+    """
     first_read_time = task_chain[0][1]
     last_write_time = task_chain[-1][1]
     reaction_time = last_write_time - first_read_time +  task_chain[0][0].period
@@ -382,8 +440,12 @@ def calculate_reaction_time(task_chain):
     return reaction_time  
 
 
-# Objective function for optimization
+
 def objective_function(x, tasks):
+    """
+    The handle function of general task chain calculation
+    Objective function for optimization
+    """
     num_tasks = len(tasks)
     for i in range(num_tasks):
         tasks[i].read_event.random_jitter = x[i]
@@ -400,23 +462,35 @@ def objective_function(x, tasks):
     else:
         return float("inf")
     
-# Iteration
+
 def take_step(x, bounds):
+    """
+    The handle function of general task chain calculation
+    Iteration
+    """
     new_x = x.copy()
     for i in range(len(x)):
         lower, upper = bounds[i]
         new_x[i] = random.uniform(lower, upper)
     return new_x
 
-# check if the new solution is within bounds
+
 def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
+    """
+    The handle function of general task chain calculation
+    check if the new solution is within bounds
+    """
     for i, (lower, upper) in enumerate(bounds):
         if not (lower <= x_new[i] <= upper):
             return False
     return True
     
-# Maximize the reaction time of the general task chain
+
+
 def maximize_reaction_time(tasks):
+    """
+    Maximize the reaction time of the general task chain
+    """
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
     for i, task in enumerate(tasks):
@@ -456,8 +530,14 @@ def maximize_reaction_time(tasks):
 
 results_function = []
 
-# outport function
+
+
 def run_analysis_passive_our(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+    """
+    Generate a task set based on random parameters (IC/LET jitter=0)
+    Generate a general task chain
+    Calculate the maximum reaction time between us and the general task chain (our passive analysis)
+    """
     global results_function
     results_function = []  
 
@@ -482,8 +562,13 @@ def run_analysis_passive_our(num_tasks, periods,read_offsets,write_offsets, per_
     return final_e2e_max, max_reaction_time, final_r, final_w, tasks
 
 
-# outport function
+
 def run_analysis_passive_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
+    """
+    Generate a LET task set based on random parameters
+    Calculate the maximum reaction time (our passive analysis)
+    There is no need to compute a generic task chain, as the interface is used to compare the results of Gunzel LET (analysis_Gunzel.py/run_analysis_Gunzel_LET)
+    """
     global results_function
     results_function = []  
 
@@ -504,8 +589,13 @@ def run_analysis_passive_Gunzel_LET(num_tasks, periods,read_offsets,write_offset
 
 
 
-# outport function
-def run_analysis_passive_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters, ):
+
+def run_analysis_passive_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets, read_jitters, write_jitters):
+    """
+    Generate a IC task set based on the known parameters obtained from Gunzel
+    Calculate the maximum reaction time (our passive analysis)
+    There is no need to compute a generic task chain, as the interface is used to compare the results of Gunzel IC (analysis_Gunzel.py/run_analysis_Gunzel_IC)
+    """
     global results_function
     results_function = []  
 
