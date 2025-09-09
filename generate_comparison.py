@@ -31,6 +31,22 @@ def suffixed(path, suffix):
     return f"{base}{suffix}{ext}"
 
 
+def sort_csv_by_policy(csv_file, suffix=''):
+    """
+    Sorting strategy:
+    - RTSS (suffix == '' or suffix == '_RTSS'): Sort by num_tasks first, then by per_jitter
+    - Other (IC/LET): Sort by num_tasks only
+    After sorting, directly replace the original file.
+    """
+    df = pd.read_csv(csv_file)
+    is_rtss = (suffix == '') or (suffix == '_RTSS')
+    if is_rtss and {'num_tasks', 'per_jitter'}.issubset(df.columns):
+        df = df.sort_values(by=['num_tasks', 'per_jitter'], ascending=[True, True])
+    elif 'num_tasks' in df.columns:
+        df = df.sort_values(by=['num_tasks'], ascending=True)
+    df.to_csv(csv_file, index=False)
+    print(f"[sort] {csv_file} suffix={suffix or 'None'} ")
+
 
 def add_final_percent_column_safe(csv_file, out_file):
     """
@@ -196,6 +212,9 @@ def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
     common_csv_passive = add_final_percent_column_safe(common_csv_passive, common_csv_passive)
     common_csv_active = add_final_percent_column_safe(common_csv_active, common_csv_active)
     
+    sort_csv_by_policy(common_csv_passive, suffix)
+    sort_csv_by_policy(common_csv_active, suffix)
+
     # Drawing different file types
     csv_files = [common_csv_passive, common_csv_active]
     compare_percent_plot_our  = suffixed(os.path.join(output_dir, "final_compare_percent_our.png"), suffix)

@@ -41,7 +41,13 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
             r_offsets.append(current_read_offset)
 
     if r_offsets:
-        read_offset = min(r_offsets, key=lambda x: abs(x - old_read_offset))
+        read_offset_random = random.choice(r_offsets)
+        valid_offsets = [x for x in r_offsets if x < old_read_offset]
+        if valid_offsets:
+            read_offset_abs = min(valid_offsets, key=lambda x: abs(x - old_read_offset))
+        else:
+            read_offset_abs = random.choice(r_offsets)
+        read_offset = min(read_offset_abs, read_offset_random)
         ad_scuss = True
         return read_offset, ad_scuss
     else:
@@ -295,7 +301,13 @@ def our_chain_active(tasks):
     The maximum reaction time results of our paper
     Formula (39) : DFF_bound
     """
-    final_combine_result = chain_asc_no_free_jitter_active(tasks)
+    if len(tasks) == 1:
+        final_r = tasks[0].read_event
+        final_w = tasks[0].write_event
+        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+        return max_reaction_time, final_r, final_w
+    else:
+        final_combine_result = chain_asc_no_free_jitter_active(tasks)
     if final_combine_result is False:
         return False
     else:
@@ -572,12 +584,24 @@ def run_analysis_active_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets,
 
 # test the code
 if __name__ == "__main__":
-    num_tasks = 5 
+    num_tasks = 1 
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-    per_jitter = 0.05 # percent jitter
-    read_offsets = [0, 0, 0, 0, 0]
-    write_offsets = [1, 1, 1, 1, 1]
+    
+    per_jitter = 0 # percent jitter
 
-    run_analysis_active_our(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    selected_periods = [5]
+    selected_read_offsets = [0]
+    selected_write_offsets = [5]
+
+    print(selected_periods)
+    print(selected_read_offsets)
+    print(selected_write_offsets)
+
+    tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
+
+    final = our_chain_active(tasks)
+    final_e2e_max = final[0]
+    
+    print(final_e2e_max)
 
 

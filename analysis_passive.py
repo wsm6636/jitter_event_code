@@ -14,7 +14,6 @@ import math
 import random
 from scipy.optimize import basinhopping
 
-
 """an event"""
 class Event:
     """
@@ -377,7 +376,13 @@ def our_chain(tasks):
     The maximum reaction time results of our paper
     Formula (39) : DFF_bound
     """
-    final_combine_result = chain_asc_no_free_jitter(tasks)
+    if len(tasks) == 1:
+        final_r = tasks[0].read_event
+        final_w = tasks[0].write_event
+        max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
+        return max_reaction_time, final_r, final_w
+    else:
+        final_combine_result = chain_asc_no_free_jitter(tasks)
     if final_combine_result:
         final_r, final_w = final_combine_result
         # max reaction time need to add the period of the first read event
@@ -616,12 +621,24 @@ def run_analysis_passive_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets
 
 # test the code
 if __name__ == "__main__":
-    num_tasks = 5 
+    num_tasks = 1 
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]
-    per_jitter = 0.05 # percent jitter
-    read_offsets = [0, 0, 0, 0, 0]
-    write_offsets = [1, 1, 1, 1, 1]
+    
+    per_jitter = 0 # percent jitter
 
-    run_analysis_passive_our(num_tasks, periods,read_offsets,write_offsets, per_jitter)
+    selected_periods = [5]
+    selected_read_offsets = [0]
+    selected_write_offsets = [5]
+
+    print(selected_periods)
+    print(selected_read_offsets)
+    print(selected_write_offsets)
+
+    tasks = RandomEvent(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter).tasks
+
+    final = our_chain(tasks)
+    final_e2e_max = final[0]
+    
+    print(final_e2e_max)
 
 
