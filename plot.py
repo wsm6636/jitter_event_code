@@ -18,7 +18,7 @@ import pandas as pd
 from matplotlib.gridspec import GridSpec
 
 
-def plot_R_histogram_our(csv_file,R_plot_name):
+def plot_R_histogram_our(csv_file,R_plot_name,tag='passive'):
     """
     Read csv_file, retain only the data with per_jitter = 20%,
     group by num_tasks, plot an R value histogram (50 bins evenly spaced from 0 to 1.05),
@@ -77,7 +77,7 @@ def plot_R_histogram_our(csv_file,R_plot_name):
         r_values_greater_than_1 = len([r for r in r_values if r > 1])
         percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-        ax.set_title(f"num_tasks = {num_tasks} - our - Data Count: {len(r_values)}")
+        ax.set_title(f"num_tasks = {num_tasks} - our ({tag}) - Data Count: {len(r_values)}")
         ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
         ax.set_ylabel("Frequency")
         ax.legend()
@@ -93,7 +93,7 @@ def plot_R_histogram_our(csv_file,R_plot_name):
 
 
 
-def plot_R_histogram_LET(csv_file,R_plot_name_LET):
+def plot_R_histogram_LET(csv_file,R_plot_name_LET,tag='passive'):
     """
     No filtering per_jitter required
     R = DFF_Gunzel_LET/DFFbound
@@ -149,7 +149,7 @@ def plot_R_histogram_LET(csv_file,R_plot_name_LET):
         r_values_greater_than_1 = len([r for r in r_values if r > 1])
         percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-        ax.set_title(f"num_tasks = {num_tasks} - LET - Data Count: {len(r_values)}")
+        ax.set_title(f"num_tasks = {num_tasks} - LET ({tag}) - Data Count: {len(r_values)}")
         ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
         ax.set_ylabel("Frequency")
         ax.legend()
@@ -166,7 +166,7 @@ def plot_R_histogram_LET(csv_file,R_plot_name_LET):
 
 
 
-def plot_R_histogram_IC(csv_file,R_plot_name_IC):
+def plot_R_histogram_IC(csv_file,R_plot_name_IC,tag='passive'):
     """
     No filtering per_jitter required
     R = DFF_Gunzel_IC/DFFbound
@@ -222,7 +222,7 @@ def plot_R_histogram_IC(csv_file,R_plot_name_IC):
         r_values_greater_than_1 = len([r for r in r_values if r > 1])
         percentage_greater_than_1 = (r_values_greater_than_1 / len(r_values)) * 100 if len(r_values) > 0 else 0
 
-        ax.set_title(f"num_tasks = {num_tasks} - IC - Data Count: {len(r_values)}")
+        ax.set_title(f"num_tasks = {num_tasks} - IC ({tag}) - Data Count: {len(r_values)}")
         ax.set_xlabel(f"R_exceed_percentage = {percentage_greater_than_1:.2f}%")
         ax.set_ylabel("Frequency")
         ax.legend()
@@ -238,7 +238,7 @@ def plot_R_histogram_IC(csv_file,R_plot_name_IC):
 
 
 
-def plot_runtime(csv_path, runtime_name):
+def plot_runtime(csv_path, runtime_name, tag='passive'):
     """
     Read csv, group by num_tasks, and calculate the average of run_time_G (Gunzel) and run_time_our (our).
     """
@@ -257,7 +257,7 @@ def plot_runtime(csv_path, runtime_name):
     plt.yscale('log')
     plt.xlabel('num_tasks')
     plt.ylabel('Average Runtime (s)')
-    plt.title(' Average Runtime vs. num_tasks')
+    plt.title(f' Average Runtime vs. num_tasks ({tag})')
 
     plt.legend()
     plt.grid(alpha=0.3)
@@ -267,7 +267,7 @@ def plot_runtime(csv_path, runtime_name):
 
     
 
-def plot_false_percent(csv_file, percent_plot_name):
+def plot_false_percent(csv_file, percent_plot_name, tag='passive'):
     """
     Group by num_tasks and plot a line with false_percentage varying with jitter.
     """
@@ -293,7 +293,7 @@ def plot_false_percent(csv_file, percent_plot_name):
         false_percentages = [np.mean(jitter_data[jitter]) * 100 for jitter in sorted(jitter_data.keys())]
         plt.plot(jitter_percent, false_percentages, label=f"num_tasks={num_tasks}", marker='o')
 
-    plt.title("False Percentage vs. Jitter for Different Number of Tasks")
+    plt.title(f"False Percentage vs. Jitter ({tag})")
     plt.xlabel("Jitter Percentage (%)")
     plt.ylabel("False Percentage (%)")
     plt.legend()
@@ -340,7 +340,7 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
             ax.bar(bin_centers, counts, width=bin_width, alpha=0.7, align='center', color=colors[idx], label=f'num_tasks={num_tasks}')
 
             label = LABELS[file_idx] 
-            ax.set_title(f"num_tasks = {num_tasks}  (per_jitter=20%) - our - Data Count: {len(r_values)}")
+            ax.set_title(f"num_tasks = {num_tasks}  (per_jitter=20%) - our({label}) - Data Count: {len(r_values)}")
             ax.set_xlabel("R_exceed_percentage = {:.2f}%".format(R_exceed_percentage))
             ax.set_ylabel("Frequency")
             ax.legend()
@@ -445,8 +445,9 @@ def process_csv_file(input_file, output_file=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
-    parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
-
+    # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
+    parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
+    parser.add_argument("name", type=str)
     args = parser.parse_args()
 
-    process_csv_file(args.csv_file)
+    compare_plot_histogram_our(args.csv_files, args.name)

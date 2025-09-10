@@ -225,18 +225,18 @@ def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
     histogram_plot_active = suffixed(os.path.join(output_dir, "final_R_histogram_active.png"), suffix)
 
     if suffix == '_IC':
-        plot_runtime(common_csv_passive, runtime_plot_passive)
-        plot_R_histogram_IC(common_csv_passive, histogram_plot_passive)
+        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+        plot_R_histogram_IC(common_csv_passive, histogram_plot_passive,tag='passive')
         process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active)
-        plot_R_histogram_IC(common_csv_active, histogram_plot_active)
+        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+        plot_R_histogram_IC(common_csv_active, histogram_plot_active,tag='active')
         process_csv_file(common_csv_active)
     elif suffix == '_LET':
-        plot_runtime(common_csv_passive, runtime_plot_passive)
-        plot_R_histogram_LET(common_csv_passive, histogram_plot_passive)
+        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+        plot_R_histogram_LET(common_csv_passive, histogram_plot_passive,tag='passive')
         process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active)
-        plot_R_histogram_LET(common_csv_active, histogram_plot_active)
+        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+        plot_R_histogram_LET(common_csv_active, histogram_plot_active,tag='active')
         process_csv_file(common_csv_active)
     else:
         compare_false_percent_our(csv_files, compare_percent_plot_our)
