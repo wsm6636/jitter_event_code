@@ -1,0 +1,29 @@
+seed: 1754657734, final_e2e_max: 16.0, max_reaction_time: 18.190118879333596, R: 1.1368824299583498, exceed, inserted: True
+   Task(period=5, offset=2.801336573968496, read_event=Event(type=read,id=0, period=5, offset=2.801336573968496, maxjitter=0.5, write_event=Event(type=write,id=0, period=5, offset=7.801336573968496, maxjitter=0.5)
+   Task(period=2, offset=1.0237881469878611, read_event=Event(type=read,id=1, period=2, offset=1.0237881469878611, maxjitter=0.2, write_event=Event(type=write,id=1, period=2, offset=3.023788146987861, maxjitter=0.2)
+   Task(period=5, offset=12.501336573968496, read_event=Event(type=bridge_read,id=0_1_bridge_r, period=5, offset=12.501336573968496, maxjitter=0, write_event=Event(type=bridge_write,id=0_1_bridge_w, period=5, offset=12.501336573968496, maxjitter=0)
+   Task(period=2, offset=1.8230891751206655, read_event=Event(type=bridge_read,id=2_bridge_r, period=2, offset=1.8230891751206655, maxjitter=0, write_event=Event(type=bridge_write,id=2_bridge_w, period=2, offset=1.8230891751206655, maxjitter=0)
+   Task(period=2, offset=1.8230891751206655, read_event=Event(type=read,id=2, period=2, offset=1.8230891751206655, maxjitter=0.2, write_event=Event(type=write,id=2, period=2, offset=3.8230891751206655, maxjitter=0.2)
+
+
+   seed: 1754657734, final_e2e_max: 16.0, max_reaction_time: 18.158536083075887, R: 1.134908505192243, exceed, inserted: True
+   Task(period=5, offset=2.801336573968496, read_event=Event(type=read,id=0, period=5, offset=2.801336573968496, maxjitter=0.5, write_event=Event(type=write,id=0, period=5, offset=7.801336573968496, maxjitter=0.5)
+   Task(period=2, offset=1.0237881469878611, read_event=Event(type=read,id=1, period=2, offset=1.0237881469878611, maxjitter=0.2, write_event=Event(type=write,id=1, period=2, offset=3.023788146987861, maxjitter=0.2)
+   Task(period=5, offset=12.501336573968496, read_event=Event(type=bridge_read,id=0_1_bridge_r, period=5, offset=12.501336573968496, maxjitter=0, write_event=Event(type=bridge_write,id=0_1_bridge_w, period=5, offset=12.501336573968496, maxjitter=0)
+   Task(period=2, offset=1.8230891751206655, read_event=Event(type=bridge_read,id=2_bridge_r, period=2, offset=1.8230891751206655, maxjitter=0, write_event=Event(type=bridge_write,id=2_bridge_w, period=2, offset=1.8230891751206655, maxjitter=0)
+   Task(period=2, offset=1.8230891751206655, read_event=Event(type=read,id=2, period=2, offset=1.8230891751206655, maxjitter=0.2, write_event=Event(type=write,id=2, period=2, offset=3.8230891751206655, maxjitter=0.2)
+chain: [
+   (Event(type=read,id=0, period=5, offset=2.801336573968496, maxjitter=0.5, 2418.1401920180156, 483), 
+   (Event(type=write,id=0, period=5, offset=7.801336573968496, maxjitter=0.5, 2423.1319511310685, 483), 
+
+   (Event(type=read,id=1, period=2, offset=1.0237881469878611, maxjitter=0.2, 2425.128177318124, 1212), 
+   (Event(type=write,id=1, period=2, offset=3.023788146987861, maxjitter=0.2, 2427.068833534149, 1212), 
+
+   (Event(type=bridge_read,id=0_1_bridge_r, period=5, offset=12.501336573968496, maxjitter=0, 2427.5013365739683, 483), 
+   (Event(type=bridge_write,id=0_1_bridge_w, period=5, offset=12.501336573968496, maxjitter=0, 2427.5013365739683, 483), 
+   
+   (Event(type=bridge_read,id=2_bridge_r, period=2, offset=1.8230891751206655, maxjitter=0, 2427.8230891751205, 1213), 
+   (Event(type=bridge_write,id=2_bridge_w, period=2, offset=1.8230891751206655, maxjitter=0, 2427.8230891751205, 1213), 
+   
+   (Event(type=read,id=2, period=2, offset=1.8230891751206655, maxjitter=0.2, 2427.8253452060503, 1213), 
+   (Event(type=write,id=2, period=2, offset=3.8230891751206655, maxjitter=0.2, 2429.9111704476377, 1213)]
