@@ -17,7 +17,7 @@ from plot import plot_R_histogram_LET
 from plot import plot_R_histogram_IC
 from plot import plot_runtime
 import pandas as pd
-from plot import process_csv_file
+import numpy as np
 
 def suffixed(path, suffix):
     """
@@ -185,6 +185,160 @@ def filter_and_export_csv_active(csv_file_path, num_chains, data_output_dir=None
     return all_data_files
 
 
+def calculate_boxplot_stats(data):
+    """计算箱线图统计值"""
+    sorted_data = np.sort(data.dropna())  # 移除NaN值
+    if len(sorted_data) == 0:
+        return None
+        
+    q1 = np.percentile(sorted_data, 25)
+    median = np.percentile(sorted_data, 50)
+    q3 = np.percentile(sorted_data, 75)
+    iqr = q3 - q1
+    
+    # 计算须线（whiskers）
+    lower_whisker = max(sorted_data.min(), q1 - 1.5 * iqr)
+    upper_whisker = min(sorted_data.max(), q3 + 1.5 * iqr)
+    
+    return {
+        'median': median,
+        'q1': q1,
+        'q3': q3,
+        'lower_whisker': lower_whisker,
+        'upper_whisker': upper_whisker,
+        'min': sorted_data.min(),
+        'max': sorted_data.max()
+    }
+
+
+def process_csv_file(input_file, output_file=None):
+    # """
+    # To draw a graph in a latex file, 
+    # keep the necessary columns ('num_tasks', 'run_time_our', 'run_time_G') 
+    # and calculate the average runtime value.
+    # """
+    # try:
+    #     df = pd.read_csv(input_file)
+
+    #     required = {'num_tasks', 'run_time_our', 'run_time_G'}
+    #     if not required.issubset(df.columns):
+    #         missing = required - set(df.columns)
+    #         print(f"error: missing columns {list(missing)}")
+    #         return False
+
+    #     avg_df = (df.groupby('num_tasks')[['run_time_our', 'run_time_G']]
+    #                 .mean()
+    #                 .reset_index())        
+
+    #     if output_file is None:
+    #         base, ext = os.path.splitext(input_file)
+    #         output_file = f"{base}_plot_runtime{ext}"
+
+    #     avg_df.to_csv(output_file, index=False)
+    #     print(f"save avg file: {output_file}")
+    #     return True
+
+    # except FileNotFoundError:
+    #     print(f"error: no file {input_file}")
+    #     return False
+    # except pd.errors.EmptyDataError:
+    #     print(f"error: {input_file} empty")
+    #     return False
+    # except Exception as e:
+    #     print(f"error: {str(e)}")
+    #     return False
+    """
+    处理CSV文件，计算平均runtime和箱线图统计值。
+    保留必要的列('num_tasks', 'run_time_our_avg', 'run_time_G_avg')
+    并添加箱线图统计值列。
+    """
+    try:
+        df = pd.read_csv(input_file)
+        
+        # 检查必需列
+        required = {'num_tasks', 'run_time_our', 'run_time_G'}
+        if not required.issubset(df.columns):
+            missing = required - set(df.columns)
+            print(f"错误: {input_file} 缺少列 {list(missing)}")
+            return False
+        
+        # 按num_tasks分组并计算统计值
+        grouped = df.groupby('num_tasks')
+        
+        result_rows = []
+        
+        for num_tasks, group in grouped:
+            # 计算平均值
+            avg_our = group['run_time_our'].mean()
+            avg_g = group['run_time_G'].mean()
+            
+            # 计算箱线图统计值
+            our_stats = calculate_boxplot_stats(group['run_time_our'])
+            g_stats = calculate_boxplot_stats(group['run_time_G'])
+            
+            if our_stats is None or g_stats is None:
+                print(f"警告: num_tasks={num_tasks} 的数据无效，跳过")
+                continue
+            
+            # 构建结果行
+            row = {
+                'num_tasks': num_tasks,
+                'run_time_our_avg': avg_our,
+                'run_time_G_avg': avg_g,
+                # Our Method箱线图统计值
+                'run_time_our_median': our_stats['median'],
+                'run_time_our_q1': our_stats['q1'],
+                'run_time_our_q3': our_stats['q3'],
+                'run_time_our_lower_whisker': our_stats['lower_whisker'],
+                'run_time_our_upper_whisker': our_stats['upper_whisker'],
+                'run_time_our_min': our_stats['min'],
+                'run_time_our_max': our_stats['max'],
+                # G Method箱线图统计值
+                'run_time_G_median': g_stats['median'],
+                'run_time_G_q1': g_stats['q1'],
+                'run_time_G_q3': g_stats['q3'],
+                'run_time_G_lower_whisker': g_stats['lower_whisker'],
+                'run_time_G_upper_whisker': g_stats['upper_whisker'],
+                'run_time_G_min': g_stats['min'],
+                'run_time_G_max': g_stats['max'],
+                # 额外信息
+                'data_count': len(group)
+            }
+            
+            result_rows.append(row)
+        
+        # 创建结果DataFrame
+        result_df = pd.DataFrame(result_rows)
+        
+        # 确定输出文件名
+        if output_file is None:
+            base, ext = os.path.splitext(input_file)
+            output_file = f"{base}_processed{ext}"
+        
+        # 保存结果
+        result_df.to_csv(output_file, index=False)
+        print(f"处理完成: {input_file}")
+        print(f"保存到: {output_file}")
+        print(f"结果包含 {len(result_df)} 个num_tasks组")
+        
+        # 打印摘要
+        for _, row in result_df.iterrows():
+            print(f"  num_tasks={int(row['num_tasks'])}: "
+                  f"Our_avg={row['run_time_our_avg']:.4f}s, "
+                  f"G_avg={row['run_time_G_avg']:.4f}s, "
+                  f"数据点={int(row['data_count'])}")
+        
+        return True
+        
+    except FileNotFoundError:
+        print(f"错误: 找不到文件 {input_file}")
+        return False
+    except pd.errors.EmptyDataError:
+        print(f"错误: {input_file} 为空文件")
+        return False
+    except Exception as e:
+        print(f"处理 {input_file} 时出错: {str(e)}")
+        return False
 
 def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
     """
@@ -202,50 +356,50 @@ def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
         print(f"error: can not found {common_csv_active}")
         return False
     
-    # use the path of common_csv_passive
-    output_dir = os.path.dirname(os.path.abspath(common_csv_passive))
-    data_output_dir = f"{output_dir}/data"
-    os.makedirs(output_dir, exist_ok=True)
-    os.makedirs(data_output_dir, exist_ok=True)
+    # # use the path of common_csv_passive
+    # output_dir = os.path.dirname(os.path.abspath(common_csv_passive))
+    # data_output_dir = f"{output_dir}/data"
+    # os.makedirs(output_dir, exist_ok=True)
+    # os.makedirs(data_output_dir, exist_ok=True)
 
-    # Get the final complete CSV file
-    common_csv_passive = add_final_percent_column_safe(common_csv_passive, common_csv_passive)
-    common_csv_active = add_final_percent_column_safe(common_csv_active, common_csv_active)
+    # # Get the final complete CSV file
+    # common_csv_passive = add_final_percent_column_safe(common_csv_passive, common_csv_passive)
+    # common_csv_active = add_final_percent_column_safe(common_csv_active, common_csv_active)
     
-    sort_csv_by_policy(common_csv_passive, suffix)
-    sort_csv_by_policy(common_csv_active, suffix)
+    # sort_csv_by_policy(common_csv_passive, suffix)
+    # sort_csv_by_policy(common_csv_active, suffix)
 
-    # Drawing different file types
-    csv_files = [common_csv_passive, common_csv_active]
-    compare_percent_plot_our  = suffixed(os.path.join(output_dir, "final_compare_percent_our.png"), suffix)
-    compare_histogram_plot_our = suffixed(os.path.join(output_dir, "final_compare_histogram_our.png"), suffix)
-    runtime_plot_passive  = suffixed(os.path.join(output_dir, "final_runtime_passive.png"), suffix)
-    histogram_plot_passive = suffixed(os.path.join(output_dir, "final_R_histogram_passive.png"), suffix)
-    runtime_plot_active  = suffixed(os.path.join(output_dir, "final_runtime_active.png"), suffix)
-    histogram_plot_active = suffixed(os.path.join(output_dir, "final_R_histogram_active.png"), suffix)
+    # # Drawing different file types
+    # csv_files = [common_csv_passive, common_csv_active]
+    # compare_percent_plot_our  = suffixed(os.path.join(output_dir, "final_compare_percent_our.png"), suffix)
+    # compare_histogram_plot_our = suffixed(os.path.join(output_dir, "final_compare_histogram_our.png"), suffix)
+    # runtime_plot_passive  = suffixed(os.path.join(output_dir, "final_runtime_passive.png"), suffix)
+    # histogram_plot_passive = suffixed(os.path.join(output_dir, "final_R_histogram_passive.png"), suffix)
+    # runtime_plot_active  = suffixed(os.path.join(output_dir, "final_runtime_active.png"), suffix)
+    # histogram_plot_active = suffixed(os.path.join(output_dir, "final_R_histogram_active.png"), suffix)
 
     if suffix == '_IC':
-        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
-        plot_R_histogram_IC(common_csv_passive, histogram_plot_passive,tag='passive')
+        # plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+        # plot_R_histogram_IC(common_csv_passive, histogram_plot_passive,tag='passive')
         process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
-        plot_R_histogram_IC(common_csv_active, histogram_plot_active,tag='active')
+        # plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+        # plot_R_histogram_IC(common_csv_active, histogram_plot_active,tag='active')
         process_csv_file(common_csv_active)
     elif suffix == '_LET':
-        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
-        plot_R_histogram_LET(common_csv_passive, histogram_plot_passive,tag='passive')
+        # plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+        # plot_R_histogram_LET(common_csv_passive, histogram_plot_passive,tag='passive')
         process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
-        plot_R_histogram_LET(common_csv_active, histogram_plot_active,tag='active')
+        # plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+        # plot_R_histogram_LET(common_csv_active, histogram_plot_active,tag='active')
         process_csv_file(common_csv_active)
-    else:
-        compare_false_percent_our(csv_files, compare_percent_plot_our)
-        compare_plot_histogram_our(csv_files, compare_histogram_plot_our)
+    # else:
+    #     compare_false_percent_our(csv_files, compare_percent_plot_our)
+    #     compare_plot_histogram_our(csv_files, compare_histogram_plot_our)
 
     # Split files into different types
-    filter_and_export_csv_passive(common_csv_passive, [3, 5, 8, 10], data_output_dir, suffix)
-    filter_and_export_csv_active(common_csv_active, [3, 5, 8, 10], data_output_dir, suffix)
-    print(f"Filtered CSV files saved in {data_output_dir}")
+    # filter_and_export_csv_passive(common_csv_passive, [3, 5, 8, 10], data_output_dir, suffix)
+    # filter_and_export_csv_active(common_csv_active, [3, 5, 8, 10], data_output_dir, suffix)
+    # print(f"Filtered CSV files saved in {data_output_dir}")
 
 
 def main():
