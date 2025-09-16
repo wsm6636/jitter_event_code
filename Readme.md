@@ -30,7 +30,7 @@ In case there is any dependent package missing, please install them accordingly.
 
 ### File Structure
 
-.
+
 ├── active                       #  Active experiment results
 ├── compare                   # Compare experiment results
 ├── passive               # Passive experiment results
