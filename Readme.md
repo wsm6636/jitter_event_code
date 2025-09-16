@@ -30,7 +30,7 @@ In case there is any dependent package missing, please install them accordingly.
 
 ### File Structure
 
-
+```
 ├── active                       #  Active experiment results
 ├── compare                   # Compare experiment results
 ├── passive               # Passive experiment results
@@ -57,6 +57,7 @@ In case there is any dependent package missing, please install them accordingly.
 ├── plot.py                      # Visualization utilities
 ├── README.md
 └── run_experiments.sh  # Batch experiment script
+```
 
 The experiments in the main function are splitted into 3 parts:
 

@@ -5,7 +5,7 @@ Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
     Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter in Task Chains"
+    "Jitter Propagation in Task Chains"
 
 @author: Shumo Wang
 """

@@ -4,8 +4,8 @@ set -euo pipefail
 ###
 # Batch start script for comparative experiments
 # Supports three algorithms: IC, LET, and RTSS
-# Usage: bash run_compare.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
-# Example: bash run_compare.sh 100 5 RTSS
+# Usage: bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
+# Example: bash run_experiments.sh 10 5 RTSS
 ###
 
 ###
