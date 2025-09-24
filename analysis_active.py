@@ -4,8 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 
 @author: Shumo Wang
 """
@@ -22,17 +23,28 @@ from analysis_passive import euclide_extend
 
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
     """
-    Corollary (2)
-    When Eq.(18) cannot be satisfied, adjust the read offset of a pair (w, r)
+    When Eq.(18) cannot be satisfied, adjust the read offset of a pair (w, r).
+    For more information, please see Corollary (2) in the paper.
+    arguments:
+        read_offset: read offset of the read event
+        write_offset: write offset of the write event
+        period: period of the events
+        write_jitter: max jitter of the write event
+        read_jitter: max jitter of the read event
+    return:
+        read_offset: adjusted read offset of the read event
+        ad_scuss: whether the adjustment is successful
     """
     ad_scuss = None
     old_read_offset = read_offset
     delta_mod_period = (read_offset - write_offset) % period
+    # If the original offset satisfies Theorem (2), return directly
     if write_jitter <= delta_mod_period and delta_mod_period < (period - read_jitter):    
         return read_offset, ad_scuss
     else:
         print(f"------------------adjust read offsets-----------------")
 
+    # Traverse all candidate read offsets
     r_offsets = []
     step=0.1
     for current_read_offset in np.arange(0, period, step):
@@ -41,12 +53,14 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
             r_offsets.append(current_read_offset)
 
     if r_offsets:
+        # Select a new offset
         read_offset_random = random.choice(r_offsets)
         valid_offsets = [x for x in r_offsets if x < old_read_offset]
         if valid_offsets:
             read_offset_abs = min(valid_offsets, key=lambda x: abs(x - old_read_offset))
         else:
             read_offset_abs = random.choice(r_offsets)
+        # Use the smaller value of the two to ensure conservatism
         read_offset = min(read_offset_abs, read_offset_random)
         ad_scuss = True
         return read_offset, ad_scuss
@@ -59,8 +73,14 @@ def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter)
 
 def effective_event_active(task1, task2):
     """
-    Find effective event with adjustment of offset
-    line 4, 8, 12 in Algorithm (2) 
+    Find effective event with adjustment of offset.
+    Please see line 4, 8, 12 in Algorithm (2) in the paper.
+    arguments:
+        task1: the task τi which write data
+        task2: the task τi+1 which read data
+    return:
+        (w_star, r_star, adjusted): the effective events and whether adjustment is successful
+        False: if no effective events can be found
     """
     r1 = task1.read_event
     w = task1.write_event
@@ -150,8 +170,14 @@ def effective_event_active(task1, task2):
 
 def combine_no_free_jitter_active(task1, task2):
     """
-    Combine tasks in the chain with adjustment of offset
-    Algorithm(2)
+    Combine tasks in the chain with adjustment of offset.
+    Please see Algorithm (2) in the paper.
+    arguments:
+        task1: the task τi which write data
+        task2: the task τi+1 which read data
+    return:
+        (r_1_2, w_1_2, adjusted): the combined read and write events and whether adjustment is successful
+        False: if no combined events can be found
     """
     r1 = task1.read_event
     w1 = task1.write_event
@@ -211,6 +237,13 @@ def combine_with_insertion(task1, task2):
     """
     Eliminating jitter with a “prefix” event series r`i and a “postfix” series w`i (Formula (40))
     For the write task τi and the read task τi+1, if the conditions of formula (23) or (29) do not hold.
+    Please see Section VI "Active analysis" in the paper.
+    arguments:
+        task1: the task τi which write data
+        task2: the task τi+1 which read data
+    return:
+        (r_1_2, w_1_2, adjusted, bridges): the combined read and write events, whether adjustment is successful, and the inserted bridge tasks
+        False: if no combined events can be found
     """
     adjusted = False
     direct = combine_no_free_jitter_active(task1, task2)
@@ -220,7 +253,7 @@ def combine_with_insertion(task1, task2):
     elif task1.period == task2.period:
         return False  # cannot combine tasks with the same period without insertion
     else:
-        
+        # Generate bridge task
         w  = task1.write_event
         r  = task2.read_event
 
@@ -253,6 +286,7 @@ def combine_with_insertion(task1, task2):
         )
         
         # Reprocess the parts with prefix and suffix
+        # Recombining bridge tasks and chains
         step1 = combine_no_free_jitter_active(task1, w_bridge_task)
         if not step1:
             return False
@@ -275,10 +309,16 @@ def combine_with_insertion(task1, task2):
 
 def chain_asc_no_free_jitter_active(tasks):
     """
-    Processing Chain with adjustment of offset
-    In ascending order of the task's index in the chain
+    Processing Chain with adjustment of offset.
+    In ascending order of the task's index in the chain.
+    arguments:
+        tasks: the task set
+    return:
+        (r_final, w_final, adjusted, all_bridges): the combined read and write events, whether adjustment is successful, and the inserted bridge tasks
+        False: if no combined events can be found
     """
     n = len(tasks)
+    # Start from the head of the chain and combine backwards
     current_task = tasks[0]
     all_bridges = []
     adjusted = False
@@ -298,10 +338,19 @@ def chain_asc_no_free_jitter_active(tasks):
 
 def our_chain_active(tasks):
     """
-    The maximum reaction time results of our paper
-    Formula (39) : DFF_bound
+    The maximum reaction time results DFF_bound in our paper Formula (39).
+    arguments:
+        tasks: the task set
+    return:
+        max_reaction_time: the maximum reaction time of the chain
+        final_r: the final read event of the chain
+        final_w: the final write event of the chain
+        adjusted: whether adjustment is successful
+        all_bridges: the list of all bridge tasks and their positions
+        False: if no valid task chain can be found
     """
     if len(tasks) == 1:
+        # Our analysis is also valid for a task
         final_r = tasks[0].read_event
         final_w = tasks[0].write_event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
@@ -320,7 +369,13 @@ def our_chain_active(tasks):
 
 def inject_bridges(tasks, all_bridges):
     """
-    Processing the adjusted task set
+    Processing the adjusted task set.
+    Insert the bridge tasks into the original task set.
+    arguments:
+        tasks: the original task set
+        all_bridges: the list of all bridge tasks and their positions
+    return:
+        tasks: the adjusted task set with bridge tasks inserted
     """
     for idx, bridge_list in reversed(all_bridges):
         for b in reversed(bridge_list):
@@ -331,8 +386,13 @@ def inject_bridges(tasks, all_bridges):
 
 def find_valid_task_chains(tasks):
     """
-    Generate a general task chain
-    Satisfy the read and write time order
+    Generate a general task chain.
+    Satisfy the read and write time order.
+    arguments:
+        tasks: the task set
+    return:
+        task_chain: the valid task chain with read and write times
+        False: if no valid task chain can be found
     """
     task_chain = []
     last_write_time = -float("inf")
@@ -372,7 +432,11 @@ def find_valid_task_chains(tasks):
 
 def calculate_reaction_time(task_chain):
     """
-    Calculate the reaction time of the general task chain
+    Calculate the reaction time of the general task chain.
+    arguments:
+        task_chain: the valid task chain with read and write times
+    return:
+        reaction_time: the reaction time of the task chain
     """
     first_read_time = task_chain[0][1]
     last_write_time = task_chain[-1][1]
@@ -385,7 +449,13 @@ def calculate_reaction_time(task_chain):
 def objective_function(x, tasks):
     """
     The handle function of general task chain calculation
-    Objective function for optimization
+    Objective function for optimization.
+    arguments:
+        x: the decision variable (jitter of read and write events)
+        tasks: the task set
+    return:
+        -max_reaction_time: the negative of the maximum reaction time of the chain (for minimization)
+        float("inf"): if no valid task chain can be found
     """
     num_tasks = len(tasks)
     for i in range(num_tasks):
@@ -407,7 +477,11 @@ def objective_function(x, tasks):
 def take_step(x, bounds):
     """
     The handle function of general task chain calculation
-    Iteration
+    arguments:
+        x: the decision variable (jitter of read and write events)
+        bounds: the bounds of the decision variable
+    return:
+        new_x: the new decision variable after taking a step
     """
     new_x = x.copy()
     for i in range(len(x)):
@@ -420,7 +494,17 @@ def take_step(x, bounds):
 def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
     """
     The handle function of general task chain calculation
-    check if the new solution is within bounds
+    check if the new solution is within bounds.
+    arguments:
+        f_new: the new objective function value
+        x_new: the new decision variable (jitter of read and write events)
+        f_old: the old objective function value
+        x_old: the old decision variable (jitter of read and write events)
+        tasks: the task set
+        bounds: the bounds of the decision variable
+    return:
+        True: if the new solution is within bounds
+        False: if the new solution is out of bounds 
     """
     for i, (lower, upper) in enumerate(bounds):
         if not (lower <= x_new[i] <= upper):
@@ -431,7 +515,11 @@ def accept_test(f_new, x_new, f_old, x_old, tasks, bounds, **kwargs):
 
 def maximize_reaction_time(tasks):
     """
-    Maximize the reaction time of the general task chain
+    Maximize the reaction time of the general task chain.
+    arguments:
+        tasks: the task set
+    return:         
+        max_reaction_time: the maximum reaction time of the chain
     """
     bounds = [(0, 0)] * (len(tasks) * 2)
     initial_guess = [0] * len(tasks) * 2
@@ -478,6 +566,20 @@ def run_analysis_active_our(num_tasks, periods,read_offsets,write_offsets, per_j
     Generate a task set based on random parameters (IC/LET jitter=0)
     Generate a general task chain
     Calculate the maximum reaction time between us and the general task chain (our active analysis)
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of periods of the tasks
+        read_offsets: list of read offsets of the tasks
+        write_offsets: list of write offsets of the tasks
+        per_jitter: jitter percentage (for period)
+    return:
+        final_e2e_max: the maximum reaction time of our active analysis
+        max_reaction_time: the maximum reaction time of the general task chain
+        final_r: the final read event of the chain
+        final_w: the final write event of the chain
+        new_tasks: the adjusted task set with bridge tasks inserted
+        adjusted: whether adjustment is successful
+        inserted: whether bridge tasks are inserted
     """
     global results_function
     results_function = []  
@@ -519,6 +621,19 @@ def run_analysis_active_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets
     Generate a LET task set based on random parameters
     Calculate the maximum reaction time (our active analysis)
     There is no need to compute a generic task chain, as the interface is used to compare the results of Gunzel LET (analysis_Gunzel.py/run_analysis_Gunzel_LET)
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of periods of the tasks
+        read_offsets: list of read offsets of the tasks
+        write_offsets: list of write offsets of the tasks
+        per_jitter: jitter percentage (for period)
+    return:
+        final_e2e_max: the maximum reaction time of our active analysis
+        final_r: the final read event of the chain
+        final_w: the final write event of the chain
+        new_tasks: the adjusted task set with bridge tasks inserted
+        adjusted: whether adjustment is successful
+        inserted: whether bridge tasks are inserted
     """
     global results_function
     results_function = []  
@@ -553,6 +668,19 @@ def run_analysis_active_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets,
     Generate a IC task set based on the known parameters obtained from Gunzel
     Calculate the maximum reaction time (our active analysis)
     There is no need to compute a generic task chain, as the interface is used to compare the results of Gunzel IC (analysis_Gunzel.py/run_analysis_Gunzel_IC)
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of periods of the tasks       
+        read_offsets: list of read offsets of the tasks
+        write_offsets: list of write offsets of the tasks   
+        read_jitters: list of read jitters of the tasks
+        write_jitters: list of write jitters of the tasks
+    return:
+        final_e2e_max: the maximum reaction time of our active analysis
+        final_r: the final read event of the chain
+        final_w: the final write event of the chain
+        new_tasks: the adjusted task set with bridge tasks inserted
+        adjusted: whether adjustment is successful  
     """
     global results_function
     results_function = []  

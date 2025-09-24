@@ -4,8 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 
 @author: Shumo Wang
 """
@@ -23,7 +24,15 @@ def plot_R_histogram_our(csv_file,R_plot_name,tag='passive'):
     Read csv_file, retain only the data with per_jitter = 20%,
     group by num_tasks, plot an R value histogram (50 bins evenly spaced from 0 to 1.05),
     and calculate the proportion of R values greater than 1.
-    R = DFFbase/DFFbound
+    R = DFFbase/DFFbound in our paper.
+
+    arguments:
+        csv_file: The CSV file containing the data
+        R_plot_name: The name of the output plot file
+        tag: A tag to include in the plot title (default is 'passive')
+    return:
+        None
+
     """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
@@ -96,7 +105,13 @@ def plot_R_histogram_our(csv_file,R_plot_name,tag='passive'):
 def plot_R_histogram_LET(csv_file,R_plot_name_LET,tag='passive'):
     """
     No filtering per_jitter required
-    R = DFF_Gunzel_LET/DFFbound
+    R = DFF_Gunzel_LET/DFFbound in our paper.
+    arguments:
+        csv_file: The CSV file containing the data
+        R_plot_name_LET: The name of the output plot file
+        tag: A tag to include in the plot title (default is 'passive')
+    return:
+        None
     """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
@@ -169,7 +184,13 @@ def plot_R_histogram_LET(csv_file,R_plot_name_LET,tag='passive'):
 def plot_R_histogram_IC(csv_file,R_plot_name_IC,tag='passive'):
     """
     No filtering per_jitter required
-    R = DFF_Gunzel_IC/DFFbound
+    R = DFF_Gunzel_IC/DFFbound in our paper.
+    arguments:
+        csv_file: The CSV file containing the data
+        R_plot_name_IC: The name of the output plot file
+        tag: A tag to include in the plot title (default is 'passive')
+    return:
+        None
     """
     num_tasks_to_r_values = {}
     r_exceed_count = 0  # Counter for R values exceeding 1.0
@@ -241,6 +262,12 @@ def plot_R_histogram_IC(csv_file,R_plot_name_IC,tag='passive'):
 def plot_runtime(csv_path, runtime_name, tag='passive'):
     """
     Read csv, group by num_tasks, and calculate the average of run_time_G (Gunzel) and run_time_our (our).
+    arguments:
+        csv_path: The path to the CSV file containing the data
+        runtime_name: The name of the output plot file
+        tag: A tag to include in the plot title (default is 'passive')
+    return:
+        None
     """
     df = pd.read_csv(csv_path)
 
@@ -270,6 +297,12 @@ def plot_runtime(csv_path, runtime_name, tag='passive'):
 def plot_false_percent(csv_file, percent_plot_name, tag='passive'):
     """
     Group by num_tasks and plot a line with false_percentage varying with jitter.
+    arguments:
+        csv_file: The CSV file containing the data
+        percent_plot_name: The name of the output plot file
+        tag: A tag to include in the plot title (default is 'passive')
+    return:
+        None
     """
     jitter_to_false_percentage = {}
     with open(csv_file, mode='r') as file:
@@ -308,6 +341,11 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
     Comparing two experiments in our paper,
     csv_files (passive and active),
     each with per_jitter = 20% data, plotting histograms side by side by num_tasks.
+    arguments:
+        csv_files: List of CSV files to be compared
+        compare_histogram_our_name: The name of the output plot file
+    return:
+        None
     """
     dfs = [pd.read_csv(file) for file in csv_files]
 
@@ -355,6 +393,11 @@ def compare_false_percent_our(csv_files, compare_plot_name):
     Comparing the two experiments in our paper,
     csv_files (passive and active),
     draw a line graph showing the False Percentage as Jitter changes.
+    arguments:
+        csv_files: List of CSV files to be compared
+        compare_plot_name: The name of the output plot file     
+    return:
+        None
     """
     num_csv_files = len(csv_files)
     num_columns = 2

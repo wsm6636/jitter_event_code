@@ -4,8 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 
 @author: Shumo Wang
 """
@@ -21,6 +22,15 @@ from evaluation_passive import generate_periods_and_offsets
 def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
     """
     Write the results of "Gunzel vs our" active experiments on IC to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
@@ -45,6 +55,16 @@ def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_
 def output_active_Gunzel_LET(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
     """
     Write the results of "Gunzel vs our" active experiments on LET to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+        jitters: the list of jitters used in the experiments
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
@@ -69,6 +89,16 @@ def output_active_Gunzel_LET(num_repeats, random_seed, timestamp, results, false
 def output_active_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
     """
     Write the results of our active experiments (IC/LET=jitter=0) to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+        jitters: the list of jitters used in the experiments
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)

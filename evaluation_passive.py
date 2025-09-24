@@ -4,8 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 
 @author: Shumo Wang
 """
@@ -21,7 +22,10 @@ def generate_LET(num_tasks, periods):
     """
     Generates LET task parameters:
     The read time for each task is fixed at the beginning of the period, and the write time is fixed at the end of the period.
-    Return value:
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of possible periods
+    return:
         selected_periods: A list of periods of length = num_tasks
         selected_read_offsets: A list of all zeros
         selected_write_offsets: Each element = read_offset + period
@@ -38,7 +42,10 @@ def generate_LET(num_tasks, periods):
 def generate_periods_and_offsets(num_tasks, periods):
     """
     Generate periods and offsets for tasks
-    Return value:
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of possible periods
+    return:
         selected_periods: A list of periods of length = num_tasks
         selected_read_offsets: A list of random read offsets
         selected_write_offsets: Each element = read_offset + period
@@ -55,6 +62,15 @@ def generate_periods_and_offsets(num_tasks, periods):
 def output_passive_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
     """
     Write the results of "Gunzel vs our" passive experiments on IC to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)
@@ -77,6 +93,16 @@ def output_passive_Gunzel_IC(num_repeats, random_seed, timestamp, results, false
 def output_passive_Gunzel_LET(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
     """
     Write the results of "Gunzel vs our" passive experiments on LET to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+        jitters: the list of jitters used in the experiments
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)
@@ -101,6 +127,16 @@ def output_passive_Gunzel_LET(num_repeats, random_seed, timestamp, results, fals
 def output_passive_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters):
     """
     Write the results of our passive experiments (IC/LET=jitter=0) to CSV.
+    arguments:
+        num_repeats: number of repetitions
+        random_seed: the initial random seed
+        timestamp: the timestamp of the experiment
+        results: the results of the experiments
+        false_results: the false results of the experiments
+        num_chains: the number of tasks in the chain
+        jitters: the list of jitters used in the experiments
+    return:
+        results_csv: the path to the results CSV file
     """
     folder_path = "passive"
     os.makedirs(folder_path, exist_ok=True)

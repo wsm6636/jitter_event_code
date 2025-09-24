@@ -1,1 +1,9 @@
 log/
+active/
+compare/
+passive/
+__pycache__/
+.vscode/
+*.pyc
+.DS_Store
+utilities/__pycache__/

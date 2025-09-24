@@ -4,9 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
-
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 @author: Shumo Wang
 """
 import argparse
@@ -24,6 +24,11 @@ def suffixed(path, suffix):
     Add a suffix to the file name without changing the file extension.
     Example:
         suffixed("result.png", "_IC") -> "result_IC.png"
+    arguments:
+        path: original file path
+        suffix: suffix to add before the file extension
+    return:
+        new file path with suffix added
     """
     if not suffix:
         return path
@@ -37,6 +42,12 @@ def sort_csv_by_policy(csv_file, suffix=''):
     - RTSS (suffix == '' or suffix == '_RTSS'): Sort by num_tasks first, then by per_jitter
     - Other (IC/LET): Sort by num_tasks only
     After sorting, directly replace the original file.
+
+    arguments:
+        csv_file: The CSV file to be sorted
+        suffix: Suffix indicating the type of experiment 
+    return:
+        None
     """
     df = pd.read_csv(csv_file)
     is_rtss = (suffix == '') or (suffix == '_RTSS')
@@ -52,6 +63,12 @@ def add_final_percent_column_safe(csv_file, out_file):
     """
     Add a column named finalpercent to the CSV file:
     For each group (num_tasks, per_jitter for our result) or just (num_tasks for IC/LET), calculate the proportion of final_e2e_max==0.
+
+    arguments:
+        csv_file: The input CSV file
+        out_file: The output CSV file with the new column
+    return:
+        out_file: The path to the output CSV file
     """
     df = pd.read_csv(csv_file)
 
@@ -77,7 +94,12 @@ def add_final_percent_column_safe(csv_file, out_file):
 def filter_and_export_csv_passive(csv_file_path, num_chains, data_output_dir=None,suffix=''):
     """
     Filters passive results by task chain length and exports sub-CSV files. Used for plotting figures in latex for papers.
-    Returns:
+    arguments:
+        csv_file_path: The input CSV file path
+        num_chains: List of task chain lengths to filter by (e.g., [3, 5, 8, 10])
+        data_output_dir: Directory to save the filtered CSV files (if None, defaults to 'data' subdirectory)
+        suffix: Suffix to append to the output file names (e.g., '_IC')
+    return:
         all_data_file : List of complete data files for each num_tasks task
         jitter_20_files: List of data files for only the 20% jitter (returns empty if per_jitter is not specified)
     """
@@ -135,7 +157,12 @@ def filter_and_export_csv_passive(csv_file_path, num_chains, data_output_dir=Non
 def filter_and_export_csv_active(csv_file_path, num_chains, data_output_dir=None,suffix=''):
     """
     Filters active results by task chain length and exports sub-CSV files. Used for plotting figures in latex for papers.
-    Returns:
+    arguments:
+        csv_file_path: The input CSV file path
+        num_chains: List of task chain lengths to filter by (e.g., [3, 5, 8, 10])
+        data_output_dir: Directory to save the filtered CSV files (if None, defaults to 'data' subdirectory)
+        suffix: Suffix to append to the output file names (e.g., '_IC') 
+    return:
         all_data_file : List of complete data files for each num_tasks task
         jitter_20_files: List of data files for only the 20% jitter (returns empty if per_jitter is not specified)
     """
@@ -186,7 +213,14 @@ def filter_and_export_csv_active(csv_file_path, num_chains, data_output_dir=None
 
 
 def calculate_boxplot_stats(data):
-    """Calculating box plot statistics"""
+    """
+    Computes the five core statistics for a boxplot: median, Q1, Q3, upper and lower whiskers (1.5 IQR rule), and min/max.
+
+    arguments:
+        data: pandas Series or 1D array. NaNs are allowed and will be dropped.
+    return:
+        dict: Contains median, q1, q3, lower_whisker, upper_whisker, min, and max.
+    """
     sorted_data = np.sort(data.dropna())   
     if len(sorted_data) == 0:
         return None
@@ -215,6 +249,11 @@ def process_csv_file(input_file, output_file=None):
     Process the CSV file and calculate the average runtime and boxplot statistics.
     Retain the necessary columns ('num_tasks', 'run_time_our_avg', 'run_time_G_avg')
     And add a column for the boxplot statistics.
+    arguments:
+        input_file: The input CSV file path
+        output_file: The output CSV file path (if None, defaults to input_file_processed.csv)
+    return:
+        True if processing is successful, False otherwise
     """
     try:
         df = pd.read_csv(input_file)
@@ -302,6 +341,12 @@ def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
         2. Add finalpercent;
         3. Draw corresponding group graphs based on suffix (_IC / _LET / _RTSS);
         4. Split and export sub-csv files.
+    arguments:
+        common_csv_passive: The passive result CSV file path
+        common_csv_active: The active result CSV file path
+        suffix: Suffix indicating the type of experiment (e.g., '_IC')
+    return:
+        True if processing is successful, False otherwise
     """
     if not os.path.exists(common_csv_passive):
         print(f"error: can not found {common_csv_passive}")

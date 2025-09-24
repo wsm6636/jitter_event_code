@@ -4,8 +4,9 @@
 Created on Mon May 05 10:25:52 2025
 
 It implements the methods described in the paper
-    Shumo Wang, Enrico Bini, Martina Maggio, Qingxu Deng
-    "Jitter Propagation in Task Chains"
+    "Jitter Propagation in Task Chains". 
+    Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio, 
+    IEEE Real-Time Systems Symposium (RTSS), 2025
 
 @author: Shumo Wang
 """
@@ -44,12 +45,12 @@ import pandas as pd
 def convert_to_our_offsets(schedule_wcet, task_set, schedule_bcet, new_task_set):
     """
     Extract offset and jitter parameters from the Gunzel schedule that match our paper
-    Args:
+    arguments:
         schedule_wcet: WCET (worst-case execution time) schedule
         task_set: task set
         schedule_bcet: BCET (best-case execution time) schedule
         new_task_set: new task set
-    Returns:
+    return:
         tuple: (read jitter list, write jitter list, read offset list, write offset list)
     """
     selected_read_offsets = []
@@ -94,14 +95,14 @@ def compare_our_passive_active(jitters, num_chains, num_repeats, random_seed, pe
     """
     Compares the "Passive Analysis" and "Active Analysis" (adjustment) experiments from the RTSS 2025 paper.
 
-    Args:
+    arguments:
         jitters: List of jitter values
         num_chains: List of number of task chains
         num_repeats: Number of repeats
         random_seed: Random seed
         periods: List of periods
 
-    Returns:
+    return:
         tuple: A tuple containing all results (passive result, passive failed result, passive final result, active result, active failed result, active final result)
     """
     TOLERANCE = 1e-9
@@ -145,9 +146,11 @@ def compare_our_passive_active(jitters, num_chains, num_repeats, random_seed, pe
 
                 # Active analysis
                 print(f"=========For evaluation active our========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
-                final_e2e_max_active, max_reaction_time_active,  final_r_active, final_w_active, tasks_active, adjusted, inserted = run_analysis_active_our(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                final_e2e_max_active, max_reaction_time_active, final_r_active, final_w_active, tasks_active, adjusted, inserted = run_analysis_active_our(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
 
                 if final_e2e_max_active != 0:
+                    # Sec. VI.
+                    # R = DFFbase/DFFbound
                     r_active = max_reaction_time_active / final_e2e_max_active
                     if r_active > 1 + TOLERANCE:  
                         exceed_active = "exceed"
@@ -162,7 +165,7 @@ def compare_our_passive_active(jitters, num_chains, num_repeats, random_seed, pe
                 final_active[num_tasks][per_jitter].append((final_r_active, final_w_active))
 
         random_seed += 1
-
+    # Save false results
     for num_tasks in num_chains:
         for per_jitter in jitters:
             false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
@@ -180,13 +183,13 @@ def compare_Gunzel_IC(num_chains, num_repeats, random_seed, periods):
     Compares our (passive, active) and paper [20] implicit communication (Gunzel IC) experiments.
     [20] M. Günzel, K.-H. Chen, N. Ueter, G. von der Brüggen, M. Dürr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause- effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
 
-    Args:
+    arguments:
         num_chains: List of number of task chains
         num_repeats: Number of repeats
         random_seed: Random seed
         periods: List of periods
 
-    Returns:
+    return:
         tuple: A tuple containing all results (passive result, passive failed result, passive final result, active result, active failed result, active final result)
     """
     TOLERANCE = 1e-9
@@ -216,6 +219,8 @@ def compare_Gunzel_IC(num_chains, num_repeats, random_seed, periods):
             run_time_our = t_our_1 - t_our_0
 
             if final_e2e_max != 0:
+                # Sec. VI.
+                # R = DFFbase/DFFbound
                 r = ic  / final_e2e_max
                 if r > 1 + TOLERANCE:  
                     exceed = "exceed"
@@ -238,6 +243,8 @@ def compare_Gunzel_IC(num_chains, num_repeats, random_seed, periods):
             run_time_our_active = t_our_active_1 - t_our_active_0
 
             if final_e2e_max_active != 0:
+                # Sec. VI.
+                # R = DFFbase/DFFbound
                 r_active = ic / final_e2e_max_active
                 if r_active > 1 + TOLERANCE:  
                     exceed_active = "exceed"
@@ -253,8 +260,8 @@ def compare_Gunzel_IC(num_chains, num_repeats, random_seed, periods):
 
         random_seed += 1
 
+    # Save false results
     for num_tasks in num_chains:
-
         false_percentage = (false_results[num_tasks] / num_repeats)
         false_results[num_tasks]= false_percentage
 
@@ -269,14 +276,14 @@ def compare_Gunzel_LET(jitters, num_chains, num_repeats, random_seed, periods):
     """
     Compares our (passive, active) and paper [20] LET communication (Gunzel LET) experiments.
 
-    Args:
+    arguments:
         jitters: zero(LET)
         num_chains: List of number of task chains
         num_repeats: Number of repeats
         random_seed: Random seed
         periods: List of periods
 
-    Returns:
+    return:
         tuple: A tuple containing all results (passive result, passive failed result, passive final result, active result, active failed result, active final result)
     """
     TOLERANCE = 1e-9
@@ -312,6 +319,8 @@ def compare_Gunzel_LET(jitters, num_chains, num_repeats, random_seed, periods):
                 run_time_G = t_G_1 - t_G_0
 
                 if final_e2e_max != 0:
+                    # Sec. VI.
+                    # R = DFFbase/DFFbound
                     r = let / final_e2e_max
                     if r > 1 + TOLERANCE:  
                         exceed = "exceed"
@@ -334,6 +343,8 @@ def compare_Gunzel_LET(jitters, num_chains, num_repeats, random_seed, periods):
                 run_time_our_active = t_our_active_1 - t_our_active_0
 
                 if final_e2e_max_active != 0:
+                    # Sec. VI.
+                    # R = DFFbase/DFFbound
                     r_active = let / final_e2e_max_active
                     if r_active > 1 + TOLERANCE:  
                         exceed_active = "exceed"
@@ -349,6 +360,7 @@ def compare_Gunzel_LET(jitters, num_chains, num_repeats, random_seed, periods):
 
         random_seed += 1
 
+    # Save false results
     for num_tasks in num_chains:
         for per_jitter in jitters:
             false_percentage = (false_results[num_tasks][per_jitter] / num_repeats)
@@ -364,6 +376,11 @@ def compare_Gunzel_LET(jitters, num_chains, num_repeats, random_seed, periods):
 def append_to_common_csv(csv_file, common_csv_file):
     """
     Append the tmp.csv file generated from a single experiment to the common_csv_file table.
+    arguments:
+        csv_file: The temporary CSV file generated from a single experiment
+        common_csv_file: The common CSV file to which results are appended
+    return:
+        None
     """
     try:
         df_current = pd.read_csv(csv_file)
@@ -387,6 +404,13 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
     Comparison charts for our passive and active experiments
         1) Failure rate vs. number of tasks/jitter (compare_percent)
         2) Ratio (our/Gunzel) histogram (compare_histogram)
+    arguments:
+        csv_files: List of CSV files to be compared
+        num_repeats: Number of repeats
+        random_seed: Random seed
+        timestamp: Timestamp for naming the output files
+    return:
+        None
     """
     folder_name = f"{num_repeats}_{random_seed}_{timestamp}"
     folder_path = os.path.join("compare/", folder_name)
@@ -406,7 +430,14 @@ def compare_plots(csv_files, num_repeats, random_seed, timestamp):
 def run_Gunzel_IC(random_seed, num_repeats, common_csv_passive, common_csv_active):
     """
     Implicit communication comparison experiment (passive/active/Gunzel IC)
-    RTSS'2025 fig.11, 13
+    please see RTSS'2025 fig.11, 13.
+    arguments:
+        random_seed: Random seed
+        num_repeats: Number of repeats
+        common_csv_passive: Common CSV file for passive results
+        common_csv_active: Common CSV file for active results
+    return:
+        None
     """
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     num_chains = [3,5,8,10] 
@@ -424,6 +455,13 @@ def run_Gunzel_IC(random_seed, num_repeats, common_csv_passive, common_csv_activ
 def run_Gunzel_LET(random_seed, num_repeats, common_csv_passive, common_csv_active):    
     """
     LET communication comparison experiment (passive-jitter=0/active-jitter=0/Gunzel LET)
+    arguments:
+        random_seed: Random seed
+        num_repeats: Number of repeats
+        common_csv_passive: Common CSV file for passive results
+        common_csv_active: Common CSV file for active results
+    return:
+        None
     """
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     num_chains = [3,5,8,10] 
@@ -443,7 +481,14 @@ def run_Gunzel_LET(random_seed, num_repeats, common_csv_passive, common_csv_acti
 def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_csv_active):
     """
     LET(jitter=0)/Implicit communication(IC) comparison experiment (passive/active)
-    RTSS'2025 fig.10, 12
+    please see RTSS'2025 fig.10, 12.
+    arguments:
+        random_seed: Random seed
+        num_repeats: Number of repeats
+        common_csv_passive: Common CSV file for passive results
+        common_csv_active: Common CSV file for active results
+    return:
+        None
     """
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
     jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 

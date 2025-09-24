@@ -1,6 +1,11 @@
 """
 Borrowed some code from the following repository https://github.com/tu-dortmund-ls12-rt/end-to-end_inter
 
+The submission version we used is from the commit:
+    git clone https://github.com/tu-dortmund-ls12-rt/end-to-end_inter
+    cd end-to-end_inter
+    git checkout 9c994636f636a93ad1a711f0ca78e6e2c52ede0d  
+
 [20] M. Günzel, K.-H. Chen, N. Ueter, G. von der Brüggen, M. Dürr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause- effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
 """
 import math
@@ -96,6 +101,14 @@ def schedule_task_set(ce_chains, task_set, print_status=False):
 Random utilization generation by UUniFast, Bini et al 2005
 """
 def uunifast(n, u):
+    """
+    Generate n utilizations with total utilization u.
+    arguments:
+        n: number of tasks
+        u: total utilization
+    return:
+        list of utilizations
+    """
     utilizations = []
     sumU = u
     for i in range(1, n):
@@ -107,11 +120,19 @@ def uunifast(n, u):
 
 
 """
-NEWFUNC by shumo. 
+NEWFUNC by shumo wang. 
 """
 def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_jitter):
     """
     Convert the task set of our paper to the LET model of paper [20] and calculate its LET value.
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of periods of the tasks
+        read_offsets: list of read offsets of the tasks
+        write_offsets: list of write offsets of the tasks
+        per_jitter: jitter percentage (for period)
+    return:
+        let: LET value of the chain 
     """
     task_set = []
     for i, period, read_offset, write_offset in zip(range(num_tasks), periods, read_offsets, write_offsets):
@@ -146,12 +167,23 @@ def run_analysis_Gunzel_LET(num_tasks, periods,read_offsets,write_offsets, per_j
 
 
 """
-NEWFUNC by shumo. 
+NEWFUNC by shumo wang. 
 """
 def run_analysis_Gunzel_IC(num_tasks, periods):
     """
     Schedule results of paper [20]
     For each generated task set (Kramer's periods [40], utilizations with UUniFast with total utilization of 50%, single CPU)
+    arguments:
+        num_tasks: number of tasks in the chain
+        periods: list of periods of the tasks
+    return:
+        ic: IC value of the chain
+        sorted_periods: list of periods of the tasks (sorted by RM)
+        schedule_wcet: schedule of the task set with WCET
+        task_set: the task set used
+        schedule_bcet: schedule of the task set with BCET
+        new_task_set: the task set with BCET
+        runtime: runtime of the IC analysis
     """
     task_set = []
     totU = 0.5

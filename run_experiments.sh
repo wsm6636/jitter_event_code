@@ -6,12 +6,13 @@ set -euo pipefail
 # Supports three algorithms: IC, LET, and RTSS
 # Usage: bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
 # Example: bash run_experiments.sh 10 5 RTSS
+# Run 10 RTSS evaluations in parallel, each with 5 repeats
 ###
 
 ###
 # Specify number of concurrent instances.
 ###
-INITIAL_SEED=1755016037         
+INITIAL_SEED=1755016037        # used for our paper
 NUM_REPEATS=${1:-100}          # Number of repetitions per experiment
 NUM_EXPERIMENTS=${2:-5}        # Number of concurrent experiments
 TYPE=${3:-our}                 # MET / LET / RTSS(our)
