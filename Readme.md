@@ -2,7 +2,7 @@
 
 The repository is used to reproduce the evaluation from
 
-*"Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  IEEE Real-Time Systems Symposium (RTSS), 2025*
+*"Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025*
 
 The tool supports both **passive** and **active** jitter analysis for cause-effect chains, and supports two mainstream models: LET (Logical Execution Time) and IC (Implicit Communication).
 
@@ -73,11 +73,11 @@ Move into the code folder and execute run_experiments.sh natively:
 
 ```
 cd jitter_event_code
-bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERMENTS] [TYPE]
+bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
 ```
 
 - `[NUM_REPEATS]`: number of repetitions per experiment
-- `[NUM_EXPERMENTS]`: number of parallel experiments
+- `[NUM_EXPERIMENTS]`: number of parallel experiments
 - `[TYPE]`: algorithm type (`RTSS`, `IC`, or `LET`)
   - `RTSS`: Passive and active analysis when jitter is a percentage of the period.
   - `IC`: Implicit communication analysis and comparison with $D^{FF}_{base}$ when jitter comes from scheduling. (both passive and active analysis)
@@ -102,6 +102,10 @@ bash run_experiments.sh 10 10 RTSS  76818.89s user 4.09s system 633% cpu 3:22:00
 Keeping `INITIAL_SEED=1755016037` in `run_experiments.sh` to obtain the same plots from the paper. You can get different results by changing the seed.
 
 ### Acknowledgments
+This work is partially supported by the project "Trustworthy
+Cyber-Physical Pipelines", funded by the MAECI Italy-Sweden
+co-operation id. PGR02086, and by VR grant number 2023-06836.
+This work is also partially supported by the Wallenberg AI, Autonomous Systems and Software Program (WASP) funded by the Knut and Alice Wallenberg Foundation, via the NEST projects Cloud-Robotics: Intelligent Cloud Robotics for Real-Time Manipulation at Scale and by the National Natural Science Foundation of China "Analysis, Modeling and Algorithm Research on Real-time Scheduling Problems of Hybrid Business Flows in Industrial Heterogeneous Networks Based on TSN" (No.62072085), and the China Scholarship Council.
 
 ### License
 
