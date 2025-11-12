@@ -1,1 +1,10 @@
 log/
+active/
+compare/
+passive/
+__pycache__/*.pyc
+.vscode/*
+*.pyc
+.DS_Store
+utilities/__pycache__/
+.vscode/settings.json

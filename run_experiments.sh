@@ -1,58 +1,117 @@
 #!/bin/bash
+set -euo pipefail
 
-INITIAL_SEED=1755016010     # random seed for the first experiment
-NUM_REPEATS=100             # number of repeats for each experiment
-NUM_EXPERIMENTS=5           # total number of experiments to run
+###
+# Batch start script for comparative experiments
+# Supports three algorithms: IC, LET, and RTSS
+# Usage: bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
+# Example: bash run_experiments.sh 10 5 RTSS
+# Run 10 RTSS evaluations in parallel, each with 5 repeats
+###
 
+###
+# Specify number of concurrent instances.
+###
+INITIAL_SEED=1755016037        # used for our paper
+NUM_REPEATS=${1:-100}          # Number of repetitions per experiment
+NUM_EXPERIMENTS=${2:-5}        # Number of concurrent experiments
+TYPE=${3:-our}                 # MET / LET / RTSS(our)
+
+###
+# TYPE determines the algorithm abbreviation and file suffix
+###
+case "$TYPE" in
+    IC) ALG="IC" ; SUFFIX="_IC" ;;
+    LET) ALG="LET"; SUFFIX="_LET" ;;
+    RTSS|our) ALG="RTSS"; SUFFIX="_RTSS" ;;
+    *) echo "Unknown TYPE: $TYPE"; exit 1 ;;
+esac
+
+PYTHON=${PYTHON:-$(command -v python3 || command -v python)}
+
+###
+# output files path
+###
 TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+OUT_DIR="compare/${TIMESTAMP}${SUFFIX}"
 
-COMMON_CSV="common_results_${TIMESTAMP}.csv"
-COMMON_CSV_C1="common_results_c1_${TIMESTAMP}.csv"
+if [[ -d "$OUT_DIR" ]]; then
+    echo "Directory exists, reusing: $OUT_DIR"
+else
+    mkdir -p "$OUT_DIR"
+fi
 
-# current seed starts from the initial seed
-current_seed=$INITIAL_SEED
+###
+# Merged file
+###
+COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
+COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
 
-echo "starting $NUM_EXPERIMENTS experiments, each with $NUM_REPEATS repeats, initial seed: $INITIAL_SEED , common CSV files: $COMMON_CSV and $COMMON_CSV_C1"
+echo "Running $NUM_EXPERIMENTS experiments (${TYPE}) in parallel, each with $NUM_REPEATS repeats"
+echo "Output directory: $OUT_DIR"
 
+###
+# Concurrent experiments
+###
+pids=()
 
+cleanup() {
+    echo
+    echo "Interrupt received, terminating all experiments..."
+    for pid in "${pids[@]}"; do
+        if kill -0 "$pid" 2>/dev/null; then
+            kill "$pid" 2>/dev/null || true
+            wait "$pid" 2>/dev/null || true
+        fi
+    done
+    
+    e
+    exit 0
+}
+
+trap cleanup SIGINT SIGTERM
+
+# Calculate independent seeds for each experiment to avoid duplication
 for i in $(seq 1 $NUM_EXPERIMENTS); do
-    echo "=================== experiment $i/$NUM_EXPERIMENTS ==================="
-    echo "current seed: $current_seed"
-    
-    python main.py $current_seed $NUM_REPEATS --common_csv $COMMON_CSV --common_csv_c1 $COMMON_CSV_C1
-    
-    if [ $? -eq 0 ]; then
-        echo "experiment $i executed successfully!"
-    else
-        echo "experiment $i executed with errors!"
-        exit 1
-    fi
-    
-    current_seed=$((current_seed + NUM_REPEATS))
-    
-    echo "next experiment seed: $current_seed"
-    echo ""
+    seed=$(( INITIAL_SEED + (i-1)*NUM_REPEATS ))
+    tmp_csv_passive="${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"
+    tmp_csv_active="${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv"
+
+    echo "Starting experiment $i/$NUM_EXPERIMENTS, seed=$seed"
+    $PYTHON main.py "$seed" "$NUM_REPEATS" \
+        --common_csv_passive "$tmp_csv_passive" \
+        --common_csv_active "$tmp_csv_active" \
+        --suffix "$SUFFIX" \
+        --alg "$ALG" &
+    pids+=($!)
 done
 
-echo "all $NUM_EXPERIMENTS experiments completed successfully!"
-echo "output results $COMMON_CSV and $COMMON_CSV_C1"
 
-if [ -f "$COMMON_CSV" ]; then
-    total_rows=$(wc -l < "$COMMON_CSV")
-    echo "rtss result total rows: $((total_rows - 1))"  # cut off the header row
-fi
+for pid in "${pids[@]}"; do wait "$pid"; done
+echo "All experiments finished, starting merge..."
 
-if [ -f "$COMMON_CSV_C1" ]; then
-    total_rows_c1=$(wc -l < "$COMMON_CSV_C1")
-    echo "C1 result total rows: $((total_rows_c1 - 1))"  # cut off the header row
-fi
+###
+# Merge temporary result files
+###
+# Use the first file to write header
+head -n 1 "${OUT_DIR}/tmp_1_passive${SUFFIX}.csv"     > "$COMMON_CSV_PASSIVE"
+head -n 1 "${OUT_DIR}/tmp_1_active${SUFFIX}.csv"  > "$COMMON_CSV_ACTIVE"
+# Append the rest of files without their headers
+for i in $(seq 1 $NUM_EXPERIMENTS); do
+    tail -n +2 "${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"    >> "$COMMON_CSV_PASSIVE"
+    tail -n +2 "${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv" >> "$COMMON_CSV_ACTIVE"
+done
 
-echo ""
-echo " ..."
-python generate_comparison.py --common_csv $COMMON_CSV --common_csv_c1 $COMMON_CSV_C1
+rm -f "${OUT_DIR}"/tmp_*"${SUFFIX}".csv
 
-if [ $? -eq 0 ]; then
-    echo "Final comparison plot generated successfully"
+echo "Processing final files ..."
+
+# Split csv file and draw graph
+if $PYTHON generate_comparison.py \
+        --common_csv_passive "$COMMON_CSV_PASSIVE" \
+        --common_csv_active "$COMMON_CSV_ACTIVE" \
+        --suffix "$SUFFIX"; then
+    echo "Final comparison plot (${TYPE}) generated successfully"
 else
     echo "Error occurred while generating comparison plot!"
 fi
