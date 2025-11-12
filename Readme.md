@@ -4,11 +4,11 @@ The repository is used to reproduce the evaluation from
 
 *"Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025*
 
-The tool supports both **passive** and **active** jitter analysis for cause-effect chains, and supports two mainstream models: LET (Logical Execution Time) and IC (Implicit Communication).
+This tool implements an analytical framework for tracking chain jitter propagation, demonstrating the impact of jitter on end-to-end latency. It supports arbitrary communication paradigms, including LET and implicit communication. We transform the chains of two tasks into an aggregation task and iteratively apply this approach to the analysis of longer chains.
 
-To simulate the task scheduling  maximum reaction time analysis, we borrowed some code from paper 20. In our paper, we set it as $D^{FF}_{base}$.
+In demonstrating the impact of jitter, we borrow the method and code from paper [A] and set it as a baseline.
 
-> [20] M. G¨unzel, K.-H. Chen, N. Ueter, G. von der Br¨uggen, M. D¨urr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
+> [A] M. G¨unzel, K.-H. Chen, N. Ueter, G. von der Br¨uggen, M. D¨urr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
 
 This document is organized as follows:
 
@@ -80,8 +80,11 @@ bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
 - `[NUM_EXPERIMENTS]`: number of parallel experiments
 - `[TYPE]`: algorithm type (`RTSS`, `IC`, or `LET`)
   - `RTSS`: Passive and active analysis when jitter is a percentage of the period.
-  - `IC`: Implicit communication analysis and comparison with $D^{FF}_{base}$ when jitter comes from scheduling. (both passive and active analysis)
-  - `LET`: LET communication analysis and comparison with $D^{FF}_{base}$ when jitter comes from scheduling. (both passive and active analysis)
+    - Passive analysis: This includes the method's failure rate and the pessimism of its boundaries.
+    - Active analysis: When passive analysis fails, active analysis will attempt to adjust parameters and continue analyzing.
+    - Please refer to Section V of the paper for details.
+  - `IC`: Passive and active analysis of implicit communication when jitter originates from scheduling.
+  - `LET`: Passive and active analysis of LET communication when jitter originates from scheduling.
 
 The results are output and saved in active/, passive/, and compare/. The results of different analyses are distinguished by RTSS/IC/LET tags.
 
