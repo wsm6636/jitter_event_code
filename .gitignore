@@ -1,7 +1,5 @@
 log/
-active/
-compare/
-passive/
+
 __pycache__/*.pyc
 .vscode/*
 *.pyc
