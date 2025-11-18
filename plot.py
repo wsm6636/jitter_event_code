@@ -448,6 +448,138 @@ def compare_false_percent_our(csv_files, compare_plot_name):
 
 
 
+def plot_false_percent_order(order_file_name, csv_file):
+    # Load data from CSV
+    df = pd.read_csv(csv_file)
+    
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    per_jitter_values = df['per_jitter'].unique()
+
+    fig, axs = plt.subplots(1, len(chain_types), figsize=(15, 5), sharey=True)
+
+    for i, chain_type in enumerate(chain_types):
+        ax = axs[i]
+        for num_tasks in num_tasks_values:
+            subset = df[(df['chain_type'] == chain_type) & (df['num_tasks'] == num_tasks)]
+            subset = subset.sort_values(by='per_jitter')
+            ax.plot(subset['per_jitter'], subset['false_percentage_by_num_tasks'], marker='o', label=f'num_tasks={num_tasks}')
+        
+        ax.set_title(f'Failure Rates for {chain_type}')
+        ax.set_xlabel('Jitter')
+        ax.set_ylabel('Failure Rate')
+        ax.legend()
+        ax.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(order_file_name)
+    print(f"Plot generated and saved to {order_file_name}")
+    # plt.close()
+
+def plot_type_percent_order(type_order_file_name, csv_file):
+    # Load data from CSV
+    df = pd.read_csv(csv_file)
+    
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    per_jitter_values = df['per_jitter'].unique()
+    
+    fig, axs = plt.subplots(1, len(num_tasks_values), figsize=(15, 5), sharey=True)
+
+    if len(num_tasks_values) == 1:
+        axs = [axs]  # 如果只有一个子图，确保 axs 是可迭代的
+    
+    for i, num_tasks in enumerate(num_tasks_values):
+        ax = axs[i]
+        for chain_type in chain_types:
+            subset = df[(df['num_tasks'] == num_tasks) & (df['chain_type'] == chain_type)]
+            subset = subset.sort_values(by='per_jitter')
+            ax.plot(subset['per_jitter'], subset['false_percentage_by_chain_type'], marker='o', label=f'chain_type={chain_type}')
+        
+        ax.set_title(f'Failure Rates for num_tasks={num_tasks}')
+        ax.set_xlabel('Jitter')
+        ax.set_ylabel('Failure Rate')
+        ax.legend()
+        ax.grid(True)
+    
+    plt.tight_layout()
+    plt.savefig(type_order_file_name)
+    print(f"Plot generated and saved to {type_order_file_name}")
+    # plt.close()
+
+def plot_R_histogram_our_order(order_r_plot_name, csv_file):
+    # Load data from CSV
+    df = pd.read_csv(csv_file)
+
+    # Convert R column to numeric, forcing errors to NaN
+    df['R'] = pd.to_numeric(df['R'], errors='coerce')
+
+    # Extract unique values
+    chain_types = df['chain_type'].unique()
+    num_tasks_values = df['num_tasks'].unique()
+    per_jitter_values = df['per_jitter'].unique()
+    TOLERANCE = 1e-9
+    # Create subplots
+    fig, axs = plt.subplots(len(num_tasks_values), len(chain_types), figsize=(20, 10), sharey=True)
+    
+    # Define colors for different per_jitter values
+    colors = plt.cm.viridis(np.linspace(0, 1, len(per_jitter_values)))
+    handles = []
+    labels = []
+    for i, num_tasks in enumerate(num_tasks_values):
+        for j, chain_type in enumerate(chain_types):
+            ax = axs[i, j]
+            r_values_all_jitter = []
+            for k, per_jitter in enumerate(per_jitter_values):
+                subset = df[(df['chain_type'] == chain_type) & (df['num_tasks'] == num_tasks) & (df['per_jitter'] == per_jitter)]
+                r_values = subset['R'].dropna()
+                # r_values = subset['R'].dropna().to_numpy(dtype=float)
+                # r_values_all_jitter = np.array(r_values_all_jitter, dtype=float)
+                r_values_all_jitter.extend(r_values)
+                # Plot histogram for each per_jitter with different color
+                hist = ax.hist(r_values, bins=20, alpha=0.5, color=colors[k])
+                
+                # Only add the first handle for each per_jitter to the legend
+                if i == 0 and j == 0:
+                    handles.append(hist[-1][0])
+                    labels.append(f'per_jitter={per_jitter}')
+
+                # # Plot histogram for each per_jitter with different color
+                # ax.hist(r_values, bins=20, alpha=0.5, color=colors[k], label=f'per_jitter={per_jitter}')
+            
+            # Calculate the total number of samples
+            total_samples = len(r_values_all_jitter)
+            
+            # Calculate the number of samples where R > 1
+            r_exceed_count = 0
+            for r in r_values_all_jitter:
+                if r > 1 + TOLERANCE:
+                    r_exceed_count += 1
+                    print(f"Warning: R value {r} exceeds 1.0 for num_tasks={num_tasks}, chain_type={chain_type}, per_jitter={per_jitter}. This may indicate an error in the data.")
+            # Calculate the percentage of R values greater than 1
+            if total_samples > 0:
+                r_exceed_percentage = (r_exceed_count / total_samples) * 100
+            else:
+                r_exceed_percentage = 0.0
+
+            # Set title with the percentage of R values greater than 1 and total sample count
+            ax.set_title(f'num_tasks={num_tasks}, {chain_type}, - Data Count: {total_samples}')
+            ax.set_xlabel(f'R Value, R_exceed_percentage = {r_exceed_percentage:.2f}%')
+            ax.set_ylabel('Frequency')
+            # ax.legend()
+            ax.grid(True)
+
+    plt.legend(handles, labels, loc='upper right', bbox_to_anchor=(1.1, 1.05), title="Legend", fontsize=8)
+
+    plt.tight_layout()
+    plt.savefig(order_r_plot_name)
+    print(f"Plot generated and saved to {order_r_plot_name}")
+    
+
+    
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Plot histograms from a CSV file.")
     # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
