@@ -2,13 +2,13 @@
 
 The repository is used to reproduce the evaluation from
 
-*"Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025*
+> "Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025
 
 This tool implements an analytical framework for tracking chain jitter propagation, demonstrating the impact of jitter on end-to-end latency. It supports arbitrary communication paradigms, including LET and implicit communication. We transform the chains of two tasks into an aggregation task and iteratively apply this approach to the analysis of longer chains.
 
 In demonstrating the impact of jitter, we borrow the method and code from paper [A] and set it as a baseline.
 
-> [A] M. G¨unzel, K.-H. Chen, N. Ueter, G. von der Br¨uggen, M. D¨urr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
+> [A] M. G&uuml;nzel, K.-H. Chen, N. Ueter, G. von der Br&uuml;ggen, M. D&uuml;rr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
 
 This document is organized as follows:
 
