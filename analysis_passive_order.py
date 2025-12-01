@@ -406,7 +406,7 @@ def chain_desc_no_free_jitter(tasks):
 
 #chain max period order
 def chain_max_period(tasks):
-    max_period_task = max(tasks, key=lambda x: (x.period, -tasks.index(x)))
+    max_period_task = min(tasks, key=lambda x: (x.period, -tasks.index(x)))
     max_period_index = tasks.index(max_period_task)
 
     #Grouping
