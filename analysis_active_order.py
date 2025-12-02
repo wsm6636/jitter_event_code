@@ -348,91 +348,13 @@ def chain_desc_no_free_jitter_active(tasks):
 
 
 
-# #chain max period order
-# def chain_max_period_active(tasks):
-#     max_period_task = max(tasks, key=lambda x: (x.period, -tasks.index(x)))
-#     max_period_index = tasks.index(max_period_task)
-#     all_bridges = []
-#     adjusted = False
-
-#     #Grouping
-#     predecessor_group = tasks[:max_period_index + 1]  #task0~i
-#     successor_group = tasks[max_period_index + 1:]       #taski+1~n
-#     final_tasks = []
-
-#     #task0~i chain
-#     if len(predecessor_group) > 1:
-#         predecessor_result = chain_desc_no_free_jitter_active(predecessor_group)
-#         if predecessor_result is not False:
-#             _, _, adjusted, all_bridges, predecessor_task = predecessor_result
-#         else:
-#             return 0, None, None, adjusted, all_bridges
-#     elif len(predecessor_group) == 1:
-#         predecessor_task = predecessor_group[0]
-
-#     if successor_group:
-#         successor_group.insert(0, predecessor_task)
-
-#     if successor_group:
-#         successor_result = chain_asc_no_free_jitter_active(successor_group)
-#         if successor_result is not False:
-#             final_r, final_w, adjusted, all_bridges, final_task = successor_result
-#             max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-#             return max_reaction_time, final_r, final_w, adjusted, all_bridges,
-#         else:
-#             return 0, None, None, adjusted, all_bridges
-#     else:
-#         # 如果后继组为空，直接返回前驱组的结果
-#         max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
-#         return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event, adjusted, all_bridges
-
-
-# #chain min period order
-# def chain_min_period_active(tasks):
-#     # 找到最小周期的任务，如果有多个，选择索引最小的那个
-#     min_period_task = min(tasks, key=lambda x: (x.period, tasks.index(x)))
-#     min_period_index = tasks.index(min_period_task)
-#     all_bridges = []
-#     adjusted = False
-
-#     #Grouping
-#     predecessor_group = tasks[:min_period_index + 1]  #task0~i
-#     successor_group = tasks[min_period_index + 1:]       #taski+1~n
-#     final_tasks = []
-
-#     #task0~i chain
-#     if len(predecessor_group) > 1:
-#         predecessor_result = chain_desc_no_free_jitter_active(predecessor_group)
-#         if predecessor_result is not False:
-#             _, _, adjusted, all_bridges, predecessor_task = predecessor_result
-#         else:
-#             return 0, None, None, adjusted, all_bridges
-#     elif len(predecessor_group) == 1:
-#         predecessor_task = predecessor_group[0]
-
-#     if successor_group:
-#         successor_group.insert(0, predecessor_task)
-        
-#     if successor_group:
-#         successor_result = chain_asc_no_free_jitter_active(successor_group)
-#         if successor_result is not False:
-#             final_r, final_w, adjusted, all_bridges, final_task = successor_result
-#             max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-#             return max_reaction_time, final_r, final_w, adjusted, all_bridges,
-#         else:
-#             return 0, None, None, adjusted, all_bridges
-#     else:
-#         # 如果后继组为空，直接返回前驱组的结果
-#         max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
-#         return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event, adjusted, all_bridges
-    
-
-
 #chain max period order
 def chain_max_period_active(tasks):
-    # max_period_task = max(tasks, key=lambda x: (x.period, -tasks.index(x)))
-    max_period_task = min(tasks, key=lambda x: (x.period, -tasks.index(x)))
-    max_period_index = tasks.index(max_period_task)
+    max_period_index, max_period_task = max(
+    enumerate(tasks),
+    key=lambda t: t[1].period
+)
+
     all_bridges = []
     pred_bridges = []
     succ_bridges = []
@@ -470,7 +392,6 @@ def chain_max_period_active(tasks):
         else:
             return 0, None, None, adjusted, all_bridges
     else:
-        # 如果后继组为空，直接返回前驱组的结果
         all_bridges = pred_bridges
         max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
         return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event, adjusted, all_bridges
@@ -478,10 +399,10 @@ def chain_max_period_active(tasks):
 
 #chain min period order
 def chain_min_period_active(tasks):
-    # 找到最小周期的任务，如果有多个，选择索引最小的那个
-    min_period_task = min(tasks, key=lambda x: (x.period, tasks.index(x)))
-    # min_period_task = max(tasks, key=lambda x: (x.period, tasks.index(x)))
-    min_period_index = tasks.index(min_period_task)
+    min_period_index, min_period_task = min(
+    enumerate(tasks),
+    key=lambda t: (t[1].period, t[0])
+)
     all_bridges = []
     pred_bridges = []
     succ_bridges = []
@@ -519,7 +440,6 @@ def chain_min_period_active(tasks):
             return 0, None, None, adjusted, all_bridges
     else:
         all_bridges = pred_bridges
-        # 如果后继组为空，直接返回前驱组的结果
         max_reaction_time = predecessor_task.write_event.offset + predecessor_task.write_event.maxjitter - predecessor_task.read_event.offset + predecessor_task.read_event.period
         return max_reaction_time, predecessor_task.read_event, predecessor_task.write_event, adjusted, all_bridges
 
@@ -530,7 +450,7 @@ def our_chain_active(tasks):
         final_r = tasks[0].read_event
         final_w = tasks[0].write_event
         max_reaction_time = final_w.offset + final_w.maxjitter - final_r.offset + final_r.period
-        return max_reaction_time, final_r, final_w, False
+        return max_reaction_time, final_r, final_w
     else:
         final_combine_result = chain_asc_no_free_jitter_active(tasks)
     if final_combine_result is False:
@@ -781,28 +701,25 @@ def run_analysis_active_our_order(num_tasks, periods,read_offsets,write_offsets,
     
     for name, func in chain_functions.items():
         print(f"Running chain type: {name}")    
+        
         result = func(tasks)
-        # new_tasks = tasks
-        new_tasks = copy.deepcopy(tasks)
-        print(f"tasks before insertion: {[task for task in new_tasks]}")
+
+        new_tasks = tasks
+
         if result:
-            max_reaction_time, final_r, final_w, adjusted, all_bridges = result
+            final_e2e_max, final_r, final_w, adjusted, all_bridges = result
             if all_bridges:
-                # new_tasks = inject_bridges(tasks[:], all_bridges)
-                new_tasks = inject_bridges(new_tasks, all_bridges)
+                new_tasks = inject_bridges(tasks[:], all_bridges)
                 inserted = True
-                print(f"tasks after insertion: {[task for task in new_tasks]}")
-            results[name] = (max_reaction_time, final_r, final_w, adjusted, inserted)
+                
+            results[name] = (final_e2e_max, final_r, final_w, adjusted, inserted)
         else:
             results[name] = (0, None, None, adjusted, inserted)
-
-        print(f"results for chain type {name}: {results[name]}")
-        # check if the final result is valid
+        
         reaction_time_a = maximize_reaction_time(new_tasks)
         reaction_time_b = max(results_function)
         max_reaction_time = max(reaction_time_a, reaction_time_b)
         mrt_results[name] = (max_reaction_time)
-
     
     return results, mrt_results, new_tasks
 

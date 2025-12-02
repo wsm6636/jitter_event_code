@@ -103,6 +103,7 @@ def run_evaluation_active_our_order(jitters, num_chains, num_repeats, random_see
                     max_reaction_time = mrt_resluts[chain_type]
                     if final_e2e_max != 0:
                         r = max_reaction_time / final_e2e_max
+                        print(f"final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}")
                         if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                             exceed = "exceed"
                         else:
@@ -155,24 +156,25 @@ def run_evaluation_active_our_order(jitters, num_chains, num_repeats, random_see
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 100  
+    num_repeats = 1  
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
     jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
-    # jitters = [0.05]
+    # jitters = [0.1]
     num_chains = [3,5,8,10] 
     # num_chains  = [3,5]  # for test
     # num_chains  = [3]  # for test
 
-    random_seed = 1755016037
+    # random_seed = 1755016042
+    random_seed = 1754657734
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     # random_seed = int(time.time())
     # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
-    chain_types = ['asc', 'desc', 'max_period', 'min_period']
-    # chain_types = ['max_period', 'min_period']  # for test
+    # chain_types = ['asc', 'desc', 'max_period', 'min_period']
+    chain_types = ['asc', 'desc']  # for test
 
     run_results, false_results, false_percentage_by_chain_type, false_percentage_by_num_tasks = run_evaluation_active_our_order(jitters, num_chains, num_repeats, random_seed, periods, chain_types)
 

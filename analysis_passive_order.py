@@ -406,9 +406,10 @@ def chain_desc_no_free_jitter(tasks):
 
 #chain max period order
 def chain_max_period(tasks):
-    max_period_task = min(tasks, key=lambda x: (x.period, -tasks.index(x)))
-    max_period_index = tasks.index(max_period_task)
-
+    max_period_index, max_period_task = max(
+    enumerate(tasks),
+    key=lambda t: t[1].period
+)
     #Grouping
     predecessor_group = tasks[:max_period_index + 1]  #task0~i
     successor_group = tasks[max_period_index + 1:]       #taski+1~n
@@ -443,8 +444,10 @@ def chain_max_period(tasks):
 #chain min period order
 def chain_min_period(tasks):
     # 找到最小周期的任务，如果有多个，选择索引最小的那个
-    min_period_task = min(tasks, key=lambda x: (x.period, tasks.index(x)))
-    min_period_index = tasks.index(min_period_task)
+    min_period_index, min_period_task = min(
+    enumerate(tasks),
+    key=lambda t: (t[1].period, t[0])
+)
 
     #Grouping
     predecessor_group = tasks[:min_period_index + 1]  #task0~i

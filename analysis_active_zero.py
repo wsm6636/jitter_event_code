@@ -18,7 +18,7 @@ from scipy.optimize import basinhopping
 
 from analysis_passive import Event, Task, RandomEvent, RandomEventForGunzel
 from analysis_passive import euclide_extend
-
+from periodic_LET import combine_zero_jitter
 
 
 def adjust_offsets(read_offset, write_offset, period, write_jitter, read_jitter):
@@ -307,6 +307,101 @@ def combine_with_insertion(task1, task2):
         return r_final, w_final, adjusted, bridges
 
 
+
+def combine_zero_jitter(task1, task2):
+    T1 = task1.period
+    rd_ph1 = task1.read_offset + task1.read_event.maxjitter
+    wr_ph1 = task1.write_offset + task1.write_event.maxjitter
+    T2 = task2.period
+    rd_ph2 = task2.read_offset + task2.read_event.maxjitter
+    wr_ph2 = task2.write_offset + task2.write_event.maxjitter
+
+    # distance from tau_1 job 0 write  -->  tau_2 job 0 read
+    PPhase = rd_ph2-wr_ph1
+
+    # G = GCD(T1,T2)
+    # c1, c2 are coefficients of Bezout's identity: c1*T1+c2*T2 = G
+    (G,c1,c2) = euclide_extend(T1,T2)
+    p1 = T1//G
+    p2 = T2//G
+
+    # Minimum latency
+    min_latency = (wr_ph1-rd_ph1)+(wr_ph2-rd_ph2)+(PPhase % G)
+
+    # Parameters of the 1 -> 2 chain
+    if T1 == T2:
+        # assuming jobs of the chain 1->2 are indexed by T1
+        rd_ph12 = rd_ph1
+        rd_delta12 = wr_delta12 = T1
+        cycle = 1
+        wr_ph12 = wr_ph2-PPhase+(PPhase % T1)
+        max_latency = min_latency
+        id_min_latency = 0
+        id_max_latency = 0
+        return None, None
+
+    elif T1 > T2:
+        T12 = T1
+        phi1 = (PPhase % T2) // G      # Eq. (23)
+        rd_ph12 = rd_ph1
+        rd_delta12 = T1                # constant separation of consecutive reads
+        dancing = [(phi1-j1*p1) % p2 for j1 in range(p2)]  # the job-dependent piece of (22)
+        cycle = p2
+        # Write phasing, Eq. (24)
+        wr_ph12 = [wr_ph2-PPhase+rem*G+(PPhase % G) for rem in dancing]
+        # separation of consecutive writes
+        wr_delta12 = [(p1//p2)*T2 if (rem >= p1 % p2) else (p1//p2+1)*T2 for rem in dancing]
+        inv_p1 = c1 % p2   # multiplicative inverse of p1 over modulo-p2
+        # Notice that min/max below are computed without enumerating dancing
+        max_latency = min_latency+T2-G
+        id_min_latency = (phi1*inv_p1) % p2      # same id as min in dancing
+        id_max_latency = ((phi1+1)*inv_p1) % p2  # same id as max in dancing
+        # Read phase of the copier task after tau_2. Eq. (37)
+        rd_ph2next = wr_ph2-PPhase+(PPhase % G)+T2-G
+
+        copier_id = f"{task2.id}_next_copier"
+        copier_offset = rd_ph2next     
+
+    else:
+        T12 = T2
+        phi2 = (PPhase % T1) // G      # Eq. (32)
+        wr_ph12 = wr_ph2
+        wr_delta12 = T2                # constant separation of consecutive writes
+        dancing = [(phi2+j2*p2) % p1 for j2 in range(p1)]  # the job-dependent piece of (31)
+        cycle = p1
+        # Read phasing, Eq. (33)
+        rd_ph12 = [rd_ph1+PPhase-(PPhase % G)-rem*G for rem in dancing]
+        # separation of consecutive reads
+        rd_delta12 = [(p2//p1+1)*T1 if (rem >= (-p2) % p1) else (p2//p1)*T1 for rem in dancing]
+        inv_p2 = c2 % p1   # multiplicative inverse of p2 over modulo-p1
+        # Notice that min/max below are computed without enumerating dancing
+        max_latency = min_latency+T1-G
+        id_min_latency = (-phi2*inv_p2) % p1     # same id as max in dancing
+        id_max_latency = (-(phi2+1)*inv_p2) % p1 # same id as min in dancing
+        # Write phase of the copier task before tau_1. Eq. (40)
+        wr_ph1prev = rd_ph1+PPhase-(PPhase % G)-T1+G
+
+        copier_id = f"{task1.id}_prev_copier"
+        copier_offset = wr_ph1prev
+
+
+    add_r = Event(
+        id=f"{copier_id}_read",
+        event_type="read_copier",
+        period=T12,
+        offset=copier_offset,
+        maxjitter=0,
+    )
+    add_w = Event(
+        id=f"{copier_id}_write",
+        event_type="write_copier",
+        period=T12,
+        offset=copier_offset,
+        maxjitter=0,
+    )
+
+    return add_r, add_w
+
 def chain_asc_no_free_jitter_active(tasks):
     """
     Processing Chain with adjustment of offset.
@@ -325,13 +420,36 @@ def chain_asc_no_free_jitter_active(tasks):
 
     for i in range(1, n):
         result = combine_with_insertion(current_task, tasks[i])
+
+        # if result is False:
+        #     return False
+        # else:
+        #     r, w, adjusted, bridges = result
+        #     current_task = Task(read_event=r, write_event=w, id=r.id)
+        #     if bridges:
+        #         all_bridges.append((i, bridges))
+
         if result is False:
-            return False
+            # Fallback: try zero-jitter combination (no bridge, no offset change)
+            result_zj = combine_zero_jitter(current_task, tasks[i])
+            if result_zj is False:
+                # Even zero-jitter failed → entire chain fails
+                return False
+            else:
+                r, w = result_zj
+                # No bridges inserted, no adjustment in this step
+                if r is None or w is None:
+                    return False
+                else:
+                    current_task = Task(read_event=r, write_event=w, id=r.id)
+                    all_bridges.append((i, current_task))
+                # Note: we do NOT mark adjusted=True here
         else:
             r, w, adjusted, bridges = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
             if bridges:
                 all_bridges.append((i, bridges))
+
     return  r, w, adjusted, all_bridges
 
 

@@ -17,6 +17,7 @@ import random
 import time
 import os
 from evaluation_passive import generate_periods_and_offsets
+from analysis_passive import euclide_extend
 
 
 def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
@@ -174,13 +175,12 @@ if __name__ == "__main__":
     
     # jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
     # jitters = random.choices([0.1,0.2,0.3,0.4,0.5], k=1)
-    jitters = [0.4]  # for test
+    jitters = [0.1]  # for test
     # num_chains = [3,5,8,10] 
     num_chains  = [3]  # for test
 
     # random_seed = 1754657734
-    # random_seed =  int(time.time())
-    random_seed =  1764690074
+    random_seed =  1755016042
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     # random_seed = int(time.time())

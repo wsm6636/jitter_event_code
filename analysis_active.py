@@ -587,6 +587,7 @@ def run_analysis_active_our(num_tasks, periods,read_offsets,write_offsets, per_j
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
 
+    print(f"tasks before insertion: {[t for t in tasks]}")
     final = our_chain_active(tasks)
     
     new_tasks = tasks
@@ -605,11 +606,15 @@ def run_analysis_active_our(num_tasks, periods,read_offsets,write_offsets, per_j
             # Processing the adjusted task set
             new_tasks = inject_bridges(tasks[:], all_bridges)
             inserted = True
-            
+
     # check if the final result is valid
     reaction_time_a = maximize_reaction_time(new_tasks)
     reaction_time_b = max(results_function)
     max_reaction_time = max(reaction_time_a, reaction_time_b)
+
+                
+    print(f"tasks after insertion: {[t for t in new_tasks]}")
+    print(f"adjusted: {adjusted}, inserted: {inserted}")
 
     return final_e2e_max, max_reaction_time, final_r, final_w, new_tasks, adjusted, inserted
 
@@ -706,7 +711,7 @@ def run_analysis_active_Gunzel_IC(num_tasks, periods,read_offsets,write_offsets,
         if bridges:
             new_tasks = inject_bridges(tasks[:], bridges)
             inserted = True
-            
+
     return final_e2e_max, final_r, final_w, new_tasks, adjusted, inserted
 
 
