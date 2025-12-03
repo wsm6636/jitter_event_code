@@ -18,6 +18,8 @@ import time
 import os
 from evaluation_passive import generate_periods_and_offsets
 
+from plot import plot_R_histogram_our
+from plot import plot_false_percent
 
 def output_active_Gunzel_IC(num_repeats, random_seed, timestamp, results, false_results, num_chains):
     """
@@ -100,10 +102,13 @@ def output_active_our(num_repeats, random_seed, timestamp, results, false_result
     return:
         results_csv: the path to the results CSV file
     """
-    folder_path = "active"
+    # folder_path = "active"
+    folder_path = "zero/compare_active"
     os.makedirs(folder_path, exist_ok=True)
 
     results_csv = os.path.join(folder_path, f"data_active_{num_repeats}_{random_seed}_{timestamp}.csv" )
+    percent_plot_name = os.path.join(folder_path,  f"percent_active_{num_repeats}_{random_seed}_{timestamp}.png")
+    R_plot_name = os.path.join(folder_path, f"R_active_{num_repeats}_{random_seed}_{timestamp}.png")
 
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
@@ -116,6 +121,9 @@ def output_active_our(num_repeats, random_seed, timestamp, results, false_result
                     writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage,adjusted,inserted])
 
     print(f"All results saved to {results_csv}")
+
+    # plot_false_percent(results_csv, percent_plot_name, tag="active")
+    # plot_R_histogram_our(results_csv, R_plot_name, tag="active")
 
     return results_csv
 
@@ -140,7 +148,6 @@ def run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, per
                 # value of rate "= max_reaction_time / final_e2e_max"
                 if final_e2e_max != 0:
                     r = max_reaction_time / final_e2e_max
-                    print(f"final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}")
                     if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                         exceed = "exceed"
                     else:
@@ -168,24 +175,24 @@ def run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, per
 
 if __name__ == "__main__":
     # INCREASE here to have more experiments per same settings
-    num_repeats = 1  
+    num_repeats = 10  
     
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000]  # periods
     
-    # jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
+    jitters = [0,0.02,0.05,0.1,0.2,0.3,0.4,0.5]  # maxjitter = percent jitter * period
     # jitters = random.choices([0.1,0.2,0.3,0.4,0.5], k=1)
-    jitters = [0.4]  # for test
-    # num_chains = [3,5,8,10] 
-    num_chains  = [3]  # for test
+    # jitters = [0.4]  # for test
+    num_chains = [3,5,8,10] 
+    # num_chains  = [3]  # for test
 
-    # random_seed = 1754657734
+    random_seed = 1755016037
     # random_seed =  int(time.time())
-    random_seed =  1764690074
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     # random_seed = int(time.time())
     # timestamp = datetime.datetime.fromtimestamp(random_seed).strftime("%Y%m%d_%H%M%S")
 
-    run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, periods)
+    results, false_results, final = run_evaluation_active_our(jitters, num_chains, num_repeats, random_seed, periods)
+    output_active_our(num_repeats, random_seed, timestamp, results, false_results, num_chains, jitters)
 
 

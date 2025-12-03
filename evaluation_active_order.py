@@ -103,7 +103,7 @@ def run_evaluation_active_our_order(jitters, num_chains, num_repeats, random_see
                     max_reaction_time = mrt_resluts[chain_type]
                     if final_e2e_max != 0:
                         r = max_reaction_time / final_e2e_max
-                        print(f"final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}")
+                        # print(f"final_e2e_max: {final_e2e_max}, max_reaction_time: {max_reaction_time}, R: {r}")
                         if r > 1 + TOLERANCE:  # if rate is larger than 1, then algorithm failed
                             exceed = "exceed"
                         else:
@@ -167,7 +167,7 @@ if __name__ == "__main__":
     # num_chains  = [3]  # for test
 
     # random_seed = 1755016042
-    random_seed = 1754657734
+    random_seed = 1755016037
     timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
 
     # random_seed = int(time.time())

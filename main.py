@@ -21,6 +21,8 @@ from evaluation_active import output_active_our
 from evaluation_active import output_active_Gunzel_IC
 from evaluation_active import output_active_Gunzel_LET
 
+from evaluation_active_zero import output_active_our_zero
+
 from analysis_passive import run_analysis_passive_our
 from analysis_passive import run_analysis_passive_Gunzel_LET
 from analysis_passive import run_analysis_passive_Gunzel_IC
@@ -30,6 +32,8 @@ from analysis_active import run_analysis_active_Gunzel_IC
 
 from analysis_Gunzel import run_analysis_Gunzel_IC
 from analysis_Gunzel import run_analysis_Gunzel_LET
+
+from analysis_active_zero import run_analysis_active_our_zero
 
 from plot import compare_false_percent_our
 from plot import compare_plot_histogram_our
@@ -175,6 +179,83 @@ def compare_our_passive_active(jitters, num_chains, num_repeats, random_seed, pe
             false_results_active[num_tasks][per_jitter] = false_percentage_active
 
     return results, false_results, final, results_active, false_results_active, final_active
+
+
+
+def compare_our_active_zero(jitters, num_chains, num_repeats, random_seed, periods):
+    TOLERANCE = 1e-9
+    # preparing list for storing result
+    results_active = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    final_active = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    false_results_active = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
+
+    results_zero = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    final_zero = {num_tasks: {per_jitter: [] for per_jitter in jitters} for num_tasks in num_chains}
+    false_results_zero = {num_tasks: {per_jitter: 0 for per_jitter in jitters} for num_tasks in num_chains}
+
+
+    for i in range(num_repeats):
+        random.seed(random_seed)
+
+        for num_tasks in num_chains:
+            # Random generation matches our periods and read/write offsets
+            selected_periods, selected_read_offsets, selected_write_offsets = generate_periods_and_offsets(num_tasks, periods)
+
+            for per_jitter in jitters:
+                # Active analysis
+                print(f"=========For evaluation active our========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
+                final_e2e_max_active, max_reaction_time_active, final_r_active, final_w_active, tasks_active, adjusted, inserted = run_analysis_active_our(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+
+                if final_e2e_max_active != 0:
+                    # Sec. VI.
+                    # R = DFFbase/DFFbound
+                    r_active = max_reaction_time_active / final_e2e_max_active
+                    if r_active > 1 + TOLERANCE:  
+                        exceed_active = "exceed"
+                    else:
+                        exceed_active = "safe"
+                else:
+                    r_active = None
+                    exceed_active = None
+                    false_results_active[num_tasks][per_jitter] += 1  # algorithm failed
+
+                results_active[num_tasks][per_jitter].append((final_e2e_max_active, max_reaction_time_active, r_active, tasks_active, random_seed, exceed_active, adjusted, inserted))
+                final_active[num_tasks][per_jitter].append((final_r_active, final_w_active))
+
+                # Passive analysis
+                print(f"=========For evaluation active zero  our========= num_tasks {num_tasks} per_jitter {per_jitter} Repeat {i} random_seed {random_seed} ==================")
+                final_e2e_max_zero, max_reaction_time_zero,  final_r_zero, final_w_zero, tasks_zero, adjusted_zero, inserted_zero = run_analysis_active_our_zero(num_tasks, selected_periods,selected_read_offsets,selected_write_offsets, per_jitter)
+                
+                if final_e2e_max_zero != 0:
+                    # Sec. VI.
+                    # R = DFFbase/DFFbound
+                    r_zero = max_reaction_time_zero / final_e2e_max_zero
+                    if r_zero > 1 + TOLERANCE:  
+                        exceed_zero = "exceed"
+                    else:
+                        exceed_zero = "safe"
+                else:
+                    # Returns 0 if the algorithm fails
+                    r_zero = None
+                    exceed_zero = None
+                    false_results_zero[num_tasks][per_jitter] += 1  
+
+                results_zero[num_tasks][per_jitter].append((final_e2e_max_zero, max_reaction_time_zero, r_zero, tasks_zero, random_seed, exceed_zero, adjusted_zero, inserted_zero))
+                final_zero[num_tasks][per_jitter].append((final_r_zero, final_w_zero))
+
+        random_seed += 1
+    # Save false results
+    for num_tasks in num_chains:
+        for per_jitter in jitters:
+            false_percentage_active = (false_results_active[num_tasks][per_jitter] / num_repeats)
+            false_results_active[num_tasks][per_jitter] = false_percentage_active
+
+            false_percentage_zero= (false_results_zero[num_tasks][per_jitter] / num_repeats)
+            false_results_zero[num_tasks][per_jitter] = false_percentage_zero
+
+    return results_active, false_results_active, final_active, results_zero, false_results_zero, final_zero
+
+
 
 
 
@@ -478,6 +559,7 @@ def run_Gunzel_LET(random_seed, num_repeats, common_csv_passive, common_csv_acti
 
 
 
+
 def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_csv_active):
     """
     LET(jitter=0)/Implicit communication(IC) comparison experiment (passive/active)
@@ -505,6 +587,28 @@ def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_
     append_to_common_csv(csv_file_active, common_csv_active)
 
 
+
+def run_our_active_zero(random_seed, num_repeats, common_csv_passive, common_csv_active):
+    periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
+    jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
+    num_chains = [3, 5, 8, 10] 
+    
+    timestamp = datetime.datetime.fromtimestamp(int(time.time())).strftime("%Y%m%d_%H%M%S")
+        
+    results_active, false_results_active, final_active, results_zero, false_results_zero, final_zero = compare_our_active_zero(
+        jitters, num_chains, num_repeats, random_seed, periods)
+
+    csv_file_active = output_active_our(num_repeats, random_seed, timestamp, results_active, false_results_active, num_chains, jitters)
+    csv_file_zero = output_active_our_zero(num_repeats, random_seed, timestamp, results_zero, false_results_zero, num_chains, jitters)
+
+    append_to_common_csv(csv_file_active, common_csv_active)
+    append_to_common_csv(csv_file_zero, common_csv_passive)
+
+
+
+
+
+
 def main():
     parser = argparse.ArgumentParser(description='compare our_passive, our_active, GunzelIC, GunzelLET')
     parser.add_argument('random_seed', type=int, help='random seed for the experiment')
@@ -513,8 +617,10 @@ def main():
                         help='passive result csv file (common_results_passive.csv)')
     parser.add_argument('--common_csv_active', type=str, default='common_results_active.csv', 
                         help='active result csv file (common_results_active.csv)')
+    parser.add_argument('--common_csv_zero', type=str, default='common_results_zero.csv',
+                        help='Zero baseline result CSV file (used only with --alg ZERO)')
     parser.add_argument('--suffix', default='', help='different name like _IC/_LET (RTSS)')
-    parser.add_argument('--alg', choices=['IC', 'LET', 'RTSS'], default='RTSS',
+    parser.add_argument('--alg', choices=['IC', 'LET', 'RTSS', 'ZERO'], default='RTSS',
                     help='which algorithm to run')
     args = parser.parse_args()
     
@@ -522,6 +628,7 @@ def main():
         'IC':  run_Gunzel_IC,
         'LET':  run_Gunzel_LET,
         'RTSS': run_our_passive_active,
+        'ZERO': run_our_active_zero,
     }
     
     random_seed = args.random_seed
@@ -530,7 +637,13 @@ def main():
     common_csv_active = args.common_csv_active
 
     alg = args.alg
-    alg_map[alg](random_seed, num_repeats, common_csv_passive, common_csv_active)
+    # alg_map[alg](random_seed, num_repeats, common_csv_passive, common_csv_active)
+
+    if alg == 'ZERO':
+        run_our_active_zero(random_seed, num_repeats, args.common_csv_active, args.common_csv_zero)
+    else:
+        alg_map[alg](random_seed, num_repeats, common_csv_passive, common_csv_active)
+
 
 if __name__ == "__main__":
     main()

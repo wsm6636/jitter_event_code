@@ -336,7 +336,7 @@ def plot_false_percent(csv_file, percent_plot_name, tag='passive'):
 
 
 
-def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
+def compare_plot_histogram_our(csv_files, compare_histogram_our_name, mode='default'):
     """
     Comparing two experiments in our paper,
     csv_files (passive and active),
@@ -356,8 +356,11 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
     fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
-    LABELS = ['passive', 'active']
-
+    if mode == 'ZERO':
+        LABELS = ['active', 'zero']
+    else:
+        LABELS = ['passive', 'active']
+    
     colors = plt.cm.tab10(np.linspace(0, 1, len(num_tasks_list)))
     TOLERANCE = 1e-9
     for idx, num_tasks in enumerate(num_tasks_list):
@@ -388,7 +391,7 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name):
 
 
 
-def compare_false_percent_our(csv_files, compare_plot_name):
+def compare_false_percent_our(csv_files, compare_plot_name, mode='default'):
     """
     Comparing the two experiments in our paper,
     csv_files (passive and active),
@@ -405,7 +408,12 @@ def compare_false_percent_our(csv_files, compare_plot_name):
 
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
-    LABELS = ['passive', 'active']
+
+    if mode == 'ZERO':
+        LABELS = ['active', 'zero']
+    else:
+        LABELS = ['passive', 'active']
+
     for idx, csv_file in enumerate(csv_files):
         ax = axes[idx]
         try:

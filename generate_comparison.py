@@ -334,72 +334,151 @@ def process_csv_file(input_file, output_file=None):
         return False
 
 
-def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
-    """
-    Main Process:
-        1. Check file existence;
-        2. Add finalpercent;
-        3. Draw corresponding group graphs based on suffix (_IC / _LET / _RTSS);
-        4. Split and export sub-csv files.
-    arguments:
-        common_csv_passive: The passive result CSV file path
-        common_csv_active: The active result CSV file path
-        suffix: Suffix indicating the type of experiment (e.g., '_IC')
-    return:
-        True if processing is successful, False otherwise
-    """
-    if not os.path.exists(common_csv_passive):
-        print(f"error: can not found {common_csv_passive}")
-        return False
+# def generate_final_comparison(common_csv_passive, common_csv_active, suffix=''):
+#     """
+#     Main Process:
+#         1. Check file existence;
+#         2. Add finalpercent;
+#         3. Draw corresponding group graphs based on suffix (_IC / _LET / _RTSS);
+#         4. Split and export sub-csv files.
+#     arguments:
+#         common_csv_passive: The passive result CSV file path
+#         common_csv_active: The active result CSV file path
+#         suffix: Suffix indicating the type of experiment (e.g., '_IC')
+#     return:
+#         True if processing is successful, False otherwise
+#     """
+#     if not os.path.exists(common_csv_passive):
+#         print(f"error: can not found {common_csv_passive}")
+#         return False
         
-    if not os.path.exists(common_csv_active):
-        print(f"error: can not found {common_csv_active}")
-        return False
+#     if not os.path.exists(common_csv_active):
+#         print(f"error: can not found {common_csv_active}")
+#         return False
     
-    # use the path of common_csv_passive
-    output_dir = os.path.dirname(os.path.abspath(common_csv_passive))
-    data_output_dir = f"{output_dir}/data"
-    os.makedirs(output_dir, exist_ok=True)
+#     # use the path of common_csv_passive
+#     output_dir = os.path.dirname(os.path.abspath(common_csv_passive))
+#     data_output_dir = f"{output_dir}/data"
+#     os.makedirs(output_dir, exist_ok=True)
+#     os.makedirs(data_output_dir, exist_ok=True)
+
+#     # Get the final complete CSV file
+#     common_csv_passive = add_final_percent_column_safe(common_csv_passive, common_csv_passive)
+#     common_csv_active = add_final_percent_column_safe(common_csv_active, common_csv_active)
+    
+#     sort_csv_by_policy(common_csv_passive, suffix)
+#     sort_csv_by_policy(common_csv_active, suffix)
+
+#     # Drawing different file types
+#     csv_files = [common_csv_passive, common_csv_active]
+#     compare_percent_plot_our  = suffixed(os.path.join(output_dir, "final_compare_percent_our.png"), suffix)
+#     compare_histogram_plot_our = suffixed(os.path.join(output_dir, "final_compare_histogram_our.png"), suffix)
+#     runtime_plot_passive  = suffixed(os.path.join(output_dir, "final_runtime_passive.png"), suffix)
+#     histogram_plot_passive = suffixed(os.path.join(output_dir, "final_R_histogram_passive.png"), suffix)
+#     runtime_plot_active  = suffixed(os.path.join(output_dir, "final_runtime_active.png"), suffix)
+#     histogram_plot_active = suffixed(os.path.join(output_dir, "final_R_histogram_active.png"), suffix)
+
+#     if suffix == '_IC':
+#         plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+#         plot_R_histogram_IC(common_csv_passive, histogram_plot_passive,tag='passive')
+#         process_csv_file(common_csv_passive)
+#         plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+#         plot_R_histogram_IC(common_csv_active, histogram_plot_active,tag='active')
+#         process_csv_file(common_csv_active)
+#     elif suffix == '_LET':
+#         plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
+#         plot_R_histogram_LET(common_csv_passive, histogram_plot_passive,tag='passive')
+#         process_csv_file(common_csv_passive)
+#         plot_runtime(common_csv_active, runtime_plot_active,tag='active')
+#         plot_R_histogram_LET(common_csv_active, histogram_plot_active,tag='active')
+#         process_csv_file(common_csv_active)
+#     else:
+#         compare_false_percent_our(csv_files, compare_percent_plot_our)
+#         compare_plot_histogram_our(csv_files, compare_histogram_plot_our)
+
+#     # Split files into different types
+#     filter_and_export_csv_passive(common_csv_passive, [3, 5, 8, 10], data_output_dir, suffix)
+#     filter_and_export_csv_active(common_csv_active, [3, 5, 8, 10], data_output_dir, suffix)
+#     print(f"Filtered CSV files saved in {data_output_dir}")
+
+
+
+
+def generate_final_comparison(common_csv_a, common_csv_b, suffix=''):
+    """
+    Unified processing function.
+    For ZERO: common_csv_a = zero, common_csv_b = active
+    For others: common_csv_a = passive, common_csv_b = active
+    """
+    if not os.path.exists(common_csv_a):
+        print(f"error: cannot find {common_csv_a}")
+        return False
+    if not os.path.exists(common_csv_b):
+        print(f"error: cannot find {common_csv_b}")
+        return False
+
+    output_dir = os.path.dirname(os.path.abspath(common_csv_a))
+    data_output_dir = os.path.join(output_dir, "data")
     os.makedirs(data_output_dir, exist_ok=True)
 
-    # Get the final complete CSV file
-    common_csv_passive = add_final_percent_column_safe(common_csv_passive, common_csv_passive)
-    common_csv_active = add_final_percent_column_safe(common_csv_active, common_csv_active)
-    
-    sort_csv_by_policy(common_csv_passive, suffix)
-    sort_csv_by_policy(common_csv_active, suffix)
+    # Add finalpercent column
+    common_csv_a = add_final_percent_column_safe(common_csv_a, common_csv_a)
+    common_csv_b = add_final_percent_column_safe(common_csv_b, common_csv_b)
 
-    # Drawing different file types
-    csv_files = [common_csv_passive, common_csv_active]
-    compare_percent_plot_our  = suffixed(os.path.join(output_dir, "final_compare_percent_our.png"), suffix)
-    compare_histogram_plot_our = suffixed(os.path.join(output_dir, "final_compare_histogram_our.png"), suffix)
-    runtime_plot_passive  = suffixed(os.path.join(output_dir, "final_runtime_passive.png"), suffix)
-    histogram_plot_passive = suffixed(os.path.join(output_dir, "final_R_histogram_passive.png"), suffix)
-    runtime_plot_active  = suffixed(os.path.join(output_dir, "final_runtime_active.png"), suffix)
-    histogram_plot_active = suffixed(os.path.join(output_dir, "final_R_histogram_active.png"), suffix)
+    sort_csv_by_policy(common_csv_a, suffix)
+    sort_csv_by_policy(common_csv_b, suffix)
+
+    csv_files = [common_csv_a, common_csv_b]
+    output_dir_abs = os.path.dirname(common_csv_a)
+    compare_percent_plot = suffixed(os.path.join(output_dir_abs, "final_compare_percent_our.png"), suffix)
+    compare_histogram_plot = suffixed(os.path.join(output_dir_abs, "final_compare_histogram_our.png"), suffix)
 
     if suffix == '_IC':
-        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
-        plot_R_histogram_IC(common_csv_passive, histogram_plot_passive,tag='passive')
-        process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
-        plot_R_histogram_IC(common_csv_active, histogram_plot_active,tag='active')
-        process_csv_file(common_csv_active)
+        runtime_plot_a = suffixed(os.path.join(output_dir_abs, "final_runtime_passive.png"), suffix)
+        histogram_plot_a = suffixed(os.path.join(output_dir_abs, "final_R_histogram_passive.png"), suffix)
+        runtime_plot_b = suffixed(os.path.join(output_dir_abs, "final_runtime_active.png"), suffix)
+        histogram_plot_b = suffixed(os.path.join(output_dir_abs, "final_R_histogram_active.png"), suffix)
+        plot_runtime(common_csv_a, runtime_plot_a, tag='passive')
+        plot_R_histogram_IC(common_csv_a, histogram_plot_a, tag='passive')
+        process_csv_file(common_csv_a)
+        plot_runtime(common_csv_b, runtime_plot_b, tag='active')
+        plot_R_histogram_IC(common_csv_b, histogram_plot_b, tag='active')
+        process_csv_file(common_csv_b)
     elif suffix == '_LET':
-        plot_runtime(common_csv_passive, runtime_plot_passive,tag='passive')
-        plot_R_histogram_LET(common_csv_passive, histogram_plot_passive,tag='passive')
-        process_csv_file(common_csv_passive)
-        plot_runtime(common_csv_active, runtime_plot_active,tag='active')
-        plot_R_histogram_LET(common_csv_active, histogram_plot_active,tag='active')
-        process_csv_file(common_csv_active)
+        runtime_plot_a = suffixed(os.path.join(output_dir_abs, "final_runtime_passive.png"), suffix)
+        histogram_plot_a = suffixed(os.path.join(output_dir_abs, "final_R_histogram_passive.png"), suffix)
+        runtime_plot_b = suffixed(os.path.join(output_dir_abs, "final_runtime_active.png"), suffix)
+        histogram_plot_b = suffixed(os.path.join(output_dir_abs, "final_R_histogram_active.png"), suffix)
+        plot_runtime(common_csv_a, runtime_plot_a, tag='passive')
+        plot_R_histogram_LET(common_csv_a, histogram_plot_a, tag='passive')
+        process_csv_file(common_csv_a)
+        plot_runtime(common_csv_b, runtime_plot_b, tag='active')
+        plot_R_histogram_LET(common_csv_b, histogram_plot_b, tag='active')
+        process_csv_file(common_csv_b)
+    elif suffix == '_ZERO':
+        # Compare zero vs active
+        compare_false_percent_our(csv_files, compare_percent_plot, mode='ZERO')
+        compare_plot_histogram_our(csv_files, compare_histogram_plot, mode='ZERO')
     else:
-        compare_false_percent_our(csv_files, compare_percent_plot_our)
-        compare_plot_histogram_our(csv_files, compare_histogram_plot_our)
+        # RTSS: passive vs active
+        compare_false_percent_our(csv_files, compare_percent_plot, mode='default')
+        compare_plot_histogram_our(csv_files, compare_histogram_plot, mode='default')
 
-    # Split files into different types
-    filter_and_export_csv_passive(common_csv_passive, [3, 5, 8, 10], data_output_dir, suffix)
-    filter_and_export_csv_active(common_csv_active, [3, 5, 8, 10], data_output_dir, suffix)
+    # Export sub-CSVs
+    if suffix == '_ZERO':
+        # Treat common_csv_a as "zero", common_csv_b as "active"
+        filter_and_export_csv_active(common_csv_a, [3, 5, 8, 10], data_output_dir, suffix + "_active")
+        filter_and_export_csv_active(common_csv_b, [3, 5, 8, 10], data_output_dir, suffix + "_zero")
+    else:
+        # Original behavior
+        # We assume a helper for passive exists — reuse active logic if needed
+        # For simplicity, we'll assume passive has same structure as active
+        filter_and_export_csv_passive(common_csv_a, [3, 5, 8, 10], data_output_dir, suffix + "_passive")
+        filter_and_export_csv_active(common_csv_b, [3, 5, 8, 10], data_output_dir, suffix + "_active")
+
     print(f"Filtered CSV files saved in {data_output_dir}")
+
+
 
 
 def main():
@@ -408,24 +487,37 @@ def main():
                         help='passive result csv file (common_results_passive.csv)')
     parser.add_argument('--common_csv_active', type=str, default='common_results_active.csv',
                         help='active result csv file (common_results_active.csv)')
+    parser.add_argument('--common_csv_zero', type=str, default='common_results_zero.csv',
+                        help='zero baseline csv file (used only with --suffix _ZERO)')
     parser.add_argument('--suffix', default='', help='filename suffix like _IC / _LET')
     
     args = parser.parse_args()
-    if os.path.exists(args.common_csv_passive):
-        with open(args.common_csv_passive, 'r') as f:
-            lines = len(f.readlines()) - 1  
-        print(f"rtss result total rows: {lines}")
+
+    if args.suffix == '_ZERO':
+        csv_a = args.common_csv_active
+        csv_b = args.common_csv_zero
+        print(f"Using ZERO mode: comparing {csv_a} vs {csv_b}")
     else:
-        print(f"can not find {args.common_csv_passive}")
-    
-    if os.path.exists(args.common_csv_active):
-        with open(args.common_csv_active, 'r') as f:
-            lines = len(f.readlines()) - 1  
-        print(f"adjust result total rows: {lines}")
+        csv_a = args.common_csv_passive
+        csv_b = args.common_csv_active
+        if os.path.exists(csv_a):
+            with open(csv_a, 'r') as f:
+                lines = len(f.readlines()) - 1
+            print(f"Passive result total rows: {lines}")
+        else:
+            print(f"Cannot find {csv_a}")
+
+
+    if os.path.exists(csv_b):
+        with open(csv_b, 'r') as f:
+            lines = len(f.readlines()) - 1
+        print(f"Active result total rows: {lines}")
     else:
-        print(f"can not find {args.common_csv_active}")
+        print(f"Cannot find {csv_b}")
     
     generate_final_comparison(args.common_csv_passive, args.common_csv_active, suffix=args.suffix)
+
+    generate_final_comparison(csv_a, csv_b, suffix=args.suffix)
 
 
 if __name__ == "__main__":

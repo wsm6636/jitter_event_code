@@ -24,6 +24,7 @@ case "$TYPE" in
     IC) ALG="IC" ; SUFFIX="_IC" ;;
     LET) ALG="LET"; SUFFIX="_LET" ;;
     RTSS|our) ALG="RTSS"; SUFFIX="_RTSS" ;;
+    ZERO) ALG="ZERO"; SUFFIX="_ZERO" ;;
     *) echo "Unknown TYPE: $TYPE"; exit 1 ;;
 esac
 
@@ -44,8 +45,16 @@ fi
 ###
 # Merged file
 ###
-COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
-COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
+# COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
+# COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
+
+if [[ "$ALG" == "ZERO" ]]; then
+    COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
+    COMMON_CSV_ZERO="${OUT_DIR}/common_results_zero${SUFFIX}_${TIMESTAMP}.csv"
+else
+    COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
+    COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
+fi
 
 echo "Running $NUM_EXPERIMENTS experiments (${TYPE}) in parallel, each with $NUM_REPEATS repeats"
 echo "Output directory: $OUT_DIR"
@@ -74,16 +83,29 @@ trap cleanup SIGINT SIGTERM
 # Calculate independent seeds for each experiment to avoid duplication
 for i in $(seq 1 $NUM_EXPERIMENTS); do
     seed=$(( INITIAL_SEED + (i-1)*NUM_REPEATS ))
-    tmp_csv_passive="${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"
-    tmp_csv_active="${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv"
 
-    echo "Starting experiment $i/$NUM_EXPERIMENTS, seed=$seed"
-    $PYTHON main.py "$seed" "$NUM_REPEATS" \
-        --common_csv_passive "$tmp_csv_passive" \
-        --common_csv_active "$tmp_csv_active" \
-        --suffix "$SUFFIX" \
-        --alg "$ALG" &
-    pids+=($!)
+    if [[ "$ALG" == "ZERO" ]]; then
+        tmp_csv_active="${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv"
+        tmp_csv_zero="${OUT_DIR}/tmp_${i}_zero${SUFFIX}.csv"
+        echo "Starting experiment $i/$NUM_EXPERIMENTS (ZERO), seed=$seed"
+        $PYTHON main.py "$seed" "$NUM_REPEATS" \
+            --common_csv_active "$tmp_csv_active" \
+            --common_csv_zero "$tmp_csv_zero" \
+            --suffix "$SUFFIX" \
+            --alg "$ALG" &
+        pids+=($!)
+    else
+        tmp_csv_passive="${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"
+        tmp_csv_active="${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv"
+
+        echo "Starting experiment $i/$NUM_EXPERIMENTS, seed=$seed"
+        $PYTHON main.py "$seed" "$NUM_REPEATS" \
+            --common_csv_passive "$tmp_csv_passive" \
+            --common_csv_active "$tmp_csv_active" \
+            --suffix "$SUFFIX" \
+            --alg "$ALG" &
+        pids+=($!)
+    fi
 done
 
 
@@ -94,24 +116,46 @@ echo "All experiments finished, starting merge..."
 # Merge temporary result files
 ###
 # Use the first file to write header
-head -n 1 "${OUT_DIR}/tmp_1_passive${SUFFIX}.csv"     > "$COMMON_CSV_PASSIVE"
-head -n 1 "${OUT_DIR}/tmp_1_active${SUFFIX}.csv"  > "$COMMON_CSV_ACTIVE"
-# Append the rest of files without their headers
-for i in $(seq 1 $NUM_EXPERIMENTS); do
-    tail -n +2 "${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"    >> "$COMMON_CSV_PASSIVE"
-    tail -n +2 "${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv" >> "$COMMON_CSV_ACTIVE"
-done
 
-rm -f "${OUT_DIR}"/tmp_*"${SUFFIX}".csv
+if [[ "$ALG" == "ZERO" ]]; then
+    # Merge active and zero
+    head -n 1 "${OUT_DIR}/tmp_1_active${SUFFIX}.csv" > "$COMMON_CSV_ACTIVE"
+    head -n 1 "${OUT_DIR}/tmp_1_zero${SUFFIX}.csv"   > "$COMMON_CSV_ZERO"
+    for i in $(seq 1 $NUM_EXPERIMENTS); do
+        tail -n +2 "${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv" >> "$COMMON_CSV_ACTIVE"
+        tail -n +2 "${OUT_DIR}/tmp_${i}_zero${SUFFIX}.csv"   >> "$COMMON_CSV_ZERO"
+    done
+    rm -f "${OUT_DIR}"/tmp_*"${SUFFIX}".csv
+else
+    head -n 1 "${OUT_DIR}/tmp_1_passive${SUFFIX}.csv"     > "$COMMON_CSV_PASSIVE"
+    head -n 1 "${OUT_DIR}/tmp_1_active${SUFFIX}.csv"  > "$COMMON_CSV_ACTIVE"
+    # Append the rest of files without their headers
+    for i in $(seq 1 $NUM_EXPERIMENTS); do
+        tail -n +2 "${OUT_DIR}/tmp_${i}_passive${SUFFIX}.csv"    >> "$COMMON_CSV_PASSIVE"
+        tail -n +2 "${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv" >> "$COMMON_CSV_ACTIVE"
+    done
+    rm -f "${OUT_DIR}"/tmp_*"${SUFFIX}".csv
+fi
 
 echo "Processing final files ..."
 
 # Split csv file and draw graph
-if $PYTHON generate_comparison.py \
-        --common_csv_passive "$COMMON_CSV_PASSIVE" \
-        --common_csv_active "$COMMON_CSV_ACTIVE" \
-        --suffix "$SUFFIX"; then
-    echo "Final comparison plot (${TYPE}) generated successfully"
+if [[ "$ALG" == "ZERO" ]]; then
+    if $PYTHON generate_comparison.py \
+            --common_csv_active "$COMMON_CSV_ACTIVE" \
+            --common_csv_zero "$COMMON_CSV_ZERO" \
+            --suffix "$SUFFIX"; then
+        echo "Final comparison plot (${TYPE}) generated successfully"
+    else
+        echo "Error occurred while generating comparison plot!"
+    fi
 else
-    echo "Error occurred while generating comparison plot!"
+    if $PYTHON generate_comparison.py \
+            --common_csv_passive "$COMMON_CSV_PASSIVE" \
+            --common_csv_active "$COMMON_CSV_ACTIVE" \
+            --suffix "$SUFFIX"; then
+        echo "Final comparison plot (${TYPE}) generated successfully"
+    else
+        echo "Error occurred while generating comparison plot!"
+    fi
 fi
