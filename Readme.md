@@ -2,13 +2,15 @@
 
 The repository is used to reproduce the evaluation from
 
-> "Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025
+*"Jitter Propagation in Task Chains". Shumo Wang, Enrico Bini, Qingxu Deng, Martina Maggio  46th IEEE Real-Time Systems Symposium (RTSS), Boston, MA, USA, 2025*
 
-This tool implements an analytical framework for tracking chain jitter propagation, demonstrating the impact of jitter on end-to-end latency. It supports arbitrary communication paradigms, including LET and implicit communication. We transform the chains of two tasks into an aggregation task and iteratively apply this approach to the analysis of longer chains.
+You can find the presentation in "20251203_RTSS.pdf".
 
-In demonstrating the impact of jitter, we borrow the method and code from paper [A] and set it as a baseline.
+The tool supports both **passive** and **active** jitter analysis for cause-effect chains, and supports two mainstream models: LET (Logical Execution Time) and IC (Implicit Communication).
 
-> [A] M. G&uuml;nzel, K.-H. Chen, N. Ueter, G. von der Br&uuml;ggen, M. D&uuml;rr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
+To simulate the task scheduling  maximum reaction time analysis, we borrowed some code from paper 20. In our paper, we set it as $D^{FF}_{base}$.
+
+> [20] M. G¨unzel, K.-H. Chen, N. Ueter, G. von der Br¨uggen, M. D¨urr, and J.-J. Chen, “Timing analysis of asynchronized distributed cause-effect chains,” in Real Time and Embedded Technology and Applications Symposium (RTAS), 2021.
 
 This document is organized as follows:
 
@@ -80,11 +82,8 @@ bash run_experiments.sh [NUM_REPEATS] [NUM_EXPERIMENTS] [TYPE]
 - `[NUM_EXPERIMENTS]`: number of parallel experiments
 - `[TYPE]`: algorithm type (`RTSS`, `IC`, or `LET`)
   - `RTSS`: Passive and active analysis when jitter is a percentage of the period.
-    - Passive analysis: This includes the method's failure rate and the pessimism of its boundaries.
-    - Active analysis: When passive analysis fails, active analysis will attempt to adjust parameters and continue analyzing.
-    - Please refer to Section V of the paper for details.
-  - `IC`: Passive and active analysis of implicit communication when jitter originates from scheduling.
-  - `LET`: Passive and active analysis of LET communication when jitter originates from scheduling.
+  - `IC`: Implicit communication analysis and comparison with $D^{FF}_{base}$ when jitter comes from scheduling. (both passive and active analysis)
+  - `LET`: LET communication analysis and comparison with $D^{FF}_{base}$ when jitter comes from scheduling. (both passive and active analysis)
 
 The results are output and saved in active/, passive/, and compare/. The results of different analyses are distinguished by RTSS/IC/LET tags.
 
@@ -105,6 +104,7 @@ bash run_experiments.sh 10 10 RTSS  76818.89s user 4.09s system 633% cpu 3:22:00
 Keeping `INITIAL_SEED=1755016037` in `run_experiments.sh` to obtain the same plots from the paper. You can get different results by changing the seed.
 
 ### Acknowledgments
+
 This work is partially supported by the project "Trustworthy
 Cyber-Physical Pipelines", funded by the MAECI Italy-Sweden
 co-operation id. PGR02086, and by VR grant number 2023-06836.
