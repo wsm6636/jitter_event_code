@@ -102,13 +102,10 @@ def output_active_our(num_repeats, random_seed, timestamp, results, false_result
     return:
         results_csv: the path to the results CSV file
     """
-    # folder_path = "active"
-    folder_path = "zero/compare_active"
+    folder_path = "active"
     os.makedirs(folder_path, exist_ok=True)
 
     results_csv = os.path.join(folder_path, f"data_active_{num_repeats}_{random_seed}_{timestamp}.csv" )
-    percent_plot_name = os.path.join(folder_path,  f"percent_active_{num_repeats}_{random_seed}_{timestamp}.png")
-    R_plot_name = os.path.join(folder_path, f"R_active_{num_repeats}_{random_seed}_{timestamp}.png")
 
     # save results to csv
     with open(results_csv, mode='w', newline='') as file:
@@ -121,9 +118,6 @@ def output_active_our(num_repeats, random_seed, timestamp, results, false_result
                     writer.writerow([seed,num_tasks, per_jitter, final_e2e_max, max_reaction_time, r, exceed, false_percentage,adjusted,inserted])
 
     print(f"All results saved to {results_csv}")
-
-    # plot_false_percent(results_csv, percent_plot_name, tag="active")
-    # plot_R_histogram_our(results_csv, R_plot_name, tag="active")
 
     return results_csv
 

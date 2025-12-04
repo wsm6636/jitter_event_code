@@ -588,7 +588,7 @@ def run_our_passive_active(random_seed, num_repeats, common_csv_passive, common_
 
 
 
-def run_our_active_zero(random_seed, num_repeats, common_csv_passive, common_csv_active):
+def run_our_active_zero(random_seed, num_repeats, common_csv_active, common_csv_zero):
     periods = [1, 2, 5, 10, 20, 50, 100, 200, 1000] 
     jitters = [0, 0.02, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5] 
     num_chains = [3, 5, 8, 10] 
@@ -602,7 +602,7 @@ def run_our_active_zero(random_seed, num_repeats, common_csv_passive, common_csv
     csv_file_zero = output_active_our_zero(num_repeats, random_seed, timestamp, results_zero, false_results_zero, num_chains, jitters)
 
     append_to_common_csv(csv_file_active, common_csv_active)
-    append_to_common_csv(csv_file_zero, common_csv_passive)
+    append_to_common_csv(csv_file_zero, common_csv_zero)
 
 
 
@@ -635,12 +635,13 @@ def main():
     num_repeats = args.num_repeats
     common_csv_passive   = args.common_csv_passive
     common_csv_active = args.common_csv_active
+    common_csv_zero = args.common_csv_zero
 
     alg = args.alg
     # alg_map[alg](random_seed, num_repeats, common_csv_passive, common_csv_active)
 
     if alg == 'ZERO':
-        run_our_active_zero(random_seed, num_repeats, args.common_csv_active, args.common_csv_zero)
+        run_our_active_zero(random_seed, num_repeats, common_csv_active, common_csv_zero)
     else:
         alg_map[alg](random_seed, num_repeats, common_csv_passive, common_csv_active)
 

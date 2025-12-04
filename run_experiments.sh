@@ -66,19 +66,21 @@ pids=()
 
 cleanup() {
     echo
-    echo "Interrupt received, terminating all experiments..."
+    echo "Received interrupt signal. Killing all child processes..."
+    # Kill direct children
     for pid in "${pids[@]}"; do
-        if kill -0 "$pid" 2>/dev/null; then
-            kill "$pid" 2>/dev/null || true
-            wait "$pid" 2>/dev/null || true
-        fi
+        kill "$pid" 2>/dev/null || true
     done
-    
-    e
-    exit 0
+    # Kill any remaining descendants
+    pkill -P $$ 2>/dev/null || true
+    sleep 1
+    echo "Cleanup complete. Exiting."
+    exit 1
 }
 
 trap cleanup SIGINT SIGTERM
+
+
 
 # Calculate independent seeds for each experiment to avoid duplication
 for i in $(seq 1 $NUM_EXPERIMENTS); do
