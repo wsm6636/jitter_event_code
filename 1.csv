@@ -1,0 +1,36 @@
+selected_periods: [1000, 10, 1000], selected_read_offsets: [808, 4, 582], selected_write_offsets: [1808, 14, 1582]
+================== num_tasks 3 per_jitter 0.5 Repeat 0 random_seed 1755016044 ==================
+original tasks: [Task(period=1000, offset=808, read_event=Event(type=read,id=0, period=1000, offset=808, maxjitter=500.0, write_event=Event(type=write,id=0, period=1000, offset=1808, maxjitter=500.0), Task(period=10, offset=4, read_event=Event(type=read,id=1, period=10, offset=4, maxjitter=5.0, write_event=Event(type=write,id=1, period=10, offset=14, maxjitter=5.0), Task(period=1000, offset=582, read_event=Event(type=read,id=2, period=1000, offset=582, maxjitter=500.0, write_event=Event(type=write,id=2, period=1000, offset=1582, maxjitter=500.0)]
+开始处理任务链，共 3 个任务
+初始任务: Task[0] (ID: 0)
+------------------------------------------------------------
+
+第 1 次循环:
+  当前任务: Task[0->0] (ID: 0)
+  下一任务: Task[1] (ID: 1)
+  任务对: Task[0] + Task[1]
+  -> combine_with_insertion 成功
+  -> 是否调整: False
+  -> 桥接任务数: 0
+  -> 新的当前任务: Task[0->1] (ID: 0_1)
+
+第 2 次循环:
+  当前任务: Task[0->1] (ID: 0_1)
+  下一任务: Task[2] (ID: 2)
+  任务对: Task[1] + Task[2]
+------------------adjust read offsets-----------------
+No valid offsets found within the given constraints.
+Does not conform to Theorem (2), Formula (18).
+  -> combine_with_insertion 失败，尝试 combine_zero_jitter
+copier task: Task(period=1000, offset=-1192.0, read_event=Event(type=read_copier,id=0_1_prev_copier_read, period=1000, offset=-1192.0, maxjitter=0, write_event=Event(type=write_copier,id=0_1_prev_copier_write, period=1000, offset=2082.0, maxjitter=0)
+  -> combine_zero_jitter 成功
+  -> 新的当前任务: Task[0->2] (ID: 0_1_prev_copier_read)
+
+============================================================
+任务链处理完成
+总共进行了 2 次组合
+插入桥接任务的位置数: 0
+是否进行了调整: False
+our task: [Task(period=1000, offset=808, read_event=Event(type=read,id=0, period=1000, offset=808, maxjitter=500.0, write_event=Event(type=write,id=0, period=1000, offset=1808, maxjitter=500.0), Task(period=10, offset=4, read_event=Event(type=read,id=1, period=10, offset=4, maxjitter=5.0, write_event=Event(type=write,id=1, period=10, offset=14, maxjitter=5.0), Task(period=1000, offset=582, read_event=Event(type=read,id=2, period=1000, offset=582, maxjitter=500.0, write_event=Event(type=write,id=2, period=1000, offset=1582, maxjitter=500.0)]
+new tasks: [Task(period=1000, offset=808, read_event=Event(type=read,id=0, period=1000, offset=808, maxjitter=500.0, write_event=Event(type=write,id=0, period=1000, offset=1808, maxjitter=500.0), Task(period=10, offset=4, read_event=Event(type=read,id=1, period=10, offset=4, maxjitter=5.0, write_event=Event(type=write,id=1, period=10, offset=14, maxjitter=5.0), Task(period=1000, offset=582, read_event=Event(type=read,id=2, period=1000, offset=582, maxjitter=500.0, write_event=Event(type=write,id=2, period=1000, offset=1582, maxjitter=500.0)]
+final_e2e_max: 4274.0, max_reaction_time: 4231.710742212184, R: 0.9901054614441236

@@ -50,11 +50,11 @@ def sort_csv_by_policy(csv_file, suffix=''):
         None
     """
     df = pd.read_csv(csv_file)
-    is_rtss = (suffix == '') or (suffix == '_RTSS')
-    if is_rtss and {'num_tasks', 'per_jitter'}.issubset(df.columns):
-        df = df.sort_values(by=['num_tasks', 'per_jitter'], ascending=[True, True])
+    is_rtss = (suffix == '') or (suffix == '_RTSS') or (suffix == '_ZERO')
+    if is_rtss and {'num_tasks', 'per_jitter','seeds'}.issubset(df.columns):
+        df = df.sort_values(by=['num_tasks', 'per_jitter','seeds'], ascending=[True, True, True])
     elif 'num_tasks' in df.columns:
-        df = df.sort_values(by=['num_tasks'], ascending=True)
+        df = df.sort_values(by=['num_tasks','seeds'], ascending=[True, True])
     df.to_csv(csv_file, index=False)
     print(f"[sort] {csv_file} suffix={suffix or 'None'} ")
 
@@ -436,7 +436,7 @@ def main():
     if os.path.exists(csv_a):
         with open(csv_a, 'r') as f:
             lines = len(f.readlines()) - 1
-        print(f"Passive result total rows: {lines}")
+        print(f" {csv_a} result total rows: {lines}")
     else:
         print(f"Cannot find {csv_a}")
 
@@ -444,7 +444,7 @@ def main():
     if os.path.exists(csv_b):
         with open(csv_b, 'r') as f:
             lines = len(f.readlines()) - 1
-        print(f"Active result total rows: {lines}")
+        print(f" {csv_b} result total rows: {lines}")
     else:
         print(f"Cannot find {csv_b}")
     

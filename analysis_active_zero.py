@@ -345,63 +345,29 @@ def combine_zero_jitter(task1, task2):
         read_copier_offset = wr_ph1prev
         write_copier_offset = task2.write_event.offset + task2.write_event.maxjitter
 
-    final_r = Event(
+    copier_r = Event(
         id=f"{copier_id}_read",
         event_type="read_copier",
         period=T12,
         offset=read_copier_offset,
         maxjitter=0,
     )
-    final_w = Event(
+    copier_w = Event(
         id=f"{copier_id}_write",
         event_type="write_copier",
         period=T12,
         offset=write_copier_offset,
         maxjitter=0,
     )
-    final_task = Task(
-        read_event=final_r,   
-        write_event=final_w,
+    copier_task = Task(
+        read_event=copier_r,   
+        write_event=copier_w,
         id=copier_id
     )
-    print(f"copier task: {final_task}")
+    print(f"copier task: {copier_task}")
 
-    return final_r, final_w
+    return copier_r, copier_w
 
-
-
-# def chain_asc_no_free_jitter_active_zero(tasks):
-#     """
-#     Processing Chain with adjustment of offset.
-#     In ascending order of the task's index in the chain.
-#     arguments:
-#         tasks: the task set
-#     return:
-#         (r_final, w_final, adjusted, all_bridges): the combined read and write events, whether adjustment is successful, and the inserted bridge tasks
-#         False: if no combined events can be found
-#     """
-#     n = len(tasks)
-#     # Start from the head of the chain and combine backwards
-#     current_task = tasks[0]
-#     all_bridges = []
-#     adjusted = False
-
-#     for i in range(1, n):
-#         result = combine_with_insertion(current_task, tasks[i])
-
-#         if result is False:
-#             result_zj = combine_zero_jitter(current_task, tasks[i])
-#             if result_zj is False:
-#                 return False
-#             else:
-#                 r, w = result_zj
-#                 current_task = Task(read_event=r, write_event=w, id=r.id)
-#         else:
-#             r, w, adjusted, bridges = result
-#             current_task = Task(read_event=r, write_event=w, id=r.id)
-#             if bridges:
-#                 all_bridges.append((i, bridges))
-#     return  r, w, adjusted, all_bridges
 
 
 def chain_asc_no_free_jitter_active_zero(tasks):
@@ -420,49 +386,22 @@ def chain_asc_no_free_jitter_active_zero(tasks):
     all_bridges = []
     adjusted = False
 
-    print(f"开始处理任务链，共 {n} 个任务")
-    print(f"初始任务: Task[0] (ID: {current_task.id})")
-    print("-" * 60)
-
     for i in range(1, n):
-        print(f"\n第 {i} 次循环:")
-        print(f"  当前任务: Task[0->{i-1}] (ID: {current_task.id})")
-        print(f"  下一任务: Task[{i}] (ID: {tasks[i].id})")
-        print(f"  任务对: Task[{current_task.id}] + Task[{i}]")
-        
         result = combine_with_insertion(current_task, tasks[i])
 
         if result is False:
-            print(f"  -> combine_with_insertion 失败，尝试 combine_zero_jitter")
             result_zj = combine_zero_jitter(current_task, tasks[i])
             if result_zj is False:
-                print(f"  -> combine_zero_jitter 也失败，返回 False")
                 return False
             else:
                 r, w = result_zj
                 current_task = Task(read_event=r, write_event=w, id=r.id)
-                print(f"  任务对: Task[{current_task.id}] + Task[{i}]")
-                print(f"  -> combine_zero_jitter 成功")
-                print(f"  -> 新的当前任务: Task[0->{i}] (ID: {current_task.id})")
         else:
-            r, w, adjusted_this_round, bridges = result
+            r, w, adjusted, bridges = result
             current_task = Task(read_event=r, write_event=w, id=r.id)
-            print(f"  -> combine_with_insertion 成功")
-            print(f"  -> 是否调整: {adjusted_this_round}")
-            print(f"  -> 桥接任务数: {len(bridges) if bridges else 0}")
-            print(f"  -> 新的当前任务: Task[0->{i}] (ID: {current_task.id})")
             if bridges:
                 all_bridges.append((i, bridges))
-                adjusted = True  # 如果有桥接任务插入，设置 adjusted 为 True
-
-    print("\n" + "=" * 60)
-    print(f"任务链处理完成")
-    print(f"总共进行了 {n-1} 次组合")
-    print(f"插入桥接任务的位置数: {len(all_bridges)}")
-    print(f"是否进行了调整: {adjusted}")
-    
-    return r, w, adjusted, all_bridges
-
+    return  r, w, adjusted, all_bridges
 
 def our_chain_active_zero(tasks):
     """
@@ -710,9 +649,9 @@ def run_analysis_active_our_zero(num_tasks, periods,read_offsets,write_offsets, 
     inserted = False
 
     tasks = RandomEvent(num_tasks, periods,read_offsets,write_offsets, per_jitter).tasks
-    print(f"original tasks: {[task for task in tasks]}")
+    # print(f"original tasks: {[task for task in tasks]}")
     final = our_chain_active_zero(tasks)
-    print(f"our task: {[task for task in tasks]}")
+    # print(f"our task: {[task for task in tasks]}")
     new_tasks = tasks
     if final is False:
         final_e2e_max = 0
@@ -730,7 +669,7 @@ def run_analysis_active_our_zero(num_tasks, periods,read_offsets,write_offsets, 
             new_tasks = inject_bridges(tasks[:], all_bridges)
             inserted = True
             
-    print(f"new tasks: {[task for task in new_tasks]}")
+    # print(f"new tasks: {[task for task in new_tasks]}")
     # check if the final result is valid
     reaction_time_a = maximize_reaction_time(new_tasks)
     reaction_time_b = max(results_function)
