@@ -25,6 +25,7 @@ case "$TYPE" in
     LET) ALG="LET"; SUFFIX="_LET" ;;
     RTSS|our) ALG="RTSS"; SUFFIX="_RTSS" ;;
     ZERO) ALG="ZERO"; SUFFIX="_ZERO" ;;
+    ADD) ALG="ADD"; SUFFIX="_ADD" ;;
     *) echo "Unknown TYPE: $TYPE"; exit 1 ;;
 esac
 
@@ -48,9 +49,9 @@ fi
 # COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
 # COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
 
-if [[ "$ALG" == "ZERO" ]]; then
+if [[ "$ALG" == "ZERO" || "$ALG" == "ADD" ]]; then
     COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
-    COMMON_CSV_ZERO="${OUT_DIR}/common_results_zero${SUFFIX}_${TIMESTAMP}.csv"
+    COMMON_CSV_ACTIVE_NEW="${OUT_DIR}/common_results_active_new${SUFFIX}_${TIMESTAMP}.csv"
 else
     COMMON_CSV_PASSIVE="${OUT_DIR}/common_results_passive${SUFFIX}_${TIMESTAMP}.csv"
     COMMON_CSV_ACTIVE="${OUT_DIR}/common_results_active${SUFFIX}_${TIMESTAMP}.csv"
@@ -86,13 +87,13 @@ trap cleanup SIGINT SIGTERM
 for i in $(seq 1 $NUM_EXPERIMENTS); do
     seed=$(( INITIAL_SEED + (i-1)*NUM_REPEATS ))
 
-    if [[ "$ALG" == "ZERO" ]]; then
+    if [[ "$ALG" == "ZERO" || "$ALG" == "ADD" ]]; then
         tmp_csv_active="${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv"
-        tmp_csv_zero="${OUT_DIR}/tmp_${i}_zero${SUFFIX}.csv"
-        echo "Starting experiment $i/$NUM_EXPERIMENTS (ZERO), seed=$seed"
+        tmp_csv_active_new="${OUT_DIR}/tmp_${i}_active_new${SUFFIX}.csv"
+        echo "Starting experiment $i/$NUM_EXPERIMENTS (ACTIVE NEW), seed=$seed"
         $PYTHON main.py "$seed" "$NUM_REPEATS" \
             --common_csv_active "$tmp_csv_active" \
-            --common_csv_zero "$tmp_csv_zero" \
+            --common_csv_active_new "$tmp_csv_active_new" \
             --suffix "$SUFFIX" \
             --alg "$ALG" &
         pids+=($!)
@@ -119,13 +120,13 @@ echo "All experiments finished, starting merge..."
 ###
 # Use the first file to write header
 
-if [[ "$ALG" == "ZERO" ]]; then
-    # Merge active and zero
+if [[ "$ALG" == "ZERO" || "$ALG" == "ADD" ]]; then
+    # Merge active and active_new
     head -n 1 "${OUT_DIR}/tmp_1_active${SUFFIX}.csv" > "$COMMON_CSV_ACTIVE"
-    head -n 1 "${OUT_DIR}/tmp_1_zero${SUFFIX}.csv"   > "$COMMON_CSV_ZERO"
+    head -n 1 "${OUT_DIR}/tmp_1_active_new${SUFFIX}.csv"   > "$COMMON_CSV_ACTIVE_NEW"
     for i in $(seq 1 $NUM_EXPERIMENTS); do
         tail -n +2 "${OUT_DIR}/tmp_${i}_active${SUFFIX}.csv" >> "$COMMON_CSV_ACTIVE"
-        tail -n +2 "${OUT_DIR}/tmp_${i}_zero${SUFFIX}.csv"   >> "$COMMON_CSV_ZERO"
+        tail -n +2 "${OUT_DIR}/tmp_${i}_active_new${SUFFIX}.csv"   >> "$COMMON_CSV_ACTIVE_NEW"
     done
     rm -f "${OUT_DIR}"/tmp_*"${SUFFIX}".csv
 else
@@ -142,10 +143,10 @@ fi
 echo "Processing final files ..."
 
 # Split csv file and draw graph
-if [[ "$ALG" == "ZERO" ]]; then
+if [[ "$ALG" == "ZERO" || "$ALG" == "ADD"  ]]; then
     if $PYTHON generate_comparison.py \
             --common_csv_active "$COMMON_CSV_ACTIVE" \
-            --common_csv_zero "$COMMON_CSV_ZERO" \
+            --common_csv_active_new "$COMMON_CSV_ACTIVE_NEW" \
             --suffix "$SUFFIX"; then
         echo "Final comparison plot (${TYPE}) generated successfully"
     else

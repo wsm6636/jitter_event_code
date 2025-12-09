@@ -356,8 +356,10 @@ def compare_plot_histogram_our(csv_files, compare_histogram_our_name, mode='defa
     fig = plt.figure(figsize=(20, 10 * len(num_tasks_list)))
     outer_grid = GridSpec(len(num_tasks_list), len(csv_files), wspace=0.4, hspace=0.4)
 
-    if mode == 'ZERO':
+    if mode == '_ZERO':
         LABELS = ['active', 'zero']
+    elif mode == '_ADD':
+        LABELS = ['active', 'add']
     else:
         LABELS = ['passive', 'active']
     
@@ -411,6 +413,8 @@ def compare_false_percent_our(csv_files, compare_plot_name, mode='default'):
 
     if mode == 'ZERO':
         LABELS = ['active', 'zero']
+    elif mode == 'ADD':
+        LABELS = ['active', 'add']
     else:
         LABELS = ['passive', 'active']
 

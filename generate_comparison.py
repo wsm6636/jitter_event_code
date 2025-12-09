@@ -212,6 +212,60 @@ def filter_and_export_csv_active(csv_file_path, num_chains, data_output_dir=None
     return all_data_files
 
 
+def filter_and_export_csv(csv_file_path, num_chains, data_output_dir=None,    suffix='', mode='passive'):
+
+    # Handle output directory
+    if data_output_dir is None:
+        parent_dir = os.path.dirname(csv_file_path)
+        data_output_dir = os.path.join(parent_dir, "data")
+    os.makedirs(data_output_dir, exist_ok=True)
+
+    # Load data
+    try:
+        df = pd.read_csv(csv_file_path)
+    except FileNotFoundError:
+        print(f"Error: File {csv_file_path} not found.")
+        return [], []
+
+    all_data_files = []
+    jitter_20_files = []
+    has_jitter = 'per_jitter' in df.columns
+
+    for num_tasks in num_chains:
+        # Filter by num_tasks
+        all_data = df[df['num_tasks'] == num_tasks]
+
+        # Construct filenames using mode
+        all_data_file = os.path.join(data_output_dir, f"{mode}_data{num_tasks}{suffix}.csv")
+
+        if not all_data.empty:
+            all_data.to_csv(all_data_file, index=False)
+            all_data_files.append(all_data_file)
+            print(f"All {mode} data for {num_tasks} tasks saved to {all_data_file}")
+        else:
+            print(f"Warning: No {mode} data found for {num_tasks} tasks")
+
+        # Handle 20% jitter subset (if applicable)
+        if has_jitter:
+            # Use np.isclose if per_jitter is float and precision matters
+            jitter_20_data = df[
+                (df['num_tasks'] == num_tasks) &
+                (df['per_jitter'] == 0.2)  # or use np.isclose(df['per_jitter'], 0.2)
+            ]
+            jitter_20_file = os.path.join(
+                data_output_dir, f"{mode}_data{num_tasks}_20per{suffix}.csv"
+            )
+            if not jitter_20_data.empty:
+                jitter_20_data.to_csv(jitter_20_file, index=False)
+                jitter_20_files.append(jitter_20_file)
+                print(f"20% jitter {mode} data for {num_tasks} tasks saved to {jitter_20_file}")
+            else:
+                print(f"Warning: No 20% jitter {mode} data found for {num_tasks} tasks")
+
+    return all_data_files, jitter_20_files
+
+
+
 def calculate_boxplot_stats(data):
     """
     Computes the five core statistics for a boxplot: median, Q1, Q3, upper and lower whiskers (1.5 IQR rule), and min/max.
@@ -386,26 +440,25 @@ def generate_final_comparison(common_csv_a, common_csv_b, suffix=''):
         plot_runtime(common_csv_b, runtime_plot_b, tag='active')
         plot_R_histogram_LET(common_csv_b, histogram_plot_b, tag='active')
         process_csv_file(common_csv_b)
-    elif suffix == '_ZERO':
-        # Compare zero vs active
-        compare_false_percent_our(csv_files, compare_percent_plot, mode='ZERO')
-        compare_plot_histogram_our(csv_files, compare_histogram_plot, mode='ZERO')
     else:
         # RTSS: passive vs active
-        compare_false_percent_our(csv_files, compare_percent_plot, mode='default')
-        compare_plot_histogram_our(csv_files, compare_histogram_plot, mode='default')
+        compare_false_percent_our(csv_files, compare_percent_plot, mode = suffix)
+        compare_plot_histogram_our(csv_files, compare_histogram_plot, mode= suffix)
 
     # Export sub-CSVs
-    if suffix == '_ZERO':
-        # Treat common_csv_a as "zero", common_csv_b as "active"
-        filter_and_export_csv_active(common_csv_a, [3, 5, 8, 10], data_output_dir, suffix + "_active")
-        filter_and_export_csv_active(common_csv_b, [3, 5, 8, 10], data_output_dir, suffix + "_zero")
+    if suffix == '_ZERO' or suffix == '_ADD':
+        filter_and_export_csv(csv_file_path=common_csv_a, num_chains=[3,5,8,10], data_output_dir=data_output_dir,
+                                suffix=suffix, mode='active')
+        filter_and_export_csv(csv_file_path=common_csv_b, num_chains=[3,5,8,10], data_output_dir=data_output_dir,
+                                suffix=suffix, mode='active')
     else:
         # Original behavior
         # We assume a helper for passive exists — reuse active logic if needed
         # For simplicity, we'll assume passive has same structure as active
-        filter_and_export_csv_passive(common_csv_a, [3, 5, 8, 10], data_output_dir, suffix + "_passive")
-        filter_and_export_csv_active(common_csv_b, [3, 5, 8, 10], data_output_dir, suffix + "_active")
+        filter_and_export_csv(csv_file_path=common_csv_a, num_chains=[3,5,8,10], data_output_dir=data_output_dir,
+                                suffix=suffix, mode='passive')
+        filter_and_export_csv(csv_file_path=common_csv_b, num_chains=[3,5,8,10], data_output_dir=data_output_dir,
+                                suffix=suffix, mode='active')
 
     print(f"Filtered CSV files saved in {data_output_dir}")
 
@@ -418,16 +471,16 @@ def main():
                         help='passive result csv file (common_results_passive.csv)')
     parser.add_argument('--common_csv_active', type=str, default='common_results_active.csv',
                         help='active result csv file (common_results_active.csv)')
-    parser.add_argument('--common_csv_zero', type=str, default='common_results_zero.csv',
-                        help='zero baseline csv file (used only with --suffix _ZERO)')
+    parser.add_argument('--common_csv_active_new', type=str, default='common_results_active_new.csv',
+                        help='--suffix _ZERO or _ADD: active_new result csv file (common_results_active_new.csv)')
     parser.add_argument('--suffix', default='', help='filename suffix like _IC / _LET')
     
     args = parser.parse_args()
 
-    if args.suffix == '_ZERO':
+    if args.suffix == '_ZERO' or args.suffix == '_ADD':
         csv_a = args.common_csv_active
-        csv_b = args.common_csv_zero
-        print(f"Using ZERO mode: comparing {csv_a} vs {csv_b}")
+        csv_b = args.common_csv_active_new
+        print(f"Using ZERO or ADD mode: comparing {csv_a} vs {csv_b}")
     else:
         csv_a = args.common_csv_passive
         csv_b = args.common_csv_active
