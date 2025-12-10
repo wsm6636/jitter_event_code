@@ -411,9 +411,9 @@ def compare_false_percent_our(csv_files, compare_plot_name, mode='default'):
     fig, axes = plt.subplots(num_rows, num_columns, figsize=(15, 5 * num_rows))
     axes = axes.flatten()
 
-    if mode == 'ZERO':
+    if mode == '_ZERO':
         LABELS = ['active', 'zero']
-    elif mode == 'ADD':
+    elif mode == '_ADD':
         LABELS = ['active', 'add']
     else:
         LABELS = ['passive', 'active']
@@ -597,6 +597,8 @@ if __name__ == "__main__":
     # parser.add_argument("csv_file", type=str, help="Path to the CSV file containing the data.")
     parser.add_argument("csv_files", type=str, nargs='+', help="Paths to the CSV files containing the data.")
     parser.add_argument("name", type=str)
+    parser.add_argument("--mode", type=str, default='default', help="Mode for comparison (default, ZERO, ADD).")
     args = parser.parse_args()
 
-    compare_plot_histogram_our(args.csv_files, args.name)
+    # compare_plot_histogram_our(args.csv_files, args.name)
+    compare_false_percent_our(args.csv_files, args.name, mode=args.mode)
