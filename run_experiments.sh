@@ -1,6 +1,6 @@
 #!/bin/bash
 set -euo pipefail
-
+# copy from RTSS
 ###
 # Batch start script for comparative experiments
 # Supports three algorithms: IC, LET, and RTSS
